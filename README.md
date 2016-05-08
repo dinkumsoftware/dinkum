@@ -14,6 +14,9 @@ Currently Not packaged.  To use:
 Modified to display multiple IP addresses.
 
 
+The blog-like working notes of the author during development of this software
+can be found [here](http://github.com/dinkumsoftware/dinkum-working-notes/blob/master/dinkum-working-notes.txt).
+
 enjoy
 tc
 
