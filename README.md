@@ -6,7 +6,7 @@ dinkum
 Currently Not packaged.  To use:
 
     1. cd to parent directory where you want the code to go
-    2. git clone https://github.com/dinkumsoftware/dinkum.git
+    2. git clone http://github.com/dinkumsoftware/dinkum.git
 
 ####DinkumSoftware forked GitHub repositories####
 
