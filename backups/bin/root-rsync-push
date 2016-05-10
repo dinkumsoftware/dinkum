@@ -1,0 +1,155 @@
+#!/bin/bash
+# root-rsync-push
+#
+# 17-Apr-07 tc@DinkumSoftware.com Initial
+# 18-Apr-07 tc@DinkumSoftware.com patched for FC1
+#
+# Bugs to fix:
+#     remove FC1 patch commenting out readlink
+#     the destination directory on remotehost must exist
+#    /boot and /dev aren't copied.  See note toward end of file
+
+
+function usage()
+{
+echo >&2 "USAGE:root-rsync-push remotehost remotedir"
+echo >&2 "    Makes a copy of the entire local filesystem on another host"
+echo >&2 "    via rsync over ssh.  You must have root access on both machines."
+echo >&2 "        remotehost  Which computer to copy to"
+echo >&2 "        remotedir   The directory on remote machine where copy is rooted"
+echo >&2 "    If the local machine is local.mydomain.com, then"
+echo >&2 "        root-rsync-push remote.mydomain.com  /usr/local/backups"
+echo >&2 "    Gets all of local / copied to remote at"
+echo >&2 "        /usr/local/backups/topdir-root-rsync-push/com/mydomain/remote"
+echo >&2 "    Some portions of the filesystem are NOT copied:"
+echo >&2 "        Networked mounted disks"
+echo >&2 "        Kernel filesystems, e.g. /proc"
+echo >&2 "    This is accomplished via rsync --one-file-system argument"
+echo >&2 "    Any pre-existing files on remotehost (from prior usage) that"
+echo >&2 "       no longer exist on local machine are removed."
+
+}
+
+
+    # fqdn_to_reversed_filetree(fqdn)
+    # converts fqdn, e.g. foo.mydomain.com to 
+    #                     com/mydomain/foo
+    # Output in: FQDN_TO_REVERSED_FILETREE
+    # Normally returns 0, returns 1 on error with msgs to stdout
+declare FQDN_TO_REVERSED_FILETREE
+function fqdn_to_reversed_filetree()
+{
+    local FQDN="$1"
+
+    # Sanity check the number of arguments
+    if (( $# != 1 )) ; then
+        echo >&2 "ERROR: wrong number of args to fqdn_to_reversed_filetree()"
+        return 1
+    fi
+
+    # Sanity check the argument
+    if [[ -z $FQDN ]] ; then
+        echo >&2 "ERROR: No fqdn(e.g. hostname): $FQDN"
+        return 1
+    fi
+
+
+                  # Convert everything to lower case
+                                   # each field on own line, removing .'s
+                                                  # reverse order
+                                                      # back on one line with / separater
+                                                                      # remove trailing /
+    FQDN_TO_REVERSED_FILETREE="`\
+      echo $FQDN | tr [A-Z] [a-z] | tr '.' '\n' | tac | tr '\n' '/' | sed 's/\/$//'  \
+    `"
+
+    return 0 ;
+}
+
+
+
+
+# Configurations
+set -u # unset variables error when expanded
+
+# Functions
+
+
+
+# Execution starts here
+# Check the preconditions
+
+# Pick off command line arguments
+if (( $# != 2 )) ; then
+    usage
+    echo >&2 "ERROR: Wrong number of command line arguments"
+    exit 1
+fi
+REMOTEHOST="$1"
+REMOTEDIR="$2"
+
+# Make sure we are root
+if [ "`whoami`" != "root" ] ; then
+    usage
+    echo >&2 "ERROR: You must be root to run this program."
+    exit 1
+fi
+
+
+# Figure out where on the remote host we are gonna "root" the copy
+# this returns FQDN_TO_REVERSED_FILETREE=$FQDN_TO_REVERSED_FILETREE
+declare HOSTNAME=`hostname`
+fqdn_to_reversed_filetree $HOSTNAME
+if (( $? != 0 )) ; then 
+    usage
+    echo >&2 "ERROR: Something wrong with hostname:$HOSTNAME"
+    exit 1    
+fi
+
+#                    frm cmd line
+#                                hardwired name
+#                                                       com/somedomain/host_copying_from
+declare REMOTE_ROOT="$REMOTEDIR/topdir-root-rsync-push/$FQDN_TO_REVERSED_FILETREE"
+# clean up any repeated // remove ..'s etc
+# BUG This was commented out for Fedora Core 1, readlink did not know about
+#     --canonicalize-missing
+#    REMOTE_ROOT=`readlink --canonicalize-missing --no-newline $REMOTE_ROOT`
+
+
+
+# Do it
+# --rsh=ssh                      ; remote shell to use, newer rsyncs
+#
+# --archive ==>  -rlptgoD
+#                --recursive(-r)
+#                --links(-l)     ; symlinks as symlinks
+#                --perms(-p)     ; preserve permissions
+#                --time(-t)      ; preserve times
+#                --group(-g)     ; preserve groups
+#                --owndr(-o)     ; preserve owner
+#                --devices(-D)   ; preserve devices
+
+# --one-file-system              ; don't leave the filesystem,
+#                                ; excludes /proc, /sys,  networked mounts
+# --hard-links                   ; preserve hard links
+# --delete                       ; delete files on rcvr not on sender
+#                                ;   default to ssh, olders ones rsh
+
+declare RSYNC_ARGS="--progress  \
+      --rsh=ssh                 \
+      --archive --one-file-system --hard-links --delete"
+
+# Do it!
+#     BUGS to fix....
+#        I'd like to backup /boot and /dev, but....
+#        the --one-file-system excludes them, apparently even if included
+#        If I make N passes over, with / /dev /boot  the --delete  on the original
+#            / will wipe out contents of /boot and /dev and resend them
+#        There is also the issue of entering the password N times.
+#        The REAL fix is to probably send / (without --one-file-system) and
+#            build a list of stuff to exclude... but for now I'll just omit
+#            /boot and /dev
+
+echo rsync \<args sniped\> /  root@$REMOTEHOST:$REMOTE_ROOT
+     rsync $RSYNC_ARGS     /  root@$REMOTEHOST:$REMOTE_ROOT
+
