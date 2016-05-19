@@ -1,5 +1,5 @@
 #!/bin/bash
-# root-rsync-push
+# dinkum-root-rsync-push
 # 
 #   Copyright 2007-2016 Dinkum Software
 #
@@ -28,13 +28,13 @@
 
 function usage()
 {
-echo >&2 "USAGE:root-rsync-push remotehost remotedir"
+echo >&2 "USAGE:dinkum-root-rsync-push remotehost remotedir"
 echo >&2 "    Makes a copy of the entire local filesystem on another host"
 echo >&2 "    via rsync over ssh.  You must have root access on both machines."
 echo >&2 "        remotehost  Which computer to copy to"
 echo >&2 "        remotedir   The directory on remote machine where copy is rooted"
 echo >&2 "    If the local machine is local.mydomain.com, then"
-echo >&2 "        root-rsync-push remote.mydomain.com  /usr/local/backups"
+echo >&2 "        dinkum-root-rsync-push remote.mydomain.com  /usr/local/backups"
 echo >&2 "    Gets all of local / copied to remote at"
 echo >&2 "        /usr/local/backups/topdir-root-rsync-push/com/mydomain/remote"
 echo >&2 "    Some portions of the filesystem are NOT copied:"
