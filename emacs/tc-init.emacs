@@ -1,10 +1,12 @@
-;; tc.emacs
+;; tc-init.emacs
 ;;
 ;; All of tc's user based emacs customization
-;; Usage:  Add following line to ~tc/.emacs
-;;  (load "~/.tc-toolbox/emacs/tc.emacs")
+;; Usage:  Add following line to ~/.emacs or ~/.emacs.d/init.el
+;;         (load "~/.emacs.d/tc-init.emacs")
+;; -or- run
+;;      https://github.com/dinkumsoftware/dinkum.git
+;;      dinkum/emacs/bin/dinkum-install-tc-emacs
 
-;; tc's emacs customizations.
 ;;04-Aug-97 tc@dinkum-software.com      Initial, moved from .emacs
 ;;20-Mar-98 tc@dinkum-software.com      Changed date-and-sign from
 ;;    tc@dinkum-software.com to tc@DinkumSoftware.com
@@ -31,6 +33,9 @@
 ;;   Retired the old emacs add-ons with AAA.emacs that I had been using.
 ;;   Now require one line modification of ~/.emacs, which reads this file.
 ;;   Combed thru years of customizations and tossed some stuff
+;; 2016-11-10 tc@DinkumSoftware.com Moved from svn to git.
+;;                                  changed names (tc-init.emacs) and locations (~/.emacs.c)
+;;                                  do  not change background color
 ;;   
 ;;;-----------------------------------------------------------------------
 ;; Set an emacs variable with this directory name (where tc.emacs lives)
@@ -38,37 +43,37 @@
 ;; in this directory.  Any one-liner kind of stuff that is requested in .emacs
 ;; can go in this file.
 
-(defvar tc-emacs-addons-directory "~tc/.tc-toolbox/emacs"
+(defvar tc-emacs-addons-directory "~/.emacs.d"
     "The directory which contains all of the add on emacs packages
-    subdirectories that are part of tc's customizations.  See tc.emacs"
+    subdirectories that are part of tc's customizations.  See tc-init.emacs"
 )
 
 ;; ****  tc's customizations from subdirectory: tc-lisp
 
-	;; Build up full pathname of subdir so AAA.emacs can use it
-        (defvar tc-lisp-subdirectory
-              (concat tc-emacs-addons-directory  "/tc-lisp")
-	"The directory which contains tc written lisp code.  See tc.emacs"
-	)
+    ;; Build up full pathname of subdir so AAA.emacs can use it
+    (defvar tc-lisp-subdirectory
+        (concat tc-emacs-addons-directory  "/tc-lisp")
+	"The directory which contains tc written lisp code.  See tc-init.emacs"
+    )
 
-	;; Stick my private lisp directory at the front of the search
-	(setq load-path (append (list tc-lisp-subdirectory)
-                        load-path))
+    ;; Stick my private lisp directory at the front of the search
+    (setq load-path (append (list tc-lisp-subdirectory)
+                     load-path))
 
-	;; load up function definitions that tc wrote
-	(load "date-stamp")
-        (load "date-and-sign")
-	(load "scroll-one")
-        (load "save-all-buffers")
+    ;; load up function definitions that tc wrote
+    (load "date-stamp")
+    (load "date-and-sign")
+    (load "scroll-one")
+    (load "save-all-buffers")
 
-	;; execute more code
-	(load "tc-diddle-background-color.emacs")
-	(load "tc-key-mappings.emacs")
+    ;; execute more code
+    ;;  (load "tc-diddle-background-color.emacs") ; use the default
+    (load "tc-key-mappings.emacs")
 
-	;; Behaviour changes
-	;; Spaces for tab.... always
-	(setq-default indent-tabs-mode nil)
-	(setq-default tab-width          4)
+    ;; Behaviour changes
+    ;; Spaces for tab.... always
+    (setq-default indent-tabs-mode nil)
+    (setq-default tab-width          4)
 
     ;; These are disabled by default, turn 'um on
     (put 'narrow-to-region 'disabled nil)

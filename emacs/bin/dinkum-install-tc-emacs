@@ -1,0 +1,69 @@
+#!/bin/bash
+# dinkum-install-tc-emacs
+#
+# Installs dinkumsoftware/tc emacs customizations
+# Usage:
+#    git clone https://github.com/dinkumsoftware/dinkum.git
+#    dinkum/emacs/bin/dinkum-install-tc-emacs
+#
+# Puts files in ~/.emacs.d
+
+# 2016-11-09 tc@DinkumSoftware.com Initial
+
+set -u    # Die on unexpanded variable
+set -e    # Die on error
+
+# Where we copy code to
+INSDIR="$HOME/.emacs.d"
+mkdir -p $INSDIR
+
+
+# Where we copy code from
+# This is the parent directory of the bin directory
+# that we live in
+SRCDIR="$(dirname $0)/.."
+
+# Copy the files
+cp    $SRCDIR/tc-init.emacs $INSDIR
+cp -r $SRCDIR/tc-lisp       $INSDIR
+
+# We have to have emacs startup code do a
+# load of the tc-init.emacs we just copied.
+# emacs looks in:
+#    ~/.emacs ~/.emacs.el ~/.emacs.d/init.el
+# We need to put the following in that file
+#    (load "~/.emacs.d/tc-init.emacs")
+# but only if it wasn't put there before.
+# This allows us to run multiple times.
+# We may have to create the file.
+
+# Figure out the file to use
+# Set INITFILE to its name
+# Use the .emacs.d version if none exist
+if   [ -e $HOME/.emacs    ] ; then INITFILE=$HOME/.emacs           
+elif [ -e $HOME/.emacs.el ] ; then INITFILE=$HOME/.emacs.el        
+else                               INITFILE=$HOME/.emacs.d/init.el
+fi
+
+# Create the file if it does not exist
+if [ ! -e $INITFILE ] ; then
+    touch $INITFILE
+fi
+
+# See if we already put the required line in
+LINE_TO_ADD='(load "~/.emacs.d/tc-init.emacs")'
+if ! grep "^${LINE_TO_ADD}$" $INITFILE > /dev/null ; then
+    # We need to add the line and a few comments
+    echo ";; Read tc of Dinkum Software's emacs customization"       >> $INITFILE
+    echo ";; See https://github.com/dinkumsoftware/dinkum.git/emacs" >> $INITFILE
+    echo ";; written by dinkum-install-tc-emacs on $(date)"          >> $INITFILE
+    echo  $LINE_TO_ADD                                               >> $INITFILE
+
+    echo $(basename $0): modified $INITFILE to read tc-init.emacs
+fi
+
+
+
+
+
+

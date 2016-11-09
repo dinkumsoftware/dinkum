@@ -3,11 +3,13 @@
 ;; Sets the key binds to tc's liking
 ;;
 ;; 2007.05.07  Initial, moved from AAA.emacs inline code
-
+;; 2016-11-10  tc@DinkumSoftware.com bug fix,
+;;                   previous-window() renamed to tc-previous-window()
+;;                   to avoid internal emacs name collision.
+;;               removed f7 binding to shell
 
 (global-set-key [f3] 'date-stamp)         ; requires date-stamp.el
 (global-set-key [f4] 'date-and-sign)      ; requires date-and-sign.el
-(global-set-key [f7] 'shell)
 (global-set-key [f8] 'shell)
 (global-set-key [f9] 'undo)
 
@@ -18,7 +20,7 @@
 (define-key esc-map "?" 'help-command)
 
 (define-key ctl-x-map "n"    'other-window)
-(define-key ctl-x-map "p"    'previous-window)  ; requires scroll-one.el
+(define-key ctl-x-map "p"    'tc-previous-window)  ; requires scroll-one.el
 (define-key ctl-x-map "/"    'delete-horizontal-space)
 (define-key ctl-x-map "g"    'goto-line)
 (define-key ctl-x-map "q"    'quoted-insert)
