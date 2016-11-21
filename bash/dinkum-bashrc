@@ -1,0 +1,31 @@
+# dinkum-bashrc
+# See git clone http://github.com/dinkumsoftware/dinkum.git / bash
+# See README.txt in this directory
+#
+# Usage: Modify ~/.bashrc to source this file
+#     DINKUM_BASHRC="$HOME/.dinkum/bash/dinkum-bashrc"
+#     if [ -e $DINKUM_BASHRC ] ; then
+#        source $DINKUM_BASHRC
+#     fi
+# See bin/dinkum-install-bashadds
+#
+# 2016-11-21 tc@DinkumSoftware.com    Initial
+#
+# Addons:
+#     dynpath    Automagically shrink bash prompt when it is too long
+
+# Where all these files lives"
+DINKUM_BASH_DIR="$HOME/.dinkum/bash"
+
+# dynpath
+#    See https://gist.github.com/ehamberg/1197104
+source $DINKUM_BASH_DIR/dynpath.bash # Define _dynpath() function
+PS1="\u@\h \$(_dynpath) \$ "         # Tell prompt to use it
+
+
+
+
+
+
+
+

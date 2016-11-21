@@ -1,0 +1,60 @@
+#!/bin/bash
+# dinkum-install-bash-addons
+#
+# Installs addons to bash.  See ../README.txt for details
+
+# Usage:
+#    git clone https://github.com/dinkumsoftware/dinkum.git
+#    dinkum/bash/bin/dinkum-install-bash-addons
+#
+# Possibly alters ~/.bashrc
+# Puts files in ~/.dinkum/bash/
+
+# 2016-11-21 tc@DinkumSoftware.com Initial
+
+set -u    # Die on unexpanded variable
+set -e    # Die on error
+
+
+# Where we copy files to to
+INSDIR="$HOME/.dinkum/bash"
+mkdir -p $INSDIR
+
+# Where we copy code from
+# This is the parent directory of the bin directory
+# that we live in
+SRCDIR="$(dirname $0)/.."
+
+# Files we want to copy
+FILES="README.txt dinkum-bashrc dynpath.bash"
+
+# Copy the files
+for FILE in $FILES ; do 
+    cp "$SRCDIR/$FILE"    $INSDIR
+done
+
+
+# File we are modifying
+RCFILE="$HOME/.bashrc"
+
+# We have to put the following code into .bashrc
+LINES_TO_ADD[0]='DINKUM_BASHRC="$HOME/.dinkum/bash/dinkum-bashrc"' 
+LINES_TO_ADD[1]='if [ -e $DINKUM_BASHRC ] ; then' 
+LINES_TO_ADD[2]='    source $DINKUM_BASHRC'
+LINES_TO_ADD[3]='fi'
+
+# See if we already put the required line in
+# We just look for an exact match of the first line
+if ! grep "^${LINES_TO_ADD[0]}$" $RCFILE > /dev/null ; then
+    # We need to add the lines preceeded by a few comments
+    echo                                                           >> $RCFILE
+    echo "# All of dinkumsoftware's .bashrc customizations"        >> $RCFILE
+    echo "# See https://github.com/dinkumsoftware/dinkum.git/bash" >> $RCFILE
+    echo "# written by dinkum-install-bash-addons on $(date)"      >> $RCFILE
+    for LINE in "${LINES_TO_ADD[@]}" ; do
+        echo "$LINE"                                               >> $RCFILE
+    done
+
+    # Tell the user
+    echo "$(basename $0): modified $RCFILE to source ~/.dinkum/bash/dinkum-bashrc"
+fi
