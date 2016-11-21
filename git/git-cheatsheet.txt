@@ -1,0 +1,10 @@
+https://github.com/dinkumsoftware/dinkum.git
+git/git-cheatsheet.txt
+
+Frequently used git commands.
+
+2016-11-21 tc@DinkumSoftware.com    Initial
+
+# Create new LOCAL branch based on REMOTE
+git branch       LOCAL origin/REMOTE
+git checkout -b  LOCAL origin/REMOTE
