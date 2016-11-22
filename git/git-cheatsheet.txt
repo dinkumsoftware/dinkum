@@ -3,7 +3,8 @@ git/git-cheatsheet.txt
 
 Frequently used git commands.
 
-2016-11-21 tc@DinkumSoftware.com    Initial
+2016-11-21 tc@DinkumSoftware.com Initial
+2016-11-22 tc@DinkumSoftware.com add Changing state.
 
 *** Creating stuff
 
@@ -12,17 +13,12 @@ git branch       LOCAL origin/REMOTE
 git checkout -b  LOCAL origin/REMOTE
 
 
-*** Publishing Stuff
-# Local branch is LOCAL
+*** Changing state
+git add -A    # stages All
+git add .     # stages new and modified, without deleted
+git add -u    # stages modified and deleted, without new
 
-# upstream branch is set and named LOCAL
-git push
-
-# upstream branch has a different name
-# Want to push to branch of same name
-git push origin LOCAL
-
-
+git commit -a # stage modified/deleted (not new) and commit
 
 
 *** Fixing stuff
@@ -35,4 +31,14 @@ git rebase -i HEAD~<N> ; 1st pick, remainder squash
 git commit --amend
 git commit --amend -m "New commit message"
 
+
+*** Publishing Stuff
+# Local branch is LOCAL
+
+# upstream branch is set and named LOCAL
+git push
+
+# upstream branch has a different name
+# Want to push to branch of same name
+git push origin LOCAL
 
