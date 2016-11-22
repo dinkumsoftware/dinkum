@@ -5,6 +5,34 @@ Frequently used git commands.
 
 2016-11-21 tc@DinkumSoftware.com    Initial
 
+*** Creating stuff
+
 # Create new LOCAL branch based on REMOTE
 git branch       LOCAL origin/REMOTE
 git checkout -b  LOCAL origin/REMOTE
+
+
+*** Publishing Stuff
+# Local branch is LOCAL
+
+# upstream branch is set and named LOCAL
+git push
+
+# upstream branch has a different name
+# Want to push to branch of same name
+git push origin LOCAL
+
+
+
+
+*** Fixing stuff
+
+# SQUASH <N> commits into one
+# Do NOT do this after a push
+git rebase -i HEAD~<N> ; 1st pick, remainder squash
+
+# edit the last commit message
+git commit --amend
+git commit --amend -m "New commit message"
+
+
