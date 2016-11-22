@@ -1,0 +1,13 @@
+# can-utils-programs-with-no-runtime-help
+# 
+# This is list of can-utils programs that do NOT
+# produce run-time help when run with no arguments
+#
+# 2016-11-22 tom@rail-pod.com    Initial
+/usr/bin/bcmserver
+/usr/bin/log2long
+/usr/bin/canplayer
+/usr/bin/asc2log
+/usr/bin/canlogserver
+
+

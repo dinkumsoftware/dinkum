@@ -1,0 +1,33 @@
+#!/bin/bash
+# dinkum-can-utils-list-programs
+#
+# List all the executables in the can-utils package
+# to stdout and dinkum/can-utils/doc/can-utils-programs
+#
+# 2016-11-22 tc@DinkumSoftware.com Initial
+
+set -e
+set -u
+set -o pipefail  # make any failure in a pipe stop program
+
+# Directory structure
+#    can-utils/
+#    |-- bin
+#    `-- doc
+
+# Pick where we write the file
+OUTDIR=$(dirname "$0")
+OUTDIR+="/../doc"
+OUTDIR=$(readlink -f $OUTDIR) # Make it absolute
+OUTFILE="$OUTDIR"/can-utils-programs
+
+# Do it
+# Scan all the provided files and limit to executabes
+# in /usr/bin.  All supplied programs are in /usr/bin
+dpkg -L can-utils | grep ^'/usr/bin/' | tee "$OUTFILE"
+
+# Give them the good news
+echo
+echo "$(basename $0) : SUCCESS"
+echo "Output captured in: $OUTFILE"
+

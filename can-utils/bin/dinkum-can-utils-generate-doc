@@ -1,0 +1,94 @@
+#!/bin/bash
+# dinkum-can-utils-generate-doc
+#
+# Generate documentation for all the programs in the
+# can-utils package.
+#
+# The documentation is basically the help output of
+# all the programs in:
+#    can-utils/doc/can-utils-program-documentation.txt
+#
+# Requires can-utils/doc/can-utils-programs as input
+# can-utils/bin/dinkum-can-utils-list-programs produces this
+# we run it if it does not exist
+#
+# 2016-11-22 tc@DinkumSoftware.com Initial
+
+set -e
+set -u
+set -o pipefail  # make any failure in a pipe stop program
+
+# Directory structure
+#    can-utils/
+#    |-- bin
+#    `-- doc
+
+# Get our base directory
+CAN_UTILS_DIR=$(dirname "$0")/..
+CAN_UTILS_DIR=$(readlink -f $CAN_UTILS_DIR) # Make it absolute
+
+# The list of can-utils programs we require
+PROG_LIST_FILE="$CAN_UTILS_DIR/doc/can-utils-programs"
+if [ ! -f "$PROG_LIST_FILE" ] ; then
+    # Our input file does not exist, make it
+    $CAN_UTILS_DIR/bin/dinkum-can-utils-list-programs
+fi
+
+
+# Some of the programs do not provide help when
+# run with no arguments.
+# A list of such programs can be found in
+PROGS_NOT_TO_RUN_FILE="$CAN_UTILS_DIR/doc/can-utils-programs-with-no-runtime-help"
+PROGS_NOT_TO_RUN=$(cat $PROGS_NOT_TO_RUN_FILE | grep -v ^'#')
+
+# Where we generate output
+DOC_FILE="$CAN_UTILS_DIR/doc/can-utils-program-documentation.txt"
+
+# Generate a header
+echo "can-utils-program-documentation.txt"              > $DOC_FILE
+echo ""                                                 >> $DOC_FILE
+echo "Documentation for programs in can-utils package." >> $DOC_FILE
+echo "Produced by running each program and capturing"   >> $DOC_FILE
+echo "   the online help"                               >> $DOC_FILE
+echo "Created by github.com/dinkumsoftware/dinkum.git"  >> $DOC_FILE
+echo "    dinkum/can-utils/bin/$(basename $0)"          >> $DOC_FILE
+echo "    on $(date +%F)"                               >> $DOC_FILE
+echo                                                    >> $DOC_FILE
+echo "TABLE OF CONTENTS, i.e. list of programs"         >> $DOC_FILE
+for PROG in $(cat $PROG_LIST_FILE) ; do
+    echo -n $PROG                                       >> $DOC_FILE
+
+    # Label the ones without help
+    if echo $PROGS_NOT_TO_RUN  | grep $PROG > /dev/null ; then
+        echo "   NO HELP AVAILABLE"                     >> $DOC_FILE
+    else
+        echo ""                                         >> $DOC_FILE
+    fi
+done
+echo                                                    >> $DOC_FILE
+echo                                                    >> $DOC_FILE
+
+
+# Run each program that has help with no args
+set +e    # some programs generate an error on return
+          # We want to ignore it.
+for PROG in $(cat $PROG_LIST_FILE) ; do
+    echo ">>>>> $PROG =========================================" >>$DOC_FILE
+    
+    # does it have help?
+    if echo $PROGS_NOT_TO_RUN  | grep $PROG  > /dev/null ; then
+        echo "             NO HELP AVAILABLE"                    >>$DOC_FILE
+    else
+        # program has help, run it
+        # Note, some of programs output help to stderr, hence the &
+        $PROG                                                    &>>$DOC_FILE
+    fi
+done
+
+
+# Give them the good news
+echo
+echo "$(basename $0) : SUCCESS"
+echo "output in: $DOC_FILE"
+
+

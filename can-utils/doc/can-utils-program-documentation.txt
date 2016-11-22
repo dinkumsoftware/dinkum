@@ -1,0 +1,617 @@
+can-utils-program-documentation.txt
+
+Documentation for programs in can-utils package.
+Produced by running each program and capturing
+   the online help
+Created by github.com/dinkumsoftware/dinkum.git
+    dinkum/can-utils/bin/dinkum-can-utils-generate-doc
+    on 2016-11-22
+
+TABLE OF CONTENTS, i.e. list of programs
+/usr/bin/cansniffer
+/usr/bin/bcmserver   NO HELP AVAILABLE
+/usr/bin/log2long   NO HELP AVAILABLE
+/usr/bin/can-calc-bit-timing
+/usr/bin/cansend
+/usr/bin/isotpsend
+/usr/bin/canbusload
+/usr/bin/isotpserver
+/usr/bin/isotpsniffer
+/usr/bin/isotpdump
+/usr/bin/slcand
+/usr/bin/slcan_attach
+/usr/bin/cangen
+/usr/bin/canplayer   NO HELP AVAILABLE
+/usr/bin/canfdtest
+/usr/bin/asc2log   NO HELP AVAILABLE
+/usr/bin/candump
+/usr/bin/slcanpty
+/usr/bin/isotptun
+/usr/bin/cangw
+/usr/bin/log2asc
+/usr/bin/isotprecv
+/usr/bin/canlogserver   NO HELP AVAILABLE
+
+
+>>>>> /usr/bin/cansniffer =========================================
+
+Usage: cansniffer [can-interface]
+Options: -m <mask>  (initial FILTER default 0x00000000)
+         -v <value> (initial FILTER default 0x00000000)
+         -q         (quiet - all IDs deactivated)
+         -r <name>  (read sniffset.name from file)
+         -b         (start with binary mode)
+         -B         (start with binary mode with gap - exceeds 80 chars!)
+         -c         (color changes)
+         -f         (filter on CAN-ID only)
+         -t <time>  (timeout for ID display [x100ms] default: 50, 0 = OFF)
+         -h <time>  (hold marker on changes [x100ms] default: 10)
+         -l <time>  (loop time (display) [x100ms] default: 2)
+Use interface name 'any' to receive from all can-interfaces
+
+commands that can be entered at runtime:
+
+q<ENTER>       - quit
+b<ENTER>       - toggle binary / HEX-ASCII output
+B<ENTER>       - toggle binary with gap / HEX-ASCII output (exceeds 80 chars!)
+c<ENTER>       - toggle color mode
+#<ENTER>       - notch currently marked/changed bits (can be used repeatedly)
+*<ENTER>       - clear notched marked
+rMYNAME<ENTER> - read settings file (filter/notch)
+wMYNAME<ENTER> - write settings file (filter/notch)
++FILTER<ENTER> - add CAN-IDs to sniff
+-FILTER<ENTER> - remove CAN-IDs to sniff
+
+FILTER can be a single CAN-ID or a CAN-ID/Bitmask:
++1F5<ENTER>    - add CAN-ID 0x1F5
+-42E<ENTER>    - remove CAN-ID 0x42E
+-42E7FF<ENTER> - remove CAN-ID 0x42E (using Bitmask)
+-500700<ENTER> - remove CAN-IDs 0x500 - 0x5FF
++400600<ENTER> - add CAN-IDs 0x400 - 0x5FF
++000000<ENTER> - add all CAN-IDs
+-000000<ENTER> - remove all CAN-IDs
+
+if (id & filter) == (sniff-id & filter) the action (+/-) is performed,
+which is quite easy when the filter is 000
+
+>>>>> /usr/bin/bcmserver =========================================
+             NO HELP AVAILABLE
+>>>>> /usr/bin/log2long =========================================
+             NO HELP AVAILABLE
+>>>>> /usr/bin/can-calc-bit-timing =========================================
+Bit timing parameters for sja1000 with 8.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error BTR0 BTR1
+1000000    125   2    3    2   1   1 1000000  0.0% 75.0% 75.0%  0.0% 0x00 0x14
+ 800000    125   3    4    2   1   1  800000  0.0% 80.0% 80.0%  0.0% 0x00 0x16
+ 500000    125   6    7    2   1   1  500000  0.0% 87.5% 87.5%  0.0% 0x00 0x1c
+ 250000    250   6    7    2   1   2  250000  0.0% 87.5% 87.5%  0.0% 0x01 0x1c
+ 125000    500   6    7    2   1   4  125000  0.0% 87.5% 87.5%  0.0% 0x03 0x1c
+ 100000    625   6    7    2   1   5  100000  0.0% 87.5% 87.5%  0.0% 0x04 0x1c
+  50000   1250   6    7    2   1  10   50000  0.0% 87.5% 87.5%  0.0% 0x09 0x1c
+  20000   3125   6    7    2   1  25   20000  0.0% 87.5% 87.5%  0.0% 0x18 0x1c
+  10000   6250   6    7    2   1  50   10000  0.0% 87.5% 87.5%  0.0% 0x31 0x1c
+
+Bit timing parameters for mscan with 32.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error BTR0 BTR1
+1000000     62   5    6    4   1   2 1000000  0.0% 75.0% 75.0%  0.0% 0x01 0x3a
+ 800000     62   7    8    4   1   2  800000  0.0% 80.0% 80.0%  0.0% 0x01 0x3e
+ 500000    125   6    7    2   1   4  500000  0.0% 87.5% 87.5%  0.0% 0x03 0x1c
+ 250000    250   6    7    2   1   8  250000  0.0% 87.5% 87.5%  0.0% 0x07 0x1c
+ 125000    500   6    7    2   1  16  125000  0.0% 87.5% 87.5%  0.0% 0x0f 0x1c
+ 100000    625   6    7    2   1  20  100000  0.0% 87.5% 87.5%  0.0% 0x13 0x1c
+  50000   1250   6    7    2   1  40   50000  0.0% 87.5% 87.5%  0.0% 0x27 0x1c
+  20000   2000   8    8    8   1  64   20000  0.0% 87.5% 68.0% 22.3% 0x3f 0x7f
+  10000 ***bitrate not possible***
+
+Bit timing parameters for mscan with 33.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error BTR0 BTR1
+1000000     90   3    4    3   1   3 1000000  0.0% 75.0% 72.7%  3.1% 0x02 0x26
+ 800000    181   2    2    2   1   6  785714  1.8% 80.0% 71.4% 10.8% 0x05 0x13
+ 500000    181   4    4    2   1   6  500000  0.0% 87.5% 81.8%  6.5% 0x05 0x17
+ 250000    333   4    5    2   1  11  250000  0.0% 87.5% 83.3%  4.8% 0x0a 0x18
+ 125000    666   4    5    2   1  22  125000  0.0% 87.5% 83.3%  4.8% 0x15 0x18
+ 100000    666   6    6    2   1  22  100000  0.0% 87.5% 86.6%  1.0% 0x15 0x1b
+  50000   1333   6    6    2   1  44   50000  0.0% 87.5% 86.6%  1.0% 0x2b 0x1b
+  20000 ***bitrate not possible***
+  10000 ***bitrate not possible***
+
+Bit timing parameters for mscan with 33.300000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error BTR0 BTR1
+1000000     90   3    4    3   1   3 1009090  0.9% 75.0% 72.7%  3.1% 0x02 0x26
+ 800000    180   2    2    2   1   6  792857  0.9% 80.0% 71.4% 10.8% 0x05 0x13
+ 500000    180   4    4    2   1   6  504545  0.9% 87.5% 81.8%  6.5% 0x05 0x17
+ 250000    570   2    2    2   1  19  250375  0.1% 87.5% 71.4% 18.4% 0x12 0x13
+ 125000   1141   2    2    2   1  38  125187  0.1% 87.5% 71.4% 18.4% 0x25 0x13
+ 100000   1111   3    3    2   1  37  100000  0.0% 87.5% 77.7% 11.2% 0x24 0x15
+  50000   1111   7    7    3   1  37   50000  0.0% 87.5% 83.3%  4.8% 0x24 0x2d
+  20000 ***bitrate not possible***
+  10000 ***bitrate not possible***
+
+Bit timing parameters for mscan with 33.333333 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error BTR0 BTR1
+1000000     90   3    4    3   1   3 1010101  1.0% 75.0% 72.7%  3.1% 0x02 0x26
+ 800000    180   2    2    2   1   6  793650  0.8% 80.0% 71.4% 10.8% 0x05 0x13
+ 500000    180   4    4    2   1   6  505050  1.0% 87.5% 81.8%  6.5% 0x05 0x17
+ 250000    570   2    2    2   1  19  250626  0.3% 87.5% 71.4% 18.4% 0x12 0x13
+ 125000   1140   2    2    2   1  38  125313  0.3% 87.5% 71.4% 18.4% 0x25 0x13
+ 100000   1110   3    3    2   1  37  100100  0.1% 87.5% 77.7% 11.2% 0x24 0x15
+  50000    870   8    8    6   1  29   49975  0.1% 87.5% 73.9% 15.5% 0x1c 0x5f
+  20000 ***bitrate not possible***
+  10000 ***bitrate not possible***
+
+Bit timing parameters for mscan with 66.660000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error BTR0 BTR1
+1000000     90   3    4    3   1   6 1010000  1.0% 75.0% 72.7%  3.1% 0x05 0x26
+ 800000    180   2    2    2   1  12  793571  0.8% 80.0% 71.4% 10.8% 0x0b 0x13
+ 500000    285   2    2    2   1  19  501203  0.2% 87.5% 71.4% 18.4% 0x12 0x13
+ 250000    570   2    2    2   1  38  250601  0.2% 87.5% 71.4% 18.4% 0x25 0x13
+ 125000    615   5    5    2   1  41  125065  0.1% 87.5% 84.6%  3.3% 0x28 0x19
+ 100000    435   8    8    6   1  29   99940  0.1% 87.5% 73.9% 15.5% 0x1c 0x5f
+  50000    870   8    8    6   1  58   49970  0.1% 87.5% 73.9% 15.5% 0x39 0x5f
+  20000 ***bitrate not possible***
+  10000 ***bitrate not possible***
+
+Bit timing parameters for at91 with 100.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error     CAN_BR
+1000000     50   7    7    5   1   5 1000000  0.0% 75.0% 75.0%  0.0% 0x00040664
+ 800000     50   8    8    8   1   5  800000  0.0% 80.0% 68.0% 15.0% 0x00040777
+ 500000    100   8    8    3   1  10  500000  0.0% 87.5% 85.0%  2.9% 0x00090772
+ 250000    250   6    7    2   1  25  250000  0.0% 87.5% 87.5%  0.0% 0x00180561
+ 125000    500   6    7    2   1  50  125000  0.0% 87.5% 87.5%  0.0% 0x00310561
+ 100000    500   8    8    3   1  50  100000  0.0% 87.5% 85.0%  2.9% 0x00310772
+  50000   1250   6    7    2   1 125   50000  0.0% 87.5% 87.5%  0.0% 0x007c0561
+  20000 ***bitrate not possible***
+  10000 ***bitrate not possible***
+
+Bit timing parameters for at91 with 99.532800 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error     CAN_BR
+1000000    100   3    3    3   1  10  995328  0.5% 75.0% 70.0%  6.7% 0x00090222
+ 800000     50   8    8    8   1   5  796262  0.5% 80.0% 68.0% 15.0% 0x00040777
+ 500000    251   2    3    2   1  25  497664  0.5% 87.5% 75.0% 14.3% 0x00180121
+ 250000    572   2    2    2   1  57  249455  0.2% 87.5% 71.4% 18.4% 0x00380111
+ 125000    532   6    6    2   1  53  125198  0.2% 87.5% 86.6%  1.0% 0x00340551
+ 100000    833   4    5    2   1  83   99932  0.1% 87.5% 83.3%  4.8% 0x00520341
+  50000    833   8    8    7   1  83   49966  0.1% 87.5% 70.8% 19.1% 0x00520776
+  20000 ***bitrate not possible***
+  10000 ***bitrate not possible***
+
+Bit timing parameters for flexcan with 24.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error   CAN_CTRL
+1000000     83   4    4    3   1   2 1000000  0.0% 75.0% 75.0%  0.0% 0x011a0003
+ 800000     83   5    6    3   1   2  800000  0.0% 80.0% 80.0%  0.0% 0x012a0004
+ 500000    125   6    7    2   1   3  500000  0.0% 87.5% 87.5%  0.0% 0x02310005
+ 250000    250   6    7    2   1   6  250000  0.0% 87.5% 87.5%  0.0% 0x05310005
+ 125000    500   6    7    2   1  12  125000  0.0% 87.5% 87.5%  0.0% 0x0b310005
+ 100000    625   6    7    2   1  15  100000  0.0% 87.5% 87.5%  0.0% 0x0e310005
+  50000   1250   6    7    2   1  30   50000  0.0% 87.5% 87.5%  0.0% 0x1d310005
+  20000   3125   6    7    2   1  75   20000  0.0% 87.5% 87.5%  0.0% 0x4a310005
+  10000   6250   6    7    2   1 150   10000  0.0% 87.5% 87.5%  0.0% 0x95310005
+
+Bit timing parameters for flexcan with 49.875000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error   CAN_CTRL
+1000000    100   3    3    3   1   5  997500  0.2% 75.0% 70.0%  6.7% 0x04120002
+ 800000    180   2    2    2   1   9  791666  1.0% 80.0% 71.4% 10.8% 0x08090001
+ 500000    200   3    4    2   1  10  498750  0.2% 87.5% 80.0%  8.6% 0x09190002
+ 250000    501   2    3    2   1  25  249375  0.2% 87.5% 75.0% 14.3% 0x18110001
+ 125000    421   7    8    3   1  21  125000  0.0% 87.5% 84.2%  3.8% 0x143a0006
+ 100000   1002   3    4    2   1  50   99750  0.2% 87.5% 80.0%  8.6% 0x31190002
+  50000   1664   4    5    2   1  83   50075  0.1% 87.5% 83.3%  4.8% 0x52210003
+  20000   3568   5    6    2   1 178   20014  0.1% 87.5% 85.7%  2.1% 0xb1290004
+  10000   4350   8    8    6   1 217    9992  0.1% 87.5% 73.9% 15.5% 0xd83d0007
+
+Bit timing parameters for flexcan with 66.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error   CAN_CTRL
+1000000     90   3    4    3   1   6 1000000  0.0% 75.0% 72.7%  3.1% 0x051a0002
+ 800000    181   2    2    2   1  12  785714  1.8% 80.0% 71.4% 10.8% 0x0b090001
+ 500000    166   4    5    2   1  11  500000  0.0% 87.5% 83.3%  4.8% 0x0a210003
+ 250000    333   4    5    2   1  22  250000  0.0% 87.5% 83.3%  4.8% 0x15210003
+ 125000    500   6    7    2   1  33  125000  0.0% 87.5% 87.5%  0.0% 0x20310005
+ 100000    666   6    6    2   1  44  100000  0.0% 87.5% 86.6%  1.0% 0x2b290005
+  50000   1333   6    6    2   1  88   50000  0.0% 87.5% 86.6%  1.0% 0x57290005
+  20000   3333   6    6    2   1 220   20000  0.0% 87.5% 86.6%  1.0% 0xdb290005
+  10000 ***bitrate not possible***
+
+Bit timing parameters for flexcan with 66.500000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error   CAN_CTRL
+1000000     90   3    4    3   1   6 1007575  0.8% 75.0% 72.7%  3.1% 0x051a0002
+ 800000    180   2    2    2   1  12  791666  1.0% 80.0% 71.4% 10.8% 0x0b090001
+ 500000    105   7    8    3   1   7  500000  0.0% 87.5% 84.2%  3.8% 0x063a0006
+ 250000    285   5    6    2   1  19  250000  0.0% 87.5% 85.7%  2.1% 0x12290004
+ 125000    571   5    6    2   1  38  125000  0.0% 87.5% 85.7%  2.1% 0x25290004
+ 100000    526   7    8    3   1  35  100000  0.0% 87.5% 84.2%  3.8% 0x223a0006
+  50000   1428   5    6    2   1  95   50000  0.0% 87.5% 85.7%  2.1% 0x5e290004
+  20000   2631   7    8    3   1 175   20000  0.0% 87.5% 84.2%  3.8% 0xae3a0006
+  10000 ***bitrate not possible***
+
+Bit timing parameters for mcp251x with 8.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error CNF1 CNF2 CNF3
+1000000    125   2    3    2   1   1 1000000  0.0% 75.0% 75.0%  0.0% 0x00 0x91 0x01
+ 800000    125   3    4    2   1   1  800000  0.0% 80.0% 80.0%  0.0% 0x00 0x9a 0x01
+ 500000    125   6    7    2   1   1  500000  0.0% 87.5% 87.5%  0.0% 0x00 0xb5 0x01
+ 250000    250   6    7    2   1   2  250000  0.0% 87.5% 87.5%  0.0% 0x01 0xb5 0x01
+ 125000    500   6    7    2   1   4  125000  0.0% 87.5% 87.5%  0.0% 0x03 0xb5 0x01
+ 100000    625   6    7    2   1   5  100000  0.0% 87.5% 87.5%  0.0% 0x04 0xb5 0x01
+  50000   1250   6    7    2   1  10   50000  0.0% 87.5% 87.5%  0.0% 0x09 0xb5 0x01
+  20000   3125   6    7    2   1  25   20000  0.0% 87.5% 87.5%  0.0% 0x18 0xb5 0x01
+  10000   6250   6    7    2   1  50   10000  0.0% 87.5% 87.5%  0.0% 0x31 0xb5 0x01
+
+Bit timing parameters for mcp251x with 16.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error CNF1 CNF2 CNF3
+1000000     62   5    6    4   1   1 1000000  0.0% 75.0% 75.0%  0.0% 0x00 0xac 0x03
+ 800000     62   7    8    4   1   1  800000  0.0% 80.0% 80.0%  0.0% 0x00 0xbe 0x03
+ 500000    125   6    7    2   1   2  500000  0.0% 87.5% 87.5%  0.0% 0x01 0xb5 0x01
+ 250000    250   6    7    2   1   4  250000  0.0% 87.5% 87.5%  0.0% 0x03 0xb5 0x01
+ 125000    500   6    7    2   1   8  125000  0.0% 87.5% 87.5%  0.0% 0x07 0xb5 0x01
+ 100000    625   6    7    2   1  10  100000  0.0% 87.5% 87.5%  0.0% 0x09 0xb5 0x01
+  50000   1250   6    7    2   1  20   50000  0.0% 87.5% 87.5%  0.0% 0x13 0xb5 0x01
+  20000   3125   6    7    2   1  50   20000  0.0% 87.5% 87.5%  0.0% 0x31 0xb5 0x01
+  10000   4000   8    8    8   1  64   10000  0.0% 87.5% 68.0% 22.3% 0x3f 0xbf 0x07
+
+Bit timing parameters for ti_hecc with 13.000000 MHz ref clock
+nominal                                 real Bitrt   nom  real SampP
+Bitrate TQ[ns] PrS PhS1 PhS2 SJW BRP Bitrate Error SampP SampP Error     CANBTC
+1000000     76   4    4    4   1   1 1000000  0.0% 75.0% 69.2%  7.7% 0x0000003b
+ 800000    307   1    1    1   1   4  812500  1.6% 80.0% 75.0%  6.2% 0x00030008
+ 500000    153   5    5    2   1   2  500000  0.0% 87.5% 84.6%  3.3% 0x00010049
+ 250000    307   5    5    2   1   4  250000  0.0% 87.5% 84.6%  3.3% 0x00030049
+ 125000   1000   3    3    1   1  13  125000  0.0% 87.5% 87.5%  0.0% 0x000c0028
+ 100000    769   5    5    2   1  10  100000  0.0% 87.5% 84.6%  3.3% 0x00090049
+  50000   1000   8    8    3   1  13   50000  0.0% 87.5% 85.0%  2.9% 0x000c007a
+  20000   3846   5    5    2   1  50   20000  0.0% 87.5% 84.6%  3.3% 0x00310049
+  10000   5000   8    8    3   1  65   10000  0.0% 87.5% 85.0%  2.9% 0x0040007a
+
+>>>>> /usr/bin/cansend =========================================
+Usage: /usr/bin/cansend <device> <can_frame>.
+>>>>> /usr/bin/isotpsend =========================================
+
+Usage: isotpsend [options] <CAN interface>
+Options: -s <can_id>  (source can_id. Use 8 digits for extended IDs)
+         -d <can_id>  (destination can_id. Use 8 digits for extended IDs)
+         -x <addr>    (extended addressing mode. Use 'any' for all addresses)
+         -p <byte>    (set and enable padding byte)
+         -P <mode>    (check padding in FC. (l)ength (c)ontent (a)ll)
+         -t <time ns> (frame transmit time (N_As) in nanosecs)
+         -f <time ns> (ignore FC and force local tx stmin value in nanosecs)
+
+CAN IDs and addresses are given and expected in hexadecimal values.
+The pdu data is expected on STDIN in space separated ASCII hex values.
+
+>>>>> /usr/bin/canbusload =========================================
+
+Usage: canbusload [options] <CAN interface>+
+  (use CTRL-C to terminate canbusload)
+
+Options: -t (show current time on the first line)
+         -c (colorize lines)
+         -b (show bargraph in 5% resolution)
+         -r (redraw the terminal - similar to top)
+         -i (ignore bitstuffing in bandwidth calculation)
+         -e (exact calculation of stuffed bits)
+
+Up to 16 CAN interfaces with mandatory bitrate can be specified on the 
+commandline in the form: <ifname>@<bitrate>
+
+The bitrate is mandatory as it is needed to know the CAN bus bitrate to
+calcultate the bus load percentage based on the received CAN frames.
+Due to the bitstuffing estimation the calculated busload may exceed 100%.
+For each given interface the data is presented in one line which contains:
+
+(interface) (received CAN frames) (used bits total) (used bits for payload)
+
+Example:
+
+user$> canbusload can0@100000 can1@500000 can2@500000 can3@500000 -r -t -b -c
+
+canbusload 2014-02-01 21:13:16 (worst case bitstuffing)
+ can0@100000   805   74491  36656  74% |XXXXXXXXXXXXXX......|
+ can1@500000   796   75140  37728  15% |XXX.................|
+ can2@500000     0       0      0   0% |....................|
+ can3@500000    47    4633   2424   0% |....................|
+
+>>>>> /usr/bin/isotpserver =========================================
+
+Usage: isotpserver -l <port> -s <can_id> -d <can_id> [options] <CAN interface>
+Options: (* = mandatory)
+
+ip adressing:
+ *       -l <port>    (local port for the server)
+
+isotp adressing:
+ *       -s <can_id>  (source can_id. Use 8 digits for extended IDs)
+ *       -d <can_id>  (destination can_id. Use 8 digits for extended IDs)
+         -x <addr>    (extended addressing mode)
+
+padding:
+         -p <byte>    (set and enable tx padding byte)
+         -r <byte>    (set and enable rx padding byte)
+         -P <mode>    (check padding in SF/CF. (l)ength (c)ontent (a)ll)
+
+rx path: (config, which is sent to the sender / data source)
+         -b <bs>      (blocksize. 0 = off)
+         -m <val>     (STmin in ms/ns. See spec.)
+         -w <num>     (max. wait frame transmissions)
+
+tx path: (config, which changes local tx settings)
+         -t <time ns> (transmit time in nanosecs)
+
+All values except for '-l' and '-t' are expected in hexadecimal values.
+
+>>>>> /usr/bin/isotpsniffer =========================================
+
+Usage: isotpsniffer [options] <CAN interface>
+Options: -s <can_id> (source can_id. Use 8 digits for extended IDs)
+         -d <can_id> (destination can_id. Use 8 digits for extended IDs)
+         -x <addr>   (extended addressing mode.)
+         -c          (color mode)
+         -t <type>   (timestamp: (a)bsolute/(d)elta/(z)ero/(A)bsolute w date)
+         -f <format> (1 = HEX, 2 = ASCII, 3 = HEX & ASCII - default: 3)
+         -h <len>    (head: print only first <len> bytes)
+
+CAN IDs and addresses are given and expected in hexadecimal values.
+
+>>>>> /usr/bin/isotpdump =========================================
+
+Usage: isotpdump [options] <CAN interface>
+Options: -s <can_id> (source can_id. Use 8 digits for extended IDs)
+         -d <can_id> (destination can_id. Use 8 digits for extended IDs)
+         -x <addr>   (extended addressing mode. Use 'any' for all addresses)
+         -c          (color mode)
+         -a          (print data also in ASCII-chars)
+         -t <type>   (timestamp: (a)bsolute/(d)elta/(z)ero/(A)bsolute w date)
+
+CAN IDs and addresses are given and expected in hexadecimal values.
+
+>>>>> /usr/bin/slcand =========================================
+
+Usage: /usr/bin/slcand [options] <tty> [canif-name]
+
+Options: -o         (send open command 'O\r')
+         -c         (send close command 'C\r')
+         -f         (read status flags with 'F\r' to reset error states)
+         -s <speed> (set CAN speed 0..8)
+         -S <speed> (set UART speed in baud)
+         -t <type>  (set UART flow control type 'hw' or 'sw')
+         -b <btr>   (set bit time register value)
+         -F         (stay in foreground; no daemonize)
+         -h         (show this help page)
+
+Examples:
+slcand -o -c -f -s6 ttyslcan0
+slcand -o -c -f -s6 ttyslcan0 can0
+
+>>>>> /usr/bin/slcan_attach =========================================
+
+Usage: /usr/bin/slcan_attach [options] tty
+
+Options: -o         (send open command 'O\r')
+         -c         (send close command 'C\r')
+         -f         (read status flags with 'F\r' to reset error states)
+         -s <speed> (set CAN speed 0..8)
+         -b <btr>   (set bit time register value)
+         -d         (only detach line discipline)
+         -w         (attach - wait for keypess - detach)
+         -n <name>  (assign created netdevice name)
+
+Examples:
+slcan_attach -w -o -f -s6 -c /dev/ttyS1
+slcan_attach /dev/ttyS1
+slcan_attach -d /dev/ttyS1
+slcan_attach -w -n can15 /dev/ttyS1
+
+>>>>> /usr/bin/cangen =========================================
+
+cangen: generate CAN frames
+
+Usage: cangen [options] <CAN interface>
+Options: -g <ms>       (gap in milli seconds - default: 200 ms)
+         -e            (generate extended frame mode (EFF) CAN frames)
+         -f            (generate CAN FD CAN frames)
+         -R            (send RTR frame)
+         -m            (mix -e -f -R frames)
+         -I <mode>     (CAN ID generation mode - see below)
+         -L <mode>     (CAN data length code (dlc) generation mode - see below)
+         -D <mode>     (CAN data (payload) generation mode - see below)
+         -p <timeout>  (poll on -ENOBUFS to write frames with <timeout> ms)
+         -n <count>    (terminate after <count> CAN frames - default infinite)
+         -i            (ignore -ENOBUFS return values on write() syscalls)
+         -x            (disable local loopback of generated CAN frames)
+         -v            (increment verbose level for printing sent CAN frames)
+
+Generation modes:
+'r'        => random values (default)
+'i'        => increment values
+<hexvalue> => fix value using <hexvalue>
+
+When incrementing the CAN data the data length code minimum is set to 1.
+CAN IDs and data content are given and expected in hexadecimal values.
+
+Examples:
+cangen vcan0 -g 4 -I 42A -L 1 -D i -v -v   (fixed CAN ID and length, inc. data)
+cangen vcan0 -e -L i -v -v -v              (generate EFF frames, incr. length)
+cangen vcan0 -D 11223344DEADBEEF -L 8      (fixed CAN data payload and length)
+cangen vcan0 -g 0 -i -x                    (full load test ignoring -ENOBUFS)
+cangen vcan0 -g 0 -p 10 -x                 (full load test with polling, 10ms timeout)
+cangen vcan0                               (my favourite default :)
+
+>>>>> /usr/bin/canplayer =========================================
+             NO HELP AVAILABLE
+>>>>> /usr/bin/canfdtest =========================================
+Usage: canfdtest [options] <can-interface>
+
+Options: -v       (low verbosity)
+         -vv      (high verbosity)
+         -g       (generate messages)
+         -l COUNT (test loop count)
+
+With the option '-g' CAN messages are generated and checked
+on <can-interface>, otherwise all messages received on the
+<can-interface> are sent back incrementing the CAN id and
+all data bytes. The program can be aborted with ^C.
+
+Example:
+	on DUT : canfdtest -v can0
+	on Host: canfdtest -g -v can2
+>>>>> /usr/bin/asc2log =========================================
+             NO HELP AVAILABLE
+>>>>> /usr/bin/candump =========================================
+
+Usage: candump [options] <CAN interface>+
+  (use CTRL-C to terminate candump)
+
+Options: -t <type>   (timestamp: (a)bsolute/(d)elta/(z)ero/(A)bsolute w date)
+         -c          (increment color mode level)
+         -i          (binary output - may exceed 80 chars/line)
+         -a          (enable additional ASCII output)
+         -S          (swap byte order in printed CAN data[] - marked with '`' )
+         -s <level>  (silent mode - 0: off (default) 1: animation 2: silent)
+         -b <can>    (bridge mode - send received frames to <can>)
+         -B <can>    (bridge mode - like '-b' with disabled loopback)
+         -u <usecs>  (delay bridge forwarding by <usecs> microseconds)
+         -l          (log CAN-frames into file. Sets '-s 2' by default)
+         -L          (use log file format on stdout)
+         -n <count>  (terminate after receiption of <count> CAN frames)
+         -r <size>   (set socket receive buffer to <size>)
+         -d          (monitor dropped CAN frames)
+         -e          (dump CAN error frames in human-readable format)
+         -x          (print extra message infos, rx/tx brs esi)
+         -T <msecs>  (terminate after <msecs> without any reception)
+
+Up to 16 CAN interfaces with optional filter sets can be specified
+on the commandline in the form: <ifname>[,filter]*
+
+Comma separated filters can be specified for each given CAN interface:
+ <can_id>:<can_mask> (matches when <received_can_id> & mask == can_id & mask)
+ <can_id>~<can_mask> (matches when <received_can_id> & mask != can_id & mask)
+ #<error_mask>       (set error frame filter, see include/linux/can/error.h)
+
+CAN IDs, masks and data content are given and expected in hexadecimal values.
+When can_id and can_mask are both 8 digits, they are assumed to be 29 bit EFF.
+Without any given filter all data frames are received ('0:0' default filter).
+
+Use interface name 'any' to receive from all CAN interfaces.
+
+Examples:
+candump -c -c -ta can0,123:7FF,400:700,#000000FF can2,400~7F0 can3 can8
+candump -l any,0~0,#FFFFFFFF    (log only error frames but no(!) data frames)
+candump -l any,0:0,#FFFFFFFF    (log error frames and also all data frames)
+candump vcan2,92345678:DFFFFFFF (match only for extended CAN ID 12345678)
+candump vcan2,123:7FF (matches CAN ID 123 - including EFF and RTR frames)
+candump vcan2,123:C00007FF (matches CAN ID 123 - only SFF and non-RTR frames)
+
+>>>>> /usr/bin/slcanpty =========================================
+
+/usr/bin/slcanpty creates a pty for applications using the slcan ASCII protocol and
+converts the ASCII data to a CAN network interface (and vice versa)
+
+Usage: /usr/bin/slcanpty <pty> <can interface>
+e.g. '/usr/bin/slcanpty /dev/ptyc0 can0' creates /dev/ttyc0 for the slcan application
+e.g. for pseudo-terminal '/usr/bin/slcanpty /dev/ptmx can0' creates /dev/pts/N
+
+>>>>> /usr/bin/isotptun =========================================
+
+Usage: isotptun [options] <CAN interface>
+
+This program creates a Linux tunnel netdevice 'ctunX' and transfers the
+ethernet frames inside ISO15765-2 (unreliable) datagrams on CAN.
+
+Options: -s <can_id>  (source can_id. Use 8 digits for extended IDs)
+         -d <can_id>  (destination can_id. Use 8 digits for extended IDs)
+         -n <name>    (name of created IP netdevice. Default: 'ctun%d')
+         -x <addr>    (extended addressing mode.)
+         -p <byte>    (padding byte rx path)
+         -q <byte>    (padding byte tx path)
+         -P <mode>    (check padding. (l)ength (c)ontent (a)ll)
+         -t <time ns> (transmit time in nanosecs)
+         -b <bs>      (blocksize. 0 = off)
+         -m <val>     (STmin in ms/ns. See spec.)
+         -w <num>     (max. wait frame transmissions.)
+         -h           (half duplex mode.)
+         -v           (verbose mode. Print symbols for tunneled msgs.)
+
+CAN IDs and addresses are given and expected in hexadecimal values.
+Use e.g. 'ifconfig ctun0 123.123.123.1 pointopoint 123.123.123.2 up'
+to create a point-to-point IP connection on CAN.
+
+>>>>> /usr/bin/cangw =========================================
+
+Usage: cangw [options]
+
+Commands:  -A (add a new rule)
+           -D (delete a rule)
+           -F (flush / delete all rules)
+           -L (list all rules)
+Mandatory: -s <src_dev>  (source netdevice)
+           -d <dst_dev>  (destination netdevice)
+Options:   -t (preserve src_dev rx timestamp)
+           -e (echo sent frames - recommended on vcanx)
+           -i (allow to route to incoming interface)
+           -l <hops> (limit the number of frame hops / routings)
+           -f <filter> (set CAN filter)
+           -m <mod> (set frame modifications)
+           -x <from_idx>:<to_idx>:<result_idx>:<init_xor_val> (XOR checksum)
+           -c <from>:<to>:<result>:<init_val>:<xor_val>:<crctab[256]> (CRC8 cs)
+           -p <profile>:[<profile_data>] (CRC8 checksum profile & parameters)
+
+Values are given and expected in hexadecimal values. Leading 0s can be omitted.
+
+<filter> is a <value><mask> CAN identifier filter
+   <can_id>:<can_mask> (matches when <received_can_id> & mask == can_id & mask)
+   <can_id>~<can_mask> (matches when <received_can_id> & mask != can_id & mask)
+
+<mod> is a CAN frame modification instruction consisting of
+<instruction>:<can_frame-elements>:<can_id>.<can_dlc>.<can_data>
+ - <instruction> is one of 'AND' 'OR' 'XOR' 'SET'
+ - <can_frame-elements> is _one_ or _more_ of 'I'dentifier 'L'ength 'D'ata
+ - <can_id> is an u32 value containing the CAN Identifier
+ - <can_dlc> is an u8 value containing the data length code (0 .. 8)
+ - <can_data> is always eight(!) u8 values containing the CAN frames data
+The max. four modifications are performed in the order AND -> OR -> XOR -> SET
+
+Example:
+cangw -A -s can0 -d vcan3 -e -f 123:C00007FF -m SET:IL:333.4.1122334455667788
+
+Supported CRC 8 profiles:
+Profile '1' (1U8)       - add one additional u8 value
+Profile '2' (16U8)      - add u8 value from table[16] indexed by (data[1] & 0xF)
+Profile '3' (SFFID_XOR) - add u8 value (can_id & 0xFF) ^ (can_id >> 8 & 0xFF)
+
+>>>>> /usr/bin/log2asc =========================================
+no CAN interfaces defined!
+Usage: log2asc [can-interfaces]
+Options: -I <infile>  (default stdin)
+         -O <outfile> (default stdout)
+         -4 (reduce decimal place to 4 digits)
+         -n (set newline to cr/lf - default lf)
+>>>>> /usr/bin/isotprecv =========================================
+
+Usage: isotprecv [options] <CAN interface>
+Options: -s <can_id>  (source can_id. Use 8 digits for extended IDs)
+         -d <can_id>  (destination can_id. Use 8 digits for extended IDs)
+         -x <addr>    (extended addressing mode.)
+         -p <byte>    (set and enable padding byte)
+         -P <mode>    (check padding in SF/CF. (l)ength (c)ontent (a)ll)
+         -b <bs>      (blocksize. 0 = off)
+         -m <val>     (STmin in ms/ns. See spec.)
+         -f <time ns> (force rx stmin value in nanosecs)
+         -w <num>     (max. wait frame transmissions.)
+         -l           (loop: do not exit after pdu receiption.)
+
+CAN IDs and addresses are given and expected in hexadecimal values.
+The pdu data is written on STDOUT in space separated ASCII hex values.
+
+>>>>> /usr/bin/canlogserver =========================================
+             NO HELP AVAILABLE
