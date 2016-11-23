@@ -9,7 +9,8 @@
 #     fi
 # See bin/dinkum-install-bashadds
 #
-# 2016-11-21 tc@DinkumSoftware.com    Initial
+# 2016-11-21 tc@DinkumSoftware.com Initial
+# 2016-11-22 tom@rail-pod.com      dynpath: Switched ubuntu 14.04 PS1
 #
 # Addons:
 #     dynpath    Automagically shrink bash prompt when it is too long
@@ -19,8 +20,19 @@ DINKUM_BASH_DIR="$HOME/.dinkum/bash"
 
 # dynpath
 #    See https://gist.github.com/ehamberg/1197104
+#    This used:
+#        PS1="\u@\h \$(_dynpath) \$ "         # Tell prompt to use it
+#
+#     Default ubuntu 14.04 PS1:
+#       PS1="\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\u@\h:\w\$ "
+#     See for explanation:
+#       http://askubuntu.com/questions/404341/where-can-i-find-a-complete-reference-for-the-ps1-variable
+#
+#     We use ubuntu default with 2nd \w (current working directory)
+#    replaced with _dynpath
 source $DINKUM_BASH_DIR/dynpath.bash # Define _dynpath() function
-PS1="\u@\h \$(_dynpath) \$ "         # Tell prompt to use it
+PS1="\[\e]0;\u@\h: \w\a\]${debian_chroot:+($debian_chroot)}\u@\h:\$(_dynpath)\$ "
+
 
 
 
