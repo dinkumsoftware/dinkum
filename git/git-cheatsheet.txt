@@ -5,6 +5,7 @@ Frequently used git commands.
 
 2016-11-21 tc@DinkumSoftware.com Initial
 2016-11-22 tc@DinkumSoftware.com add Changing state.
+2016-11-23 tc@DinkumSoftware.com add Deleting commits
 
 *** Creating stuff
 
@@ -30,6 +31,12 @@ git rebase -i HEAD~<N> ; 1st pick, remainder squash
 # edit the last commit message
 git commit --amend
 git commit --amend -m "New commit message"
+
+
+# Delete <N> commits
+# http://stackoverflow.com/questions/1338728/delete-commits-from-a-branch-in-git
+# WARNING! Stash first, deletes working dir changes
+git reset --hard HEAD~<N>
 
 
 *** Publishing Stuff
