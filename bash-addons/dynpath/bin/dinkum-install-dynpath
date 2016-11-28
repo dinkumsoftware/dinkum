@@ -1,0 +1,127 @@
+#!/bin/bash
+# http://github.com/dinkumsoftware/dinkum.git
+# bash-addons/dynpath/bin/dinkum-install-dynpath
+#
+# Installs the files required for dynpath (which automagically
+# shortens the bash prompt when current working directory gets
+# to long.
+#
+# 2016-11-27 tc@DinkumSoftware.com Initial
+
+
+# INPUT FILES IN GIT:
+#  dinkum
+#    bash-addons/
+#      dynpath/
+#        README.txt                  # Installed
+#        bin/ 
+#          dinkum-install-dynpath    # This program (not installed)
+#          dinkum-dynpath.bash       # Installed
+
+# OUTPUT FILES TO:
+# ~/.dinkum/
+#  bash-addons/
+#    dynpath/
+#      README.txt                    # Installed
+#      bin/
+#        dinkum-dynpath.bash         # Installed
+
+# We potentially modify ~/.bashrc
+# by running
+#    dinkum/bash-addons/bin/install-bash-addons
+
+
+set -u    # Die on unexpanded variable
+set -e    # Die on error
+
+# <todo> Refactor this into 
+#    dinkum-install-from-git-to-user <git-subdir-to-install> [ extra files to install ]
+
+GIT_SUBDIR_TO_INSTALL_FRM="$(dirname $0)/.."  # parent directory of bin (where we live)
+
+# The files we install are:
+#    README.txt
+#    bin/<executables>
+#    bin/*.bash
+
+# Make a list of all the files to install
+# They get checked later for existence and being under git control
+# We keep them in a bash array
+PFS=()   # Make the empty array
+#        PFS[${#PFS[@]}]    This gobble gook puts an element at end of array:
+#        ${PFS[<n>]"        References a particular element
+#        ${PFS[@]}          All the elements
+
+# Specific files we want to install
+PFS[${#PFS[@]}]="$GIT_SUBDIR_TO_INSTALL_FRM/README.txt"
+
+# All of the files in bin directory that are executables
+for F in $(find "$GIT_SUBDIR_TO_INSTALL_FRM/bin" -executable) ; do
+    # Executable candidate in F
+    # We don't want any directorys (find -executable returns dirs and files)
+    if [ -d "$F" ] ; then
+        continue    # don't install it
+    fi
+
+    # We don't want any executables that start with: dinkum-install-
+    # ie as these programs (like us) move from git to user
+    # no need to be there cause already installed
+    PROG_NAME="$(basename "$F")"
+    if  [[ "$F" =~ ^dinkum-install- ]] ; then
+        continue    # don't install it
+    fi
+
+    # We want to install this one
+    # Put it at end of array
+    PFS[${#PFS[@]}]="$F"
+
+done
+
+
+# Install bin/*.bash.
+# These are intended to be sourced by bash
+for F in $(find "$GIT_SUBDIR_TO_INSTALL_FRM/bin" -name '*'.bash ) ; do
+    # Put it at end of array
+    PFS[${#PFS[@]}]="$F"
+done
+
+# Do the install
+# we filter out any file that is NOT under git control
+# should remove editor backup files, e.g. *~
+
+for f in ${PFS[@]} ; do 
+
+    # Don't install non-git fils
+    # returns 0 if in git, 1 if not
+    if ! git ls-files "$f" --error-unmatch  &>>/dev/null ; then
+        continue    # ignore this file, not under git control
+    fi
+
+    echo $f
+done
+
+# Life is good
+exit
+
+for f in ${PFS[@]} ; do echo $f ; done
+
+# All the executable files in bin directory
+# NOT named "dinkum-install-*"
+
+
+
+DIR="$GIT_SUBDIR_TO_INSTALL_FRM/bin"
+FILES_TO_INSTALL+=$(find "$DIR" -executable \! type d | grep -v "$DIR"/dinkum-install-'*')
+
+# All the *.bash file in the bin directory
+DIR="$GIT_SUBDIR_TO_INSTALL_FRM/bin"
+FILES_TO_INSTALL+=$(find "$DIR" -name '*'.bash)
+
+echo "$FILES_TO_INSTALL"
+
+
+
+
+
+
+ 
