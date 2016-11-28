@@ -33,6 +33,7 @@
 
 set -u    # Die on unexpanded variable
 set -e    # Die on error
+PN=$(basename $0) # program name for labelling
 
 # <todo> Refactor this into 
 #    dinkum-install-from-git-to-user <git-subdir-to-install> [ extra files to install ]
@@ -56,7 +57,7 @@ PFS=()   # Make the empty array
 PFS[${#PFS[@]}]="$GIT_SUBDIR_TO_INSTALL_FRM/README.txt"
 
 # All of the files in bin directory that are executables
-for F in $(find "$GIT_SUBDIR_TO_INSTALL_FRM/bin" -executable) ; do
+for F in $(find "$GIT_SUBDIR_TO_INSTALL_FRM/bin" -executable || true ) ; do
     # Executable candidate in F
     # We don't want any directorys (find -executable returns dirs and files)
     if [ -d "$F" ] ; then
@@ -80,24 +81,60 @@ done
 
 # Install bin/*.bash.
 # These are intended to be sourced by bash
-for F in $(find "$GIT_SUBDIR_TO_INSTALL_FRM/bin" -name '*'.bash ) ; do
+for F in $(find "$GIT_SUBDIR_TO_INSTALL_FRM/bin" -name '*'.bash || true ) ; do
     # Put it at end of array
     PFS[${#PFS[@]}]="$F"
 done
 
+# We will copy
+#    <git-root-dir>/a/b/c/file to ~/.dinkum/a/b/c/file
+# There is a nice program git-root-dir that will find
+# to top level git directory, but sadly we cannot assume
+# it is installed on PATH.  So we look for it
+GRD_PROGRAM=$(find ~ -name git-root-dir 2>/dev/null || true )
+# Now run it with our directory as an argument
+# It will spit out the <whereever>/dinkum directory
+GIT_ROOT_DIR="$("$GRD_PROGRAM" "$GIT_SUBDIR_TO_INSTALL_FRM" )"
+
 # Do the install
+# We will copy
+#    <git-root-dir>/a/b/c/file to ~/.dinkum/a/b/c/file
+DES_ROOT="$HOME/.dinkum"
+
 # we filter out any file that is NOT under git control
-# should remove editor backup files, e.g. *~
+#     this should remove editor backup files, e.g. *~
+for SRC in ${PFS[@]} ; do 
 
-for f in ${PFS[@]} ; do 
-
-    # Don't install non-git fils
+    # Don't install non-git files
     # returns 0 if in git, 1 if not
-    if ! git ls-files "$f" --error-unmatch  &>>/dev/null ; then
+    if ! git ls-files "$SRC" --error-unmatch  &>>/dev/null ; then
         continue    # ignore this file, not under git control
     fi
 
-    echo $f
+    # Produce the DES location
+    DES="$(readlink -f "$SRC")"  # Make it an absolute path
+
+    # Replace <where>/dinkum with ~/.dinkum
+    DES="${DES/$GIT_ROOT_DIR/$DES_ROOT}"
+
+    # Make sure directory we are copying into exists
+    mkdir --parents "$(dirname $DES)"
+
+    # Do the copy
+    # We want symbolic links intact
+    cp --preserve=all --no-dereference "$SRC" "$DES"
+
+    # Make pretty output with columns aligned
+    # "foo.cc                               -> /home/whatever/.dinkum/.../foo.cc"
+    LINE="                                  -> $DES"
+    SRC="$(basename "$SRC")" # do not not want full path
+    SRC_LEN=${#SRC}          # How long $SRC is
+    LINE="${LINE:$SRC_LEN}"  # Remove spaces at head of LINE for SRC
+    LINE="${SRC}${LINE}"         # Put SRC at beginning
+    echo "$LINE"
+        
+
+
 done
 
 # Life is good
