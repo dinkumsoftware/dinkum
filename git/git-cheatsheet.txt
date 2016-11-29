@@ -41,6 +41,12 @@ git commit --amend -m "New commit message"
 git reset --hard HEAD~<N>
 
 
+*** Deleting stuff
+
+# Delete a branch
+git branch -d LOCAL    # local branch LOCAL
+git push origin --delete REMOTE # Remote branch REMOTE
+
 *** Publishing Stuff
 # Local branch is LOCAL
 
