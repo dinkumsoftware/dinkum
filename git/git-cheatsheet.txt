@@ -7,7 +7,9 @@ Frequently used git commands.
 2016-11-22 tc@DinkumSoftware.com add Changing state.
 2016-11-23 tc@DinkumSoftware.com add Deleting commits
 2016-11-28 tc@DinkumSoftware.com add How to tell if file under git
-
+2016-11-29 tom@rail-pod.com      how to delete a branch
+                                 how to pretty log
+2016-12-02 tom@rail-pod.com      Added username/password caching
 
 *** Creating stuff
 
@@ -34,14 +36,12 @@ git rebase -i HEAD~<N> ; 1st pick, remainder squash
 git commit --amend
 git commit --amend -m "New commit message"
 
+*** Deleting stuff
 
 # Delete <N> commits
 # http://stackoverflow.com/questions/1338728/delete-commits-from-a-branch-in-git
 # WARNING! Stash first, deletes working dir changes
 git reset --hard HEAD~<N>
-
-
-*** Deleting stuff
 
 # Delete a branch
 git branch -d LOCAL    # local branch LOCAL
@@ -62,3 +62,23 @@ git push origin LOCAL
 # How to tell if file under git control
 # http://stackoverflow.com/questions/2405305/how-to-tell-if-a-file-is-git-tracked-by-shell-exit-code
 git ls-files <file-name> --error-unmatch  &>>/dev/null  # returns 0 if in git, 1 if not
+
+# Pretty one line log list
+# Thanks to: http://stackoverflow.com/questions/1441010/the-shortest-possible-output-from-git-log-containing-author-and-date
+# example output: 2016-11-23 tom campbell    dacf92c   test-socketCAN user interface enhancements.
+git log --pretty=format:"%ad %<(15,trunc)%an %<(9,trunc)%h %s" --date=short
+
+*** username/password caching
+
+This will remember the username for a give repo.  You must supply password
+once per session and then it will be remembered forever.
+
+# Remember password in memory for a week
+git config --global credential.helper 'cache --timeout=604800'
+
+# If you remember, clone the repo with username in URL
+git clone https://<USERNAME>@github.com/whatever/repo.git
+
+# Associate remote USERNAME with a REPO
+# Thanks to http://superuser.com/questions/199507/how-do-i-ensure-git-doesnt-ask-me-for-my-github-username-and-password
+git config --global url."https://username@github.com/REPO".insteadOf "https://github.com/REPO"
