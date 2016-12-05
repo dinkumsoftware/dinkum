@@ -10,6 +10,7 @@ Frequently used git commands.
 2016-11-29 tom@rail-pod.com      how to delete a branch
                                  how to pretty log
 2016-12-02 tom@rail-pod.com      Added username/password caching
+2016-12-05 tom@rail-pod.com      squashing since last push
 
 *** Creating stuff
 
@@ -19,18 +20,26 @@ git checkout -b  LOCAL origin/REMOTE
 
 
 *** Changing state
-git add -A    # stages All
+git add -A .  # stages All in current directory
 git add .     # stages new and modified, without deleted
 git add -u    # stages modified and deleted, without new
 
 git commit -a # stage modified/deleted (not new) and commit
 
+# Changing the upstream source that branch will pull from.
+git branch --set-upstream-to <origin/whatever> [<branchname>] 
+                                               # only reqd if not current branch
+
 
 *** Fixing stuff
 
-# SQUASH <N> commits into one
+# SQUASHING
+# squash <N> commits into one
 # Do NOT do this after a push
 git rebase -i HEAD~<N> ; 1st pick, remainder squash
+
+# squash all commits since last push
+git rebase -i origin
 
 # edit the last commit message
 git commit --amend
@@ -67,6 +76,16 @@ git ls-files <file-name> --error-unmatch  &>>/dev/null  # returns 0 if in git, 1
 # Thanks to: http://stackoverflow.com/questions/1441010/the-shortest-possible-output-from-git-log-containing-author-and-date
 # example output: 2016-11-23 tom campbell    dacf92c   test-socketCAN user interface enhancements.
 git log --pretty=format:"%ad %<(15,trunc)%an %<(9,trunc)%h %s" --date=short
+
+# What is upstream?
+git remote show origin
+git branch -vv
+
+# See all the files in a commit
+git diff-tree  --no-commit-id --name-only -r <SHA1> # Just the names
+
+git show       --pretty=""    --name-only    <SHA1> # names and commit info
+git log                       --name-only           #    ditto
 
 *** username/password caching
 
