@@ -2,9 +2,11 @@ dinkum/bash/README.txt
 
 A collection of bash enhancements
 
-2016-11-21 tc@DinkumSoftware.com
+2016-11-21 tc@DinkumSoftware.com Initial
+2016-12-06 tc@DinkumSoftware.com Added bash-cheatsheet.txt
 
 Table of contents:
+    bash-cheatsheet.txt  bash commands I can never remember      
     dynpath    Automagically shrink bash prompt when it is too long
 
 

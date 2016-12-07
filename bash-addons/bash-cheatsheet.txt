@@ -1,0 +1,8 @@
+dinkum/bash/bash-cheatsheet.txt
+
+# 2016-12-06 tom@rail-pod.com Initial
+
+
+# To diddle the PATH cache
+hash -r 
+hash -d <single basename to remove>

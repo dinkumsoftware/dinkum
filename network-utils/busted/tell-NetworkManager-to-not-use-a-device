@@ -1,0 +1,62 @@
+#!/bin/bash
+# tell-NetworkManager-to-not-use-a-device
+#
+
+PN=$(basename $0)
+
+USAGE=$( cat << END_OF_USAGE
+$PN <device>
+  Tells NetworkManager to not manage <device> by
+  writing a config file and then restarting NetworkManager.
+  Example:
+    $PN eth1
+  Requires sudo.
+END_OF_USAGE
+)
+
+#2016-12-06 tom@rail-pod.com Initial
+
+# Debug aids:
+
+# shows status of devices being managed by NetworkManager
+#    nmcli dev status
+
+
+# Check the command line
+if (( $# != 1 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: Wrong number of command line arguments"
+   exit 1
+fi
+
+# Who not to manage
+DEVICE="$1"
+
+# Where we write the config file
+NM_CONF_DIR="/etc/NetworkManager"
+CONF_FILE="$NM_CONF_DIR/conf.d/do-not-manage-$DEVICE.conf"
+
+# Make sure NetworkManager is installed
+if [ ! -d "$NM_CONF_DIR" ] ; then
+   echo "ERROR:$PN: Does not exist: $NM_CONF_DIR"
+   echo "      Either NetworkManager not installed --or--"
+   echo "      it is installed in a different place"
+   exit 1
+fi
+
+# Make the conf.d directory
+sudo mkdir --parents $(dirname $CONF_FILE)
+
+# Write the conf file.
+# Can't use > with sudo, hence the tee
+echo Writing conf file: $CONF_FILE
+echo "# written by tell-NetworkManager-to-not-use-a-device" | sudo tee    $CONF_FILE > /dev/null
+echo "# $(date "+%Y-%m-%d")"                                | sudo tee -a $CONF_FILE > /dev/null
+echo "[main]"                                               | sudo tee -a $CONF_FILE > /dev/null
+echo "no-auto-default=$DEVICE"                              | sudo tee -a $CONF_FILE > /dev/null
+
+
+# Restart the network manager to force reread of config files
+echo "Restarting network Manager"
+sudo service network-manager restart
+

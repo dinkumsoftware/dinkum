@@ -1,0 +1,89 @@
+#!/bin/bash
+# create-static-interface
+#
+set -u 
+set -e
+
+PN=$(basename $0)
+
+USAGE=$( cat << END_OF_USAGE
+$PN <device> <ip> [<netmask>]
+  Creates configuration for <device> with ip addr of <ip> and
+  netmask of <netmask>. If <netmask> omitted, 255.255.255.0 is
+  assumed.
+  Example:
+    $PN eth1 192.168.1.45
+  Files:
+    alters  /etc/interfaces  # adds source interfaces.d/create-static-interface.<device>
+    creates /etc/interfaces.d/create-static-interface.<device>
+  Requires sudo.
+END_OF_USAGE
+)
+
+#2016-12-06 tom@rail-pod.com Initial
+
+# Debug aids:
+
+# Check the command line
+if (( $# < 2  || $# > 3 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: Wrong number of command line arguments"
+   exit 1
+fi
+
+# Pick off command line arguments
+DEVICE="$1"
+IP="$2"
+NETMASK="${3-255.255.255.0}"
+
+# Files we diddle
+ITF_FILE="/etc/network/interfaces"
+CONF_FILE="/etc/network/interfaces.d/$PN.$DEVICE"
+
+# What we write in in interfaces file
+ITF_LINE="source interfaces.d/$(basename $CONF_FILE)"
+
+# It is already there?
+if ! grep "$ITF_LINE" < $ITF_FILE > /dev/null ; then
+    # no. line needs to be written, not already in the file
+    # What we write
+
+ITF_CONTENT=$(cat <<- END_OF_ITF_CONTENT
+
+# Written by $PN on $(date "+%Y-%m-%d")
+$ITF_LINE
+END_OF_ITF_CONTENT
+)
+    # cannot use >> with sudo, hence the tee --append
+    echo $PN: Modifying $ITF_FILE
+    echo "$ITF_CONTENT" | sudo tee -a "$ITF_FILE" > /dev/null
+fi
+
+# Now create the actual file
+CONF_FILE_CONTENT=$(cat << END_OF_CONF_FILE_CONTENT
+# $CONF_FILE
+# Written by $PN on $(date "+%Y-%m-%d")
+allow-hotplug $DEVICE
+auto          $DEVICE
+iface         $DEVICE inet static
+    address   $IP
+    netmask   $NETMASK
+
+END_OF_CONF_FILE_CONTENT
+)
+
+echo $PN: Writing $CONF_FILE
+echo "$CONF_FILE_CONTENT" | sudo tee "$CONF_FILE" > /dev/null
+
+# Force reread of new config files
+echo $PN: Bring $DEVICE up and down
+sudo ifdown $DEVICE  >/dev/null 2&>1  || true   # ignore errors
+sudo ifup   $DEVICE
+
+
+# Tell them how to get rid of it
+echo $PN: Done
+echo "   To undo: sudo rm $CONF_FILE"
+echo "            optionally edit $ITF_FILE"
+
+
