@@ -10,7 +10,7 @@
 # See bin/dinkum-install-bashadds
 #
 # 2016-11-21 tc@DinkumSoftware.com Initial
-# 2016-11-22 tom@rail-pod.com      dynpath: Switched ubuntu 14.04 PS1
+# 2016-11-22 tc@DinkumSoftare.com      dynpath: Switched ubuntu 14.04 PS1
 #
 # Addons:
 #     dynpath    Automagically shrink bash prompt when it is too long
