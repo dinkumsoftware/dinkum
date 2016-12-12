@@ -3,10 +3,15 @@ emacs/emacs-cheatsheet.txt
 
 A list of emacs commands that I never seem to remember
 
-2016-11-30 tom@rail-pod.com   Initial
+2016-11-30 tc@DinkumSoftware.com  Initial
+2016-12-11 tc@DinkumSoftware.com  Added sudo::
 
 # tramp
 # A way to edit remote files and files owned by root
 # https://www.emacswiki.org/emacs/TrampMode
 Find File: /<username>@<host>:<filename>    # edits file remotely
            ^          ^      ^
+
+# Edits local as root
+Find File: /sudo::/path/to/file-to-edit
+

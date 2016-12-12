@@ -19,12 +19,15 @@
 # 17-Apr-07  tc@DinkumSoftware.com Initial
 # 18-Apr-07  tc@DinkumSoftware.com patched for FC1
 # 2016-05-10 tc@DinkumSoftware.com Added copyright info
+# 2016-12-11 tc@DinkumSoftware.com hostname ==> hostname --fqdn
+#                                    ubuntu was storing in topdir-root-rsync-push/
+#                                    instead of topdir-root-rsync-push/com/domainname/hostname
+#                                  mkdir --parents of remote directory.
 #
 # Bugs to fix:
 #     remove FC1 patch commenting out readlink
 #     the destination directory on remotehost must exist
 #    /boot and /dev aren't copied.  See note toward end of file
-
 
 function usage()
 {
@@ -114,7 +117,7 @@ fi
 
 # Figure out where on the remote host we are gonna "root" the copy
 # this returns FQDN_TO_REVERSED_FILETREE=$FQDN_TO_REVERSED_FILETREE
-declare HOSTNAME=`hostname`
+declare HOSTNAME=`hostname --fqdn`
 fqdn_to_reversed_filetree $HOSTNAME
 if (( $? != 0 )) ; then 
     usage
@@ -131,6 +134,14 @@ declare REMOTE_ROOT="$REMOTEDIR/topdir-root-rsync-push/$FQDN_TO_REVERSED_FILETRE
 #     --canonicalize-missing
 #    REMOTE_ROOT=`readlink --canonicalize-missing --no-newline $REMOTE_ROOT`
 
+# Make the directory on the remote filesystem (if it doesn't exist)
+ssh "root@$REMOTEHOST" mkdir --parents "$REMOTE_ROOT"
+
+
+# Log our actions
+PN="$(basename $0)"
+logger "$PN $*"
+ssh "root@$REMOTEHOST" logger "$REMOTEHOST:$PN $*"
 
 
 # Do it

@@ -1,0 +1,37 @@
+#!/bin/bash
+# dinkum-fin-newest-file-in
+#
+# 2016-12-11 tc@DinkumSoftware.com Initial
+#  From Heppo
+#  http://stackoverflow.com/questions/5566310/how-to-recursively-find-and-list-the-latest-modified-files-in-a-directory-with-s
+
+set -u
+set -e
+
+PN="$(basename $0)"
+USAGE=$(cat << END_OF_USAGE
+USAGE:$PN <directory>
+Recursively finds the most recently modified files under <directory> and
+prints them out.
+END_OF_USAGE
+)
+
+# Check command line
+if (( $# != 1 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN:Wrong number of command line arguments"
+   exit 1
+fi
+
+# Pick off the starting point
+DIR="$1"
+if [ ! -d "$DIR" ] ; then
+   echo "$USAGE"
+   echo "ERROR:$PN:Not a directory: $DIR"
+   exit 1
+fi
+
+# Do it
+find "$DIR" -type f -exec stat --format '%Y :%y %n' "{}" \; | sort -nr | cut -d: -f2- | head
+
+
