@@ -1,6 +1,6 @@
 #!/bin/bash
 # http://github.com/dinkumsoftware/dinkum.git
-# git/bin/git-root-dir
+# bin/dinkum-git-root-dir
 #
 USAGE=$(cat <<END_OF_USAGE
 Usage: git_root_dir <starting-dir-or-file>
@@ -15,6 +15,9 @@ END_OF_USAGE
 # thanks to following for idea:
 # http://stackoverflow.com/questions/2044574/determine-if-directory-is-under-git-control
 
+# 2016-12-?? tc@DinkumSoftware.com Initial
+# 2016-12-09 tc@DinkumSoftware.com renamed git-doot-dir
+#
 # Algorithm:
 #    Look up the filesystem tree from <starting-dir-or-file>
 #    until we find a directory that has a directory named .git in it
