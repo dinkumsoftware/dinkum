@@ -1,0 +1,44 @@
+#!/bin/bash
+# http://github.com/dinkumsoftware/dinkum.git
+# bin/
+# dinkum-is-git-file
+#
+USAGE=$(cat <<END_OF_USAGE
+USAGE: dinkum-is-git-file <file0> [ .. <fileN>]
+  Silently tests all <file*> for being under git control.
+  Returns: 0 if ALL files are    under git control.
+          33 if any file  is NOT under git control.
+           1 on anyother sort of error
+END_OF_USAGE
+)
+
+# What we may return
+NON_GIT_EXIT_STATUS=33 # Why 33? Wanted to distinguish from no such file errors
+                       # and like.  It's Larry Bird's number.
+
+# Check the command line
+PN="$(basename $(readlink -f $0))"    # Name of program for labeling
+if (( $# < 1 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: Wrong number of command line arguments."
+   exit 1
+fi
+
+# iterate over the command line
+for file in $* ; do
+    # Make sure file exists
+    if [ ! -e "$file" ] ; then
+        echo "ERROR:$PN: File does not exist: $file"
+        exit 1
+    fi
+
+    # A git file?
+    if ! git ls-files "$file" --error-unmatch  &>>/dev/null ; then
+        # Not a git file
+        exit $NON_GIT_EXIT_STATUS
+    fi
+done
+
+# All files under git control
+exit 0
+

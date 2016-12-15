@@ -1,0 +1,111 @@
+#!/bin/bash
+# http://github.com/dinkumsoftware/dinkum.git
+# bin/dinkum-are-files-identical
+#
+USAGE=$(cat <<END_OF_USAGE
+USAGE: dinkum-are-files-identical <file-0> <file-1>  [.... <file-N>]
+ Tests if <file-0> is identical to rest of <file-*> on command line
+    same permissions
+    same length
+    byte-for-byte equal (using cmp)
+
+<file-0> MUST exist.
+If any other files do not exist, treated as non-identical
+
+Returns 0 if all files are identical
+Returns 1 otherwise
+END_OF_USAGE
+)
+
+
+# functions to extract file permissions and sizes
+# Each take filename as $1 and send results to stdout
+function file_perms() {
+    local file="$1"
+
+    # %A is permissions in human readable format
+    # -rwxrwxr-x
+    stat --format=%A "$file" 2>/dev/null
+
+}
+function file_size() {
+    local file="$1"
+
+    # %s is file size
+    stat --format=%s "$file" 2>/dev/null
+
+}
+
+# Developer note
+# Make return 0 to turn on debug output
+# usage:  if deb_ ; then echo something ; fi
+function deb_() {
+    return 1  # 0==> we are debugging
+}
+
+
+# main() starts here.... well sorta
+# Check the command line
+PN=$(basename "$0") # Program name for labeling
+if (( $# < 2 )) ; then
+    echo "$USAGE"
+    echo "ERROR: $PN: Wrong number of command line arguments."
+    exit 1
+fi
+# Extract our arguments
+MASTER_FILE="$1" ; shift
+
+# Make sure it exists
+if [ ! -e "$MASTER_FILE" ] ; then
+    echo "$USAGE"
+    echo "ERROR:$PN:<file-0> Does not exist: $MASTER_FILE"
+    exit 1
+fi
+
+# Get permissions and file size of the master
+MASTER_PERMS=$(file_perms "$MASTER_FILE")
+MASTER_SIZE=$(file_size "$MASTER_FILE")
+
+# Iterate thru rest of arguments on the command line
+for test_file in $* ; do
+    # Does it exist
+    if [ ! -e "$test_file" ] ; then
+        # can hardly be identical
+        if deb_ ; then echo $PN:Does not exist:$test_file ; fi
+        exit 1
+    fi
+
+    # Get stats on file under test
+    test_size=$(file_size   "$test_file")
+    test_perms=$(file_perms "$test_file")
+
+    # Check file sizes
+    if (( $test_size != $MASTER_SIZE )) ; then
+        # Different sizes, not identical
+        if deb_ ; then echo $PN:different size:$test_file ;
+                       echo "  Should be $MASTER_SIZE. Is $test_size" ; fi
+        exit 1
+    fi
+
+    # Check permissions
+    if [ "$test_perms" != "$MASTER_PERMS" ] ; then
+        # Different permissions
+        if deb_ ; then echo $PN:different perms:$test_file ;
+                       echo "  Should be $MASTER_PERMS" ;
+                       echo "         Is $test_perms"    ; fi
+        exit 1
+    fi
+
+    # OK, compare them byte for byte
+    if ! cmp --quiet "$MASTER_FILE" "$test_file" ; then
+        # contents differ
+        if deb_ ; then echo $PN:different content: $test_file ; fi
+        exit 1
+    fi
+
+done
+
+# If we fall out, all are identical
+exit 0
+
+
