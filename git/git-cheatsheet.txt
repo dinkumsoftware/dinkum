@@ -11,6 +11,7 @@ Frequently used git commands.
                                  how to pretty log
 2016-12-02 tom@rail-pod.com      Added username/password caching
 2016-12-05 tom@rail-pod.com      squashing since last push
+2016-12-14 tom@rail-pod.com      git reset --hard HEAD
 
 *** Creating stuff
 
@@ -33,6 +34,7 @@ git branch --set-upstream-to <origin/whatever> [<branchname>]
 
 *** Fixing stuff
 
+
 # SQUASHING
 # squash <N> commits into one
 # Do NOT do this after a push
@@ -46,6 +48,13 @@ git commit --amend
 git commit --amend -m "New commit message"
 
 *** Deleting stuff
+
+# Throw away all uncommitted changes to tracked file in the
+# working directory
+git reset --hard HEAD
+
+# Delete all untracked files
+git clean  
 
 # Delete <N> commits
 # http://stackoverflow.com/questions/1338728/delete-commits-from-a-branch-in-git
