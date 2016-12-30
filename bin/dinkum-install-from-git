@@ -1,0 +1,89 @@
+#!/bin/bash
+# http://github.com/dinkumsoftware/dinkum.git
+# bin/dinkum-install-from-git
+#
+USAGE=$(cat << END_OF_USAGE
+# This installs all the dinkumsoftware programs in ~/.dinkum
+# It makes mild alteration to ~/.bashrc
+# It does NOT require sudo.
+#
+# It's OK to run this as many times as you like.  If a new version of
+# something shows up in git, you can rerun this to get it on your machine
+
+Usage:
+  cd ~/<somewhere>
+  git clone http://github.com/dinkumsoftware/dinkum.git
+  <somewhere>/bin/dinkum-install-from-git
+
+  [optional] rm -rf ~/<somewhere>/dinkum # Don't need git copy after install
+                                         # But feel free to keep it and contribute
+
+To undo these actions:
+  rm -rf ~/.dinkum
+  [optional] edit ~/.bashrc (see end of file) to remove dinkum stuff.
+            # This is not required, won't break anything if you leave it in
+
+To use:
+  You will have to log out and log in to pick up the .bashrc changes.
+  If you want to just try it in a terminal window:
+      bash
+
+END_OF_USAGE
+)
+
+# 2016-12-09 tc@DinkumSoftware.com Initial
+# 2016-12-29 tc@DinkumSoftware.com Debugging
+
+set -u # die on undefined variables
+set -e # die if something errors
+
+# A program we call is expected to be in the same directory as us
+# As we are a dinkum-install- program, we can assume NOTHING about the PATH
+PDIR="$(dirname $(readlink -f $0))"  # Directory we are running from
+
+
+# Check the command line
+PN="$(basename $(readlink -f $0))"   # Name of program for labeling
+if (( $# != 0 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: Wrong number of command line arguments."
+   exit 1
+fi
+
+
+# What we do
+#    Confirm we are under git control
+#    Create ~/.dinkum and copy over ../bin/* ../README.* 
+#    diddle ~/.bashrc to source ~/.dinkum/bin/dinkum-bashrc
+
+# Confirm we are under git control
+if ! "$PDIR"/dinkum-is-git-file "$0" ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: This program is NOT under git control."
+   echo "      It assumes it lives in a 'git clone of dinkumsoftware'"
+   echo "      That doesn't appear to be the case. See USAGE above."
+   exit 1
+fi
+
+# top level directories for copies, Make them absolute paths
+DES_ROOT_DIR="$HOME/.dinkum"
+DES_ROOT_DIR=$(readlink -f "$DES_ROOT_DIR")
+    # $PDIR is the directory of this program
+    # dinkum-git-root-dir walks up the directory tree until it finds a .git file
+    # So SRC_ROOT_DIR will be ~/<somewhere>/dinkum
+SRC_ROOT_DIR=$("$PDIR/dinkum-git-root-dir" "$PDIR")
+SRC_ROOT_DIR=$(readlink -f "$SRC_ROOT_DIR")
+
+echo src: $SRC_ROOT_DIR
+echo des: $DES_ROOT_DIR
+
+# Create ~/.dinkum and copy over ../bin/* ../README.*
+mkdir --parents --verbose "$DES_ROOT_DIR"
+"$PDIR"/dinkum-install-helper-cp-std-files "$SRC_ROOT_DIR" "$DES_ROOT_DIR"
+
+# Life is good
+exit 0
+
+
+
+

@@ -1,0 +1,138 @@
+#!/bin/bash
+# http://github.com/dinkumsoftware/dinkum.git
+# bin/dinkum-install-helper-cp-files
+#
+PN="$(basename $(readlink -f $0))"   # Name of program for labeling
+USAGE=$(cat << END_OF_USAGE
+USAGE:$PN <src-dir> <des-dir> [<file0> ..... <fileN>]"
+
+Copies <src-dir>/<fileN> to <des-dir>.
+Creates directories as required in <des-dir>
+<file*> should be specified relative to <src-dir>
+If <des-dir>/<fileN> is identical to <src-dir>/<fileN>
+    it is NOT copied and name not echoed to stdout
+
+It is an error if <src-dir>/<file*> does not exist
+It is NOT an error to not specify any files.
+
+The files copied are echoed to stdout.
+
+END_OF_USAGE
+)
+
+# 2016-12-09 tc@DinkumSoftware.com Initial
+
+set -u # die on undefined variables
+set -e # die if something errors
+
+# A program we call is expected to be in the same directory as us
+# As we are a dinkum-install- program, we can assume NOTHING about the PATH
+PDIR="$(dirname $(readlink -f $0))"  # Directory we are running from
+
+# Check the command line
+if (( $#  < 2 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: Wrong number of command line arguments."
+   exit 1
+fi
+
+# Pick off the directorys from the command line
+SRC_DIR="$1"
+DES_DIR="$2"
+shift 2      # and eat them
+
+# make src_dir exists
+if [ ! -d "$SRC_DIR" ] ; then
+    echo "$USAGE"
+    echo "ERROR:$PN:Not an existing directory:$dir"
+    exit 1
+fi
+
+# Make pretty output with columns aligned
+#0        1         2         3         4         5         6         7
+#123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.
+#foo.cc                            -> des_dir/dira/dirb/
+#created directory                    des_dir/dira/dirb/
+declare -i COLUMN_WIDTH=35
+directory_label="created directory                      "
+lots_of_spaces="                                                                         "
+
+# How we label directories
+# DES_DIR        /a/b/c/d/e/f
+# DES_DIR_LABEL             f/
+DES_DIR_LABEL=$( basename "$DES_DIR")
+DES_DIR_LABEL+="/"
+
+# if des_dir doesn't exist....
+if [ ! -d "$DES_DIR" ] ; then
+    # We make it, but without --parents
+    # this insures that parent of $DES_DIR Must pre-exist
+    mkdir "$DES_DIR"
+    
+    # label this
+    # "created directory                    /home/user/whatever/dira/dirb/"
+    echo "$directory_label ${DES_DIR}"
+
+fi
+
+
+# Iterate thru all the files on the command line
+for file in $* ; do
+    # Form full pathnames
+    src="$SRC_DIR/$file"
+    des="$DES_DIR/$file"
+
+    # Make sure src exists
+    if [ ! -e "$src" ] ; then
+        echo "$USAGE"
+        echo "ERROR:$PN: src file does not exist: $src"
+        exit 1
+    fi
+
+    # If des exists and is identical to src...don't make the copy
+    if "$PDIR/dinkum-are-files-identical" "$src" "$des" ; then
+        # Same file, don't copy it
+        continue ;
+    fi
+
+
+    # Make any required non-existant directories
+    des_dir=$(dirname "$des")
+    if [ ! -d "$des_dir" ] ; then
+        mkdir --parents "$des_dir"
+
+        # label this
+        # "created directory                    dira/dirb/"
+        echo "$directory_label ${DES_DIR_LABEL}$(dirname $file)/"
+    fi
+
+    # Do the copy
+    # We want symbolic links and permissions intact
+    cp --preserve=all --no-dereference "$src" "$des"
+
+    # Label the output with nicely aligned columns
+    # only show relative directory names
+    #foo.cc                            -> dira/dirb/
+
+    basename_des=$(basename "$des")  # foo.cc
+    LINE="$basename_des"             # foo.cc
+
+    # Space over for alignment: 'foo.cc                           '
+    declare -i num_spaces_to_insert=$COLUMN_WIDTH-${#basename_des}
+    if (( $num_spaces_to_insert > 0 )) ; then
+        LINE+="${lots_of_spaces:0:$num_spaces_to_insert}"
+    fi
+
+    # Tack on label and destination directory
+    LINE+=" --> "                # foo.cc                            -> 
+    LINE+="$DES_DIR_LABEL"       # foo.cc                            -> des/
+    LINE+="$(dirname $file)/"    # foo.cc                            -> des/dira/dirb/
+
+    # and show them
+    echo "$LINE"
+
+done
+
+
+
+

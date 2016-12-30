@@ -1,0 +1,81 @@
+#!/bin/bash
+# http://github.com/dinkumsoftware/dinkum.git
+# bin/dinkum-install-helper-cp-std-file
+#
+PN="$(basename $(readlink -f $0))"   # Name of program for labeling
+USAGE=$(cat << END_OF_USAGE
+USAGE:$PN <src-dir> <des-dir>
+
+This copies standard dinkum installed files from <src-dir> to <des-dir>.
+  <src-dir>/bin/*       ==> <des-dir/bin
+  <src-dir>/README.*    ==> <des-dir>
+  <src-dir>cheatsheet*  ==> <des-dir>
+
+The files must be under git control to be copied.
+Any missing files are silently ignored.
+
+END_OF_USAGE
+)
+
+# 2016-12-09 tc@DinkumSoftware.com Initial
+# 2016-12-29 tc@DinkumSoftware.com debugging
+
+set -u # die on undefined variables
+set -e # die if something errors
+
+# Check the command line
+if (( $# != 2 )) ; then
+   echo "$USAGE"
+   echo "ERROR:$PN: Wrong number of command line arguments."
+   exit 1
+fi
+
+# A program we call is expected to be in the same directory as us
+# As we are a dinkum-install- program, we can assume NOTHING about the PATH
+PDIR="$(dirname $(readlink -f $0))"   # Directory we are running from
+
+# Pick off the directorys
+SRC_DIR="$1"
+DES_DIR="$2"
+
+# make sure they exist
+for dir in "$SRC_DIR" "$DES_DIR" ; do
+    # exist?
+    if [ ! -d "$dir" ] ; then
+        echo "$USAGE"
+        echo "ERROR:$PN:Not an existing directory:$dir"
+        exit 1
+    fi
+done
+
+# convert to absolute path
+SRC_DIR=$(readlink -e "$SRC_DIR")
+DES_DIR=$(readlink -e "$DES_DIR")
+
+# Here are the files we want to install
+# They must have a path relative to $SRC_DIR
+FILE_TEMPLATES_TO_INSTALL="bin/* README.* cheatsheet*"
+
+# Build up a list of files to copy 
+# They must be under git control (excludes editor backup files and other .gitignored files"
+# They must have a path relative to $SRC_DIR
+cd "$SRC_DIR"
+FILES_TO_CONSIDER=$(ls $FILE_TEMPLATES_TO_INSTALL 2>/dev/null || true)
+                                                 # ignore errors about missing files
+
+# Now filter the list to only files that are under git control
+# Removes editor backup files and other .gitignored files
+FILES_TO_INSTALL=""
+for file in $FILES_TO_CONSIDER ; do 
+    # Under git control
+    if "$PDIR/dinkum-is-git-file" "$file" ; then
+        FILES_TO_INSTALL+=" $file" 
+    fi
+done
+
+# Do the install
+"$PDIR"/dinkum-install-helper-cp-files "$SRC_DIR" "$DES_DIR" $FILES_TO_INSTALL
+
+
+
+
