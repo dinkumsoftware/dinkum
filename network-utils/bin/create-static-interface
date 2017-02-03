@@ -1,6 +1,12 @@
 #!/bin/bash
 # create-static-interface
 #
+# 2017-12-06 tc@DinkumSoftware.com Initial
+# 2017-02-03 tc@DinkumSoftware.com Bug fix that hung system boot for 2 min
+#                                  Removed auto eth<N>
+# http://askubuntu.com/questions/213614/waiting-for-network-configuration-problem
+
+
 set -u 
 set -e
 
@@ -64,7 +70,6 @@ CONF_FILE_CONTENT=$(cat << END_OF_CONF_FILE_CONTENT
 # $CONF_FILE
 # Written by $PN on $(date "+%Y-%m-%d")
 allow-hotplug $DEVICE
-auto          $DEVICE
 iface         $DEVICE inet static
     address   $IP
     netmask   $NETMASK
