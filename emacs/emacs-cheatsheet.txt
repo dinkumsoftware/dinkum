@@ -5,6 +5,7 @@ A list of emacs commands that I never seem to remember
 
 2016-11-30 tc@DinkumSoftware.com  Initial
 2016-12-11 tc@DinkumSoftware.com  Added sudo::
+2017-02-06 tc@DinkumSoftware.com  Added note about disown'ing emacs
 
 # tramp
 # A way to edit remote files and files owned by root
@@ -15,3 +16,12 @@ Find File: /<username>@<host>:<filename>    # edits file remotely
 # Edits local as root
 Find File: /sudo::/path/to/file-to-edit
 
+# Launch emacs from unity(and maybe gnome)
+# At least on Ubuntu 14.04, if you launch emacs from desktop button, it
+# doesn't read .bashrc, instead reading .profile.
+# If you launch it from a terminal, it dies when terminal is killed
+# This launches it from a terminal and disowns it so emacs is not killed
+# when terminal is killed.
+    emacs &
+    [1] 10480    ; job# and process id
+    disown %1    ; where 1 is the job number.
