@@ -1,0 +1,61 @@
+https://github.com/dinkumsoftware/dinkum.git
+thunderbird/thunderbird-tips.txt
+
+Various pieces of advice about dealing with the Thunderbird email program.
+
+2017-02-06 tc@DinkumSoftware.com
+
+Table of contents
+    MAIL XFER Between thunderbirds
+    Address book XFER Between thunderbirds
+
+thunderbird stores all it's data in:
+    ~/.thunderbird/<random-number>.default/
+
+**** MAIL XFER Between thunderbirds ********************************
+
+Like most email programs, the mail is stored in a format incomprehesible to
+any human being.  To move email from one machine to another, use an add-on:
+    ImportOutputTools
+    https://freeshell.de/~kaosmos/mboximport-en.html
+
+Download
+install on via:
+    "Tools" "Addons" "Install from local file"
+
+Export: export folder with subfolders (with structure)
+Import: "import mbox file" ; with its/their subdirectory.
+        select the mbox file (NOT *.sbd directory)
+
+
+**** Address book XFER Between thunderbirds ************************
+
+Address books are stored in:
+    *.mab files
+Again incomprehensible to humans.
+
+Mapping of file names is in
+    ~/.thunderbird/<random-number>.default/
+    pref.js
+           has *.mab info
+           don't edit manualy while running, will be overwritten
+           Edit Preferences Config_Editor will let you edit it.
+
+Again, an addon does the trick:
+       MoreFunctionsForAddressBook
+       https://freeshell.de//~kaosmos/morecols-en.html
+
+Download
+install on via:
+    "Tools" "Addons" "Install from local file"
+    restart
+
+export: Address Book.<right click> "More Functions for AddressBook"
+        Export as *.mab
+
+import: Address Book.<right click> "More Functions for AddressBook"
+        Import addressbook form *.mab file
+
+                       
+
+
