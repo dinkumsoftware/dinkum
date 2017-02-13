@@ -1,0 +1,31 @@
+#!/bin/bash
+# dinkum-emacs-use-for-sudoedit
+# Copyright(c) 2017 Dinkum Software
+#
+# Usage: dinkum-emacs-use-for-sudoedit
+#        Requires sudo
+# Writes /etc/sudodoers.d/dinkum-use-emacs-for-sudoedit
+# which makes emacs the default editor for sudoedit
+#
+# Note: On many distributions you can also accomplish this
+#       by having EDITOR set in the environment
+#
+# 2017-02-13 tc@DinkumSoftware.com Initial
+
+# File we write
+OUT_FILE=/etc/sudoers.d/dinkum-use-emacs-for-sudoedit
+
+cat << END_OF_INPUT | sudo tee $OUT_FILE > /dev/null
+# $(basename $OUT_FILE)
+# Tells sudoedit to use emacs as the editor
+#
+# Written by $(basename $0) on $(date --rfc-3339=date)
+
+Defaults editor=$(which emacs)
+END_OF_INPUT
+
+# Give it the right permissions
+sudo chmod 440 $OUT_FILE
+
+
+
