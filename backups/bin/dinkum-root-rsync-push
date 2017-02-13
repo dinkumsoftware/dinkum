@@ -1,7 +1,7 @@
 #!/bin/bash
 # dinkum-root-rsync-push
 # 
-#   Copyright 2007-2016 Dinkum Software
+#   Copyright 2007-2017 Dinkum Software
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
@@ -23,9 +23,10 @@
 #                                    ubuntu was storing in topdir-root-rsync-push/
 #                                    instead of topdir-root-rsync-push/com/domainname/hostname
 #                                  mkdir --parents of remote directory.
+# 2017-02-12 tc@DinkumSoftware.com Switched from root usage to sudo because of lack of
+#                                  of root accounts on ubutu
 #
 # Bugs to fix:
-#     remove FC1 patch commenting out readlink
 #     the destination directory on remotehost must exist
 #    /boot and /dev aren't copied.  See note toward end of file
 
@@ -33,7 +34,7 @@ function usage()
 {
 echo >&2 "USAGE:dinkum-root-rsync-push remotehost remotedir"
 echo >&2 "    Makes a copy of the entire local filesystem on another host"
-echo >&2 "    via rsync over ssh.  You must have root access on both machines."
+echo >&2 "    via rsync over ssh.  You must have sudo access on both machines."
 echo >&2 "        remotehost  Which computer to copy to"
 echo >&2 "        remotedir   The directory on remote machine where copy is rooted"
 echo >&2 "    If the local machine is local.mydomain.com, then"
@@ -49,6 +50,7 @@ echo >&2 "       no longer exist on local machine are removed."
 
 }
 
+# Functions
 
     # fqdn_to_reversed_filetree(fqdn)
     # converts fqdn, e.g. foo.mydomain.com to 
@@ -86,14 +88,9 @@ function fqdn_to_reversed_filetree()
 }
 
 
-
-
 # Configurations
 set -u # unset variables error when expanded
-
-# Functions
-
-
+set -e # Die if command fails
 
 # Execution starts here
 # Check the preconditions
@@ -106,13 +103,6 @@ if (( $# != 2 )) ; then
 fi
 REMOTEHOST="$1"
 REMOTEDIR="$2"
-
-# Make sure we are root
-if [ "`whoami`" != "root" ] ; then
-    usage
-    echo >&2 "ERROR: You must be root to run this program."
-    exit 1
-fi
 
 
 # Figure out where on the remote host we are gonna "root" the copy
@@ -130,18 +120,26 @@ fi
 #                                                       com/somedomain/host_copying_from
 declare REMOTE_ROOT="$REMOTEDIR/topdir-root-rsync-push/$FQDN_TO_REVERSED_FILETREE"
 # clean up any repeated // remove ..'s etc
-# BUG This was commented out for Fedora Core 1, readlink did not know about
-#     --canonicalize-missing
-#    REMOTE_ROOT=`readlink --canonicalize-missing --no-newline $REMOTE_ROOT`
+REMOTE_ROOT=$(readlink --canonicalize-missing --no-newline $REMOTE_ROOT)
 
-# Make the directory on the remote filesystem (if it doesn't exist)
-ssh "root@$REMOTEHOST" mkdir --parents "$REMOTE_ROOT"
+# Make sure the directory on the remote filesystem exists
+# Test a regular users
+if  ssh "$REMOTEHOST" [ ! -d "$REMOTE_ROOT" ] ; then
+    # Does not exist, need to make it as root
+    echo $REMOTEHOST:$REMOTE_ROOT does NOT exist.
+    echo Making it as root
+
+    # The -t forces a terminal so sudo works on far side.
+    set -x    # Let them see what they are sudo'ing
+    ssh -t "$REMOTEHOST" sudo mkdir --parents "$REMOTE_ROOT"
+    set +x
+fi
 
 
-# Log our actions
+# Log our actions, both here and there
 PN="$(basename $0)"
 logger "$PN $*"
-ssh "root@$REMOTEHOST" logger "$REMOTEHOST:$PN $*"
+ssh "$REMOTEHOST" logger "$REMOTEHOST:$PN $*"
 
 
 # Do it
@@ -166,6 +164,9 @@ declare RSYNC_ARGS="--progress  \
       --rsh=ssh                 \
       --archive --one-file-system --hard-links --delete"
 
+# For debug
+echo RSYNC_ARGS:$RSYNC_ARGS
+
 # Do it!
 #     BUGS to fix....
 #        I'd like to backup /boot and /dev, but....
@@ -177,7 +178,8 @@ declare RSYNC_ARGS="--progress  \
 #            build a list of stuff to exclude... but for now I'll just omit
 #            /boot and /dev
 
-echo rsync \<args sniped\> /  root@$REMOTEHOST:$REMOTE_ROOT
-     rsync $RSYNC_ARGS     /  root@$REMOTEHOST:$REMOTE_ROOT
+echo sudo rsync --rsync-path="sudo rsync" \<args sniped\> /  $REMOTEHOST:$REMOTE_ROOT
+     sudo rsync --rsync-path="sudo rsync" $RSYNC_ARGS     /  $REMOTEHOST:$REMOTE_ROOT
+
 
 
