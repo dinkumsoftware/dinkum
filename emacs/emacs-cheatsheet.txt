@@ -6,6 +6,7 @@ A list of emacs commands that I never seem to remember
 2016-11-30 tc@DinkumSoftware.com  Initial
 2016-12-11 tc@DinkumSoftware.com  Added sudo::
 2017-02-06 tc@DinkumSoftware.com  Added note about disown'ing emacs
+2017-02-13 tc@DinkumSoftware.com  Added Edit remote file as root
 
 # tramp
 # A way to edit remote files and files owned by root
@@ -15,6 +16,9 @@ Find File: /<username>@<host>:<filename>    # edits file remotely
 
 # Edits local as root
 Find File: /sudo::/path/to/file-to-edit
+
+# Edit remote file as root
+Find File: /ssh:you@remotehost|sudo:remotehost:/path/to/file
 
 # Launch emacs from unity(and maybe gnome)
 # At least on Ubuntu 14.04, if you launch emacs from desktop button, it
