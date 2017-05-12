@@ -13,12 +13,22 @@ Frequently used git commands.
 2016-12-05 tc@DinkumSoftware.com squashing since last push
 2016-12-14 tc@DinkumSoftware.com git reset --hard HEAD
 2017-05-09 tc@DinkumSoftware.com git merge-base branchA branchB
+2017-05-11 tc@DinkumSoftware.com bunch of additions
 
 *** Creating stuff
+# Initial copy of a repo from GitHub
+cd parent
+git clone https://<USERNAME>@github.com/whatever/repo.git      ; creates in directory parent/repo
+git clone https://<USERNAME>@github.com/whatever/repo.git  DIR ; creates in directory parent/DIR
+
+
 
 # Create new LOCAL branch based on REMOTE
 git branch       LOCAL origin/REMOTE
 git checkout -b  LOCAL origin/REMOTE
+
+# Change who you "pull" from
+git branch --set-upstream-to origin/REMOTE
 
 
 *** Changing state
@@ -57,6 +67,9 @@ git reset --hard HEAD
 # Delete all untracked files
 git clean  
 
+# throwaway the last attempted merge
+git merge --abort
+
 # Delete <N> commits
 # http://stackoverflow.com/questions/1338728/delete-commits-from-a-branch-in-git
 # WARNING! Stash first, deletes working dir changes
@@ -86,6 +99,15 @@ git ls-files <file-name> --error-unmatch  &>>/dev/null  # returns 0 if in git, 1
 # Thanks to: http://stackoverflow.com/questions/1441010/the-shortest-possible-output-from-git-log-containing-author-and-date
 # example output: 2016-11-23 tom campbell    dacf92c   test-socketCAN user interface enhancements.
 git log --pretty=format:"%ad %<(15,trunc)%an %<(9,trunc)%h %s" --date=short
+
+# git log useful options
+--oneline      Suppress commit message
+--name-only    list files that changed in commit
+--name-status  list files that changed in commit along with single char status code
+                 Added (A), Copied (C), Deleted (D), Modified (M), Renamed (R),
+                 have their type (i.e. regular file, symlink, submodule, ...) changed (T)
+                 are Unmerged (U), are Unknown (X), or have had their pairing Broken (B). 
+--no-merges    suppress printout of commits that are the result of merges (2 parents)
 
 # What is upstream?
 git remote show origin
