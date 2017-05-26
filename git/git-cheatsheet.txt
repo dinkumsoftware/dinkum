@@ -15,12 +15,20 @@ Frequently used git commands.
 2017-05-09 tc@DinkumSoftware.com git merge-base branchA branchB
 2017-05-11 tc@DinkumSoftware.com bunch of additions
 
+Table of contents
+    *** Creating stuff
+    *** Changing state
+    *** Fixing stuff
+    *** Deleting stuff
+    *** Publishing Stuff
+    *** Determining state
+    *** username/password caching
+==================================================
 *** Creating stuff
 # Initial copy of a repo from GitHub
 cd parent
 git clone https://<USERNAME>@github.com/whatever/repo.git      ; creates in directory parent/repo
 git clone https://<USERNAME>@github.com/whatever/repo.git  DIR ; creates in directory parent/DIR
-
 
 
 # Create new LOCAL branch based on REMOTE
