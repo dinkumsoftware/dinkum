@@ -1,0 +1,14 @@
+#!/bin/bash
+# dinkum-git-configure-for-tc
+#
+# Configures git for the author.
+# It's probably not right for you
+
+# 2019-04-12 tc@DinkumSoftware.com
+
+set -e  # stop on error
+set -u  # die on unexpanded vars
+
+git config --global user.email  "tc@DinkumSoftware.com"
+git config --global user.name   "tom campbell"
+git config --global core.editor emacs
