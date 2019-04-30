@@ -1,0 +1,19 @@
+
+http://github.com/dinkumsoftware/dinkum.git
+CONVENTIONS.txt
+
+This is list of conventions followed in the dinkum repo (see above)
+
+2019-04-30 tc@DinkumSoftware.com Initial
+
+All executables start with dinkum-
+
+Anything starting with tc- is NON-generic and are the author's desired customization.
+
+All the python library source will be in:
+    dinkum/python/dinkum/a/b/*.py    # In package library code
+           python/bin/dinkum-*.py    # Is executable
+
+    dinkum/bin ; sym links.e.g.
+          dinkum-* ==> ../python/bin/dinkum-*.py
+
