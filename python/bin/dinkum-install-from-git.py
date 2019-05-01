@@ -2,10 +2,15 @@
 
 """
 DESCRIPTION
- This installs all the dinkumsoftware programs in ~/.dinkum
+ This installs all the dinkumsoftware programs/code in ~/.dinkum/git-copy
+     by copying files from the git clone of dinkumsoftware.
+ It puts symbolic links in ~/doc/dinkum/* to all the documentation
+     files under ~/.dinkum/git-copy
  It makes mild alteration to ~/.bashrc
- It does NOT require sudo.  It assumes you have done a full
- git checkout of the source. (See EXAMPLES)
+     Puts ~/dinkum/git-copy/bin on the PATH
+     Puts ~/.dinkum/git-copy/python on PYTHONPATH
+ It does NOT require sudo.
+ It assumes you have done a full git checkout of the source. (See EXAMPLES)
 
  It's OK to run this as many times as you like.  If a new version of
  something shows up in git, you can rerun this to get it on your machine
@@ -16,13 +21,13 @@ EXAMPLES
   <somewhere>/bin/dinkum-install-from-git
 
   [optional] rm -rf ~/<somewhere>/dinkum # Don't need git copy after install
-                                         # But feel free to keep it and contribute
+                                         # But feel free to keep it
 To undo these actions:
   rm -rf ~/.dinkum
   [optional] edit ~/.bashrc (see end of file) to remove dinkum stuff.
             # This is not required, won't break anything if you leave it in
 
-To use:
+USAGE
   You will have to log out and log in to pick up the .bashrc changes.
   If you want to just try it in a terminal window:
       bash
@@ -44,15 +49,121 @@ LICENSE
 VERSION
     0.0
 """
-version_exe = 0.0
+program_version = 0.0
 
 import sys, os, traceback, argparse
 import textwrap # for getting file docs to screen
+from distutils.file_util import copy_file
+from distutils.dir_util  import copy_tree, mkpath
+from distutils import log
 
-# return "err_msg" to indicate an error.
 #  "err_msg" will be printed for user
 def main ():
-    pass
+    ''' 
+Normally returns None.  On error, return "err_msg" .
+
+We install by copying from a git clone of dinkumsoftware to the
+directory ~/.dinkum.  
+
+    Find the git root dir and validate it
+    Find and use python library code in git
+    Enumerate all the subdirs to publish
+'''
+    # Make these from the cmd line <todo>
+    verbose = 1
+    dry_run = 0    # Use for debugging
+
+    # Required to make verbose work on distutil.xxx calls
+    log.set_verbosity(log.INFO)
+    log.set_threshold(log.INFO)
+
+    # these are fragile times as we are a dinkum install
+    # program.  Can't make assumptions about where to find
+    # stuff.  We expect we are running from a git clone
+    # copy of dinkumsoftware.
+    # <x>/dinkum/bin/dinkum-install-from-git    # where we live
+    # <x>/dinkum                                # git root dir
+    # <x>/dinkum/python/dinkum/...              # Where packages live
+
+    # Get our inclosing directory <x>/dinkum/bin
+    our_dir = os.path.dirname (sys.argv[0] )
+    our_dir = os.path.abspath(our_dir)
+
+    # Find the git root dir <x>/dinkum
+    # It should be the parent of our_dir
+    # and it must contain a .git directory
+    git_dirname = ".git"
+    git_root_dir = os.path.dirname(our_dir)
+    if not os.path.isdir ( os.path.join( git_root_dir,
+                                         git_dirname)) :
+        # Error
+        err_msg = '''
+ERROR: This program is NOT part of a dinkumsoftware git clone.
+Expecting directory {} to be a git root directory.
+It is not as there is no directory {}.
+Run again with --help switch.
+'''.format(git_root_dir,git_dirname)
+        return err_msg
+
+    # where our python packages in git live
+    pkg_dir = os.path.join(our_dir, '../python' )
+    pkg_dir = os.path.abspath(pkg_dir)
+    
+    # Validate the package directory
+    if not os.path.isdir(pkg_dir) :
+        err_msg='''
+ERROR. Directory {} does not exist.
+It is suppose to be the parent directory of dinkum python packages.
+Sure you are running from a good git clone of dinkumsoftware?
+Rerun with --help to see usage and description.
+'''.format(pkg_dir)
+        return err_msg ;
+
+    # insert that at head of search path
+    # So that we can use that software
+    sys.path.insert(0, pkg_dir)
+
+    # Recursively copy from git_root_dir
+    #     We publish all files in git_root_dir
+    #       except: .gitignore
+    #     We publish every subdirectory of git_root_dir
+    #     that does NOT contain a file named:
+    magic_filename_to_not_publish = 'DINKUM_NOT_TO_PUBLISH'
+    #     We do not publish the .git directory
+
+    # They are all copied to ~/.dinkum/git-copy-root
+    dinkum_git_copy_root = '~/.dinkum/git-copy-root' ;
+    des_root = os.path.expanduser( dinkum_git_copy_root )
+    des_root = os.path.abspath( des_root) # probably not req'd
+    
+    # Create the directory if it doesn't exist
+    dirs_created = mkpath( des_root, verbose=verbose, dry_run=dry_run)
+
+    # All the files (or dirs) in git_root_dir are
+    # targets to publish.  Iterate thru them
+    names_to_ignore = [git_dirname, ".gitignore"]
+    for file_or_dir in os.listdir( git_root_dir ) :
+        # Don't publish stufff we are ignoring
+        if file_or_dir in names_to_ignore :
+            continue
+
+        # Don't publish dirs that contain a file
+        # with magic name not to publish
+        if os.path.isfile( os.path.join(git_root_dir, file_or_dir,
+                                        magic_filename_to_not_publish)) :
+            continue 
+                           
+        # We want to publish this subdir or file
+        # src ==> des_root
+        # Make sure directory exists
+
+        src = os.path.join( git_root_dir, file_or_dir )
+        if os.path.isdir (src) :
+            copy_tree(src, des_root, preserve_symlinks=True, verbose=verbose, dry_run=dry_run) ;
+        else :
+            copy_file(src, des_root, verbose=verbose, dry_run=dry_run) ;
+
+
 
 
 if __name__ == '__main__':
