@@ -2,7 +2,7 @@
 
 """
 DESCRIPTION
- This installs all the dinkumsoftware programs/code in ~/.dinkum/git-copy
+ This installs all the dinkumsoftware programs & code in ~/.dinkum/git-copy
      by copying files from the git clone of dinkumsoftware.
  It puts symbolic links in ~/doc/dinkum/* to all the documentation
      files under ~/.dinkum/git-copy
@@ -26,6 +26,7 @@ To undo these actions:
   rm -rf ~/.dinkum
   [optional] edit ~/.bashrc (see end of file) to remove dinkum stuff.
             # This is not required, won't break anything if you leave it in
+  <todo> fix this
 
 USAGE
   You will have to log out and log in to pick up the .bashrc changes.
@@ -56,7 +57,10 @@ program_version = 0.0
 
 import sys, os, traceback, argparse
 import textwrap # for getting file docs to screen
-import shutil   # copytree
+
+
+# Other imports from dinkum.x.y.z must wait a bit
+# until PYTHONPATH is set up
 
 #  returned "err_msg" will be printed for user
 def main ():
@@ -120,53 +124,10 @@ Rerun with --help to see usage and description.
     # So that we can use that software
     sys.path.insert(0, pkg_dir)
 
-    # Recursively copy from git_root_dir
-    #     We publish all files in git_root_dir
-    #       except: .gitignore
-    #     We publish every subdirectory of git_root_dir
-    #     that does NOT contain a file named:
-    magic_filename_to_not_publish = 'DINKUM_NOT_TO_PUBLISH'
-    #     We do not publish the .git directory itself.
+    # We can now use dinkum python package
+    from dinkum.project.install import install_from_git
+    install_from_git(git_root_dir)
 
-    # Everything is copied to ~/.dinkum/git-copy-root
-    dinkum_git_copy_root = '~/.dinkum/git-copy-root' ;
-    des_root = os.path.expanduser( dinkum_git_copy_root ) # ~ expansion
-    des_root = os.path.abspath( des_root) # probably not req'd
-    
-    # Create the directory if it doesn't exist
-    try:
-        # <todo> verbose=verbose, dry_run=dry_run)
-        os.makedirs( des_root )
-    except OSError, e:
-        # Silently ignore: OSError: [Errno 17] File exists:
-        # Means des_root already exists.  Pass any other along.
-        if e.errno != os.errno.EEXIST:
-            raise
-        
-    # All the files (or dirs) in git_root_dir are
-    # targets to publish.  Iterate thru them
-    names_to_ignore = [git_dirname, ".gitignore"]
-    for file_or_dir in os.listdir( git_root_dir ) :
-        # Don't publish stufff we are ignoring
-        if file_or_dir in names_to_ignore :
-            continue
-
-        # Don't publish dirs that contain a file
-        # with magic name indicating not to publish it
-        if os.path.isfile( os.path.join(git_root_dir, file_or_dir,
-                                        magic_filename_to_not_publish)) :
-            continue 
-                           
-        # We want to publish this subdir or file
-        # src ==> des_root
-        src = os.path.join( git_root_dir, file_or_dir )
-        if os.path.isdir (src) :
-            # copy tree requires des be a non-existent dir
-            # So we have to compute top level destination directory
-            des = os.path.join(des_root, os.path.basename(src))
-            shutil.copytree(src, des, symlinks=True)
-        else :
-            shutil.copy2(src, des_root) # single file
 
     # Life is good
     return None
