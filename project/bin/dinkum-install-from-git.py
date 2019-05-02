@@ -111,7 +111,7 @@ directory ~/.dinkum.
     # copy of dinkumsoftware.
     # <x>/dinkum                                # git root dir
     # <x>/dinkum/bin/dinkum-install-from-git    # where we live
-    # <x>/dinkum/python/dinkum/...              # Where python package dirs live
+    # <x>/dinkum/                               # Where python package dirs live
 
     # Get our inclosing directory <x>/dinkum/bin
     our_dir = os.path.dirname (sys.argv[0] )
@@ -134,8 +134,7 @@ Run again with --help switch.
         return err_msg
 
     # where our python packages in git live
-    pkg_dir = os.path.join(our_dir, '../python' )
-    pkg_dir = os.path.abspath(pkg_dir)
+    pkg_dir = git_root_dir
     
     # Validate the package directory
     if not os.path.isdir(pkg_dir) :
@@ -147,9 +146,24 @@ Rerun with --help to see usage and description.
 '''.format(pkg_dir)
         return err_msg ;
 
+    # Confirm pkg_dir has right name
+    # It must be dinkum in order for python
+    #    import dinkum.whatever
+    # to work.
+    if os.path.basename(pkg_dir) != "dinkum" :
+       err_msg = '''
+ERROR. The git root directory {} is NOT named dinkum.
+Please rerun git clone http://github.com/dinkumsoftware/dinkum.git
+This is required so that python import dinkum.whatever works.
+'''.format(pkg_dir)
+       return err_msg
+# <todo> test the above
+
+    # python imports should work.
     # insert that at head of search path
     # So that we can use that software
-    sys.path.insert(0, pkg_dir)
+    # sys.path has the Parent of the dinkum dir
+    sys.path.insert(0, os.path.dirname(pkg_dir))
 
     # We can now use dinkum python package
     from dinkum.project.install import install_from_git
