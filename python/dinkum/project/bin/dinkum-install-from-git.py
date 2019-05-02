@@ -32,6 +32,12 @@ To undo these actions:
   <todo> fix this
 
 USAGE
+dinkum-install-from-git
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  Announce what it is doing
+  -d, --dry-run  Announce what WOULD do, but don't do it
+
   You will have to log out and log in to pick up the .bashrc changes.
   If you want to just try it in a terminal window:
       bash
@@ -67,7 +73,12 @@ import textwrap # for getting file docs to screen
 
 #  returned "err_msg" will be printed for user
 def main ():
-    ''' 
+    ''' dinkum-install-from-git
+optional arguments:
+  -h, --help     show this help message and exit
+  -v, --verbose  Announce what it is doing
+  -d, --dry-run  Announce what WOULD do, but don't do it
+
 Normally returns None.  On error, return "err_msg" .
 
 We install by copying from a git clone of dinkumsoftware to the
@@ -77,9 +88,22 @@ directory ~/.dinkum.
     Find and use python library code in git
     Enumerate all the subdirs to publish
 '''
-    # Make these from the cmd line <todo>
-    verbose = 1
-    dry_run = 0    # Use for debugging
+
+    # Specify and parse the command line arguments
+    parser = argparse.ArgumentParser(
+        # print document string "as is" on --help
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(__doc__))
+    parser.add_argument("-v", "--verbose",
+                        help="Announce what it is doing",
+                        action="store_true")
+    parser.add_argument("-d", "--dry-run",
+                        help="Announce what WOULD do, but don't do it",
+                        action="store_true")
+    parser.parse_args()
+    args = parser.parse_args()
+    verbose = args.verbose
+    dry_run = args.dry_run
 
     # these are fragile times as we are a dinkum install
     # program.  Can't make assumptions about where to find
@@ -129,8 +153,11 @@ Rerun with --help to see usage and description.
 
     # We can now use dinkum python package
     from dinkum.project.install import install_from_git
-    install_from_git(git_root_dir)
+    install_from_git(git_root_dir, verbose, dry_run)
 
+    # Warn them if we didn't do anything
+    if dry_run :
+        print "** This was a DRY-RUN.  Nothing was written. **"
 
     # Life is good
     return None
@@ -138,14 +165,6 @@ Rerun with --help to see usage and description.
 
 if __name__ == '__main__':
     try:
-        # Specify the command line arguments
-        parser = argparse.ArgumentParser(
-            # print document string "as is" on --help
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            description=textwrap.dedent(__doc__))
-
-        parser.parse_args()
-
         # Invoke the actual program
         # It's an error if it returns anything
         main_return = main()
