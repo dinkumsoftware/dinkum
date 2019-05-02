@@ -38,7 +38,9 @@ EXIT STATUS
     2  Some kind of exception tossed
 
 AUTHOR
+    <todo> move this out of docstring
     2019-04-30 tc@DinkumSoftware.com Initial
+    2019-04-30 tc@DinkumSoftware.com Switched to shutil.copytree()
 
 LICENSE
     Copyright(c) 2019 Dinkum Software
@@ -49,15 +51,14 @@ LICENSE
 VERSION
     0.0
 """
+# <todo> only put version # one place, f'string?
 program_version = 0.0
 
 import sys, os, traceback, argparse
 import textwrap # for getting file docs to screen
-from distutils.file_util import copy_file
-from distutils.dir_util  import copy_tree, mkpath
-from distutils import log
+import shutil   # copytree
 
-#  "err_msg" will be printed for user
+#  returned "err_msg" will be printed for user
 def main ():
     ''' 
 Normally returns None.  On error, return "err_msg" .
@@ -73,17 +74,13 @@ directory ~/.dinkum.
     verbose = 1
     dry_run = 0    # Use for debugging
 
-    # Required to make verbose work on distutil.xxx calls
-    log.set_verbosity(log.INFO)
-    log.set_threshold(log.INFO)
-
     # these are fragile times as we are a dinkum install
     # program.  Can't make assumptions about where to find
     # stuff.  We expect we are running from a git clone
     # copy of dinkumsoftware.
-    # <x>/dinkum/bin/dinkum-install-from-git    # where we live
     # <x>/dinkum                                # git root dir
-    # <x>/dinkum/python/dinkum/...              # Where packages live
+    # <x>/dinkum/bin/dinkum-install-from-git    # where we live
+    # <x>/dinkum/python/dinkum/...              # Where python package dirs live
 
     # Get our inclosing directory <x>/dinkum/bin
     our_dir = os.path.dirname (sys.argv[0] )
@@ -129,16 +126,23 @@ Rerun with --help to see usage and description.
     #     We publish every subdirectory of git_root_dir
     #     that does NOT contain a file named:
     magic_filename_to_not_publish = 'DINKUM_NOT_TO_PUBLISH'
-    #     We do not publish the .git directory
+    #     We do not publish the .git directory itself.
 
-    # They are all copied to ~/.dinkum/git-copy-root
+    # Everything is copied to ~/.dinkum/git-copy-root
     dinkum_git_copy_root = '~/.dinkum/git-copy-root' ;
-    des_root = os.path.expanduser( dinkum_git_copy_root )
+    des_root = os.path.expanduser( dinkum_git_copy_root ) # ~ expansion
     des_root = os.path.abspath( des_root) # probably not req'd
     
     # Create the directory if it doesn't exist
-    dirs_created = mkpath( des_root, verbose=verbose, dry_run=dry_run)
-
+    try:
+        # <todo> verbose=verbose, dry_run=dry_run)
+        os.makedirs( des_root )
+    except OSError, e:
+        # Silently ignore: OSError: [Errno 17] File exists:
+        # Means des_root already exists.  Pass any other along.
+        if e.errno != os.errno.EEXIST:
+            raise
+        
     # All the files (or dirs) in git_root_dir are
     # targets to publish.  Iterate thru them
     names_to_ignore = [git_dirname, ".gitignore"]
@@ -148,22 +152,24 @@ Rerun with --help to see usage and description.
             continue
 
         # Don't publish dirs that contain a file
-        # with magic name not to publish
+        # with magic name indicating not to publish it
         if os.path.isfile( os.path.join(git_root_dir, file_or_dir,
                                         magic_filename_to_not_publish)) :
             continue 
                            
         # We want to publish this subdir or file
         # src ==> des_root
-        # Make sure directory exists
-
         src = os.path.join( git_root_dir, file_or_dir )
         if os.path.isdir (src) :
-            copy_tree(src, des_root, preserve_symlinks=True, verbose=verbose, dry_run=dry_run) ;
+            # copy tree requires des be a non-existent dir
+            # So we have to compute top level destination directory
+            des = os.path.join(des_root, os.path.basename(src))
+            shutil.copytree(src, des, symlinks=True)
         else :
-            copy_file(src, des_root, verbose=verbose, dry_run=dry_run) ;
+            shutil.copy2(src, des_root) # single file
 
-
+    # Life is good
+    return None
 
 
 if __name__ == '__main__':
