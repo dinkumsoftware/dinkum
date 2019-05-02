@@ -15,6 +15,9 @@ DESCRIPTION
  It's OK to run this as many times as you like.  If a new version of
  something shows up in git, you can rerun this to get it on your machine
 
+ Any existing installation from git is UNINSTALLED and then reinstalled.
+ This is due to limitations of some underlying tools.
+
 EXAMPLES
   cd ~/<somewhere>
   git clone http://github.com/dinkumsoftware/dinkum.git

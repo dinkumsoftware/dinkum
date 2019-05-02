@@ -3,11 +3,15 @@
 Series of functions to install, uninstall, and support all the software
 produced by dinkum software.
 
+    install_from_git       Copies from a git to .dinkum/git-copy-root and
+                             configures so user can use it
+    remove_install_from_git undoes the above
+
 '''
 #2019-05-02 tc@DinkumSoftware.com Initial
 
 import os       # makedirs
-import shutil   # copytree
+import shutil   # copytree, rmtree
 
 # Where dinkumsoftware stores "private" stuff
 dinkum_data = "~/.dinkum"
@@ -19,7 +23,7 @@ dinkum_data = os.path.abspath( dinkum_data)
 # in install_from_git()
 dinkum_git_copy_root = os.path.join(dinkum_data, "git-copy-root")
 
-# If a file named this exists in a subdirectory of git_root_dir,
+# If a file named the following exists in a subdirectory of git_root_dir,
 # then that directory is NOT copied into dinkum_git_copy_root
 magic_filename_to_not_publish = 'DINKUM_NOT_TO_PUBLISH'
 
@@ -35,7 +39,16 @@ def install_from_git(git_root_dir) :
          that does NOT contain a file currently named
            DINKUM_NOT_TO_PUBLISH (See magic_filename_to_no_publish_above)
          We do not publish the .git directory itself.
-    ''' # <todo> f'string?
+
+    Any existing installation from git is UNINSTALLED and then reinstalled.
+    This is due to limitations of some underlying tools
+
+    ''' # <todo> f'string? to avoid entering defs twice
+    
+    # Silently remove any existing prior installation
+    # the shutil.copytree and os.makedirs() complain if there are
+    # preexisting files.
+    remove_install_from_git() 
     
     # Everything is copied to dinkum_git_copy_root
     
@@ -66,6 +79,18 @@ def install_from_git(git_root_dir) :
             des = os.path.join(dinkum_git_copy_root, os.path.basename(src))
             shutil.copytree(src, des, symlinks=True)
         else :
+            #<todo> I suspect symbolic links don't work properly
             shutil.copy2(src, dinkum_git_copy_root) # single file
 
+
+def remove_install_from_git() :
+    ''' Undoes an install_from_git().
+        .dinkum/git-copy-root   is recursively deleted.
+    It is NOT an error if none of the files exist
+    '''
+
+    # If ~/.dinkum/git-copy-root file tree exists
+    if os.path.isdir( dinkum_git_copy_root) :
+        # Wipe it out 
+        shutil.rmtree( dinkum_git_copy_root)
 
