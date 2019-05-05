@@ -104,6 +104,8 @@ def install_from_git(git_root_dir, verbose=False, dry_run=False) :
             shutil.copy2(src, dinkum_git_copy_root) # single file
         
     # recursive copy the directories
+    # <todo> should probably be able to ignore some files
+    #        like *~ and *.pyc
     dirs_to_copy.sort()
     for src in dirs_to_copy :
         # copy tree requires des be a non-existent dir

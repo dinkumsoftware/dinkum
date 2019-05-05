@@ -88,7 +88,10 @@ def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
     executable.
 
     Returns the dinkum_git_root_dir
-    On error, throws an exception
+    On error, throws an exception:
+        BadFileorDirArg    file_or_dir is non-valid path
+        NoDotGitDirectory  Could not find parent dir with .git in it
+        GitRootDirHasWrongName Found a git root dir, but not named "dinkum"
     '''
     # We expect we are running from a git clone copy of dinkumsoftware.
     # file_or_dir:         <x>/dinkum/a/b/c/whatever
@@ -116,18 +119,20 @@ def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
                 PROBABLE SOFTWARE ERROR."""
             err_msg = textwrap.dedent(err_msg.format(wrk_dir=wrk_dir,
                                                      file_or_dir=file_or_dir))
-            raise Exception(err_msg)
+            class BadFileorDirArg(Exception) : pass
+            raise BadFileorDirArg(err_msg)
 
         # Hit the top of the file tree ?
         if wrk_dir == root or not wrk_dir :
             # Failed to find the dinkum git root
             err_msg = '''\
                 FAILED to locate dinkum git root dir.
-                Starting looking upward in file system from: {file_or_dir}.
+                Starting looking upward in file system from: {file_or_dir}
                 Did NOT find a directory with {git_dirname} in it.'''
             err_msg = textwrap.dedent(err_msg.format(file_or_dir=file_or_dir,
                                                      git_dirname=git_dirname))
-            raise Exception(err_msg)
+            class NoDotGitDirectory(Exception) : pass
+            raise NoDotGitDirectory(err_msg)
 
         # Is this a git root? i.e containts a .git sub directory
         if os.path.isdir ( os.path.join( wrk_dir,
@@ -145,12 +150,13 @@ def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
     if os.path.basename(wrk_dir) != dinkum_git_root_reqd_name :
         err_msg = '''\
             Found a git root dir (has a .git subdir): {wrk_dir}
-            BUT it is NOT named:  {dinkum_git_root_reqd_name}
+            BUT it is NOT named: {dinkum_git_root_reqd_name}
             It must have that name for python package imports to work.
             Sure you are running from a good git clone of dinkumsoftware?'''
         err_msg = textwrap.dedent(err_msg.format(wrk_dir=wrk_dir,
                                                  dinkum_git_root_reqd_name=dinkum_git_root_reqd_name))
-        raise Exception(err_msg)
+        class GitRootDirHasWrongName(Exception) : pass
+        raise GitRootDirHasWrongName(err_msg)
 
     # Life is good, found the required git directory and it is properly name
     return wrk_dir
@@ -234,10 +240,9 @@ if __name__ == '__main__':
         raise e
     except SystemExit, e: # sys.exit()
         raise e
-    except Exception, e:
-        print 'ERROR, UNEXPECTED EXCEPTION'
-        print str(e)
-        traceback.print_exc()
+    except Exception, e:         
+        print 'ERROR: uncaught EXCEPTION. Msg after traceback.'
+        traceback.print_exc()    # stack dump (which prints err msg)
         os._exit(2)
 
 # full-license:
