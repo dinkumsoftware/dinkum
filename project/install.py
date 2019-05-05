@@ -49,7 +49,7 @@ def install_from_git(git_root_dir, verbose=False, dry_run=False) :
     Any existing installation from git is UNINSTALLED and then reinstalled.
     This is due to limitations of some underlying tools
 
-    ''' # <todo> f'string? to avoid entering defs twice
+    '''
     
     # Silently remove any existing prior installation
     # the shutil.copytree and os.makedirs() complain if there are
@@ -63,15 +63,20 @@ def install_from_git(git_root_dir, verbose=False, dry_run=False) :
     if not dry_run :
         os.makedirs( dinkum_git_copy_root )
 
-    # All the files (or dirs) in git_root_dir are
+    # Most of the files (or dirs) in git_root_dir are
     # targets to publish.  Iterate thru them
     # Produce list of files and list of dirs
     files_to_copy = []
     dirs_to_copy  = []
     names_to_ignore = [".git", ".gitignore"]
+    extensions_to_ignore=('~', '.pyc')  # backup files and python "object code"
+                                        # must be tuple for endswith()
     for file_or_dir in os.listdir( git_root_dir ) :
-        # Don't publish stufff we are ignoring
+
+        # Don't publish stuff we are ignoring
         if file_or_dir in names_to_ignore :
+            continue
+        if file_or_dir.endswith(extensions_to_ignore) :
             continue
 
         # Don't publish dirs that contain a file

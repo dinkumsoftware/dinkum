@@ -4,18 +4,19 @@
 #path: project/bin/
 
 """
- This installs all the dinkumsoftware programs & code in ~/.dinkum/git-copy
+This installs all the dinkumsoftware programs & code in ~/.dinkum/git-copy
      by copying files from the git clone of dinkumsoftware.
- It puts symbolic links in ~/doc/dinkum/* to all the documentation
+It puts symbolic links in ~/doc/dinkum/* to all the documentation
      files under ~/.dinkum/git-copy
- It makes mild alteration to ~/.bashrc
+It makes mild alteration to ~/.bashrc
      Puts ~/dinkum/git-copy/bin on the PATH
      Puts ~/.dinkum/git-copy/python on PYTHONPATH
- It does NOT require sudo.
- It assumes you have done a full git checkout of the source. (See EXAMPLES)
+It does NOT require sudo.
+It assumes you have done a full git checkout of the source. (See EXAMPLES)
 
- It's OK to run this as many times as you like.  If a new version of
- something shows up in git, you can rerun this to get it on your machine
+ It's OK to run this as many times as you like.  If it was previously installed,
+it will be removed and reinstalled.  If a new version of something shows up in git,
+you can rerun this to get it on your machine
 
  Any existing installation from git is UNINSTALLED and then reinstalled.
  This is due to limitations of some underlying tools.
@@ -70,7 +71,7 @@ __doc__=__doc__.format(program_version=program_version)
 # 2019-05-05 tc@DinkumSoftware.com refactoring
 
 import sys, os, traceback, argparse
-import textwrap # dedent
+import textwrap    # dedent
 
 
 # Other imports from dinkum.x.y.z must wait a bit
@@ -107,8 +108,6 @@ def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
     root = '/'
     git_dirname = '.git'
     while True :
-        print "## wrk_dir", wrk_dir
-
         # Validate wrk_dir
         if not os.path.isdir(wrk_dir) :
             err_msg = """\

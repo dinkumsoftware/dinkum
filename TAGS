@@ -1,0 +1,45 @@
+
+project/bin/dinkum-install-from-git.py,57
+def find_dinkum_git_root_dir(81,2525
+def main 159,5780
+
+project/install.py,90
+def install_from_git(32,876
+def remove_install_from_git(113,4103
+def announce(131,4744
+
+project/recipe-528877-1.py,17
+def main 40,709
+
+sudoko/bin/sudoko.py,846
+def sudoku_solver(7,148
+class Board 20,480
+    def all_cell_values(33,938
+    def __init__(58,1752
+    def solve(135,5271
+    def check_solution_for_uniqueness(229,9440
+    def next_unsolved_cell(252,10355
+    def set(271,11134
+    def is_solved(345,14378
+    def num_unsolved(351,14557
+    def remove_from_unsolved(356,14818
+    def add_to_unsolved(373,15439
+    def unsolved_neighbors(390,16130
+    def remove_a_possibility(445,18241
+    def sanity_check(473,19265
+    def output(512,21182
+    def __str__(522,21542
+    def debug_str(541,22076
+    def hash_str(578,23420
+    def __hash__(592,23850
+    def __eq__(603,24203
+    def __ne__(609,24436
+    def debug_solve_label(617,24664
+    def debug_solve_indent(627,25205
+    def debug_set_label(633,25401
+    def debug_set_indent(645,26186
+def pretty_print(733,29557
+
+project/__init__.py,0
+
+__init__.py,0
