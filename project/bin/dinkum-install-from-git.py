@@ -67,13 +67,94 @@ __doc__=__doc__.format(program_version=program_version)
 # history:
 # 2019-04-30 tc@DinkumSoftware.com Initial
 # 2019-04-30 tc@DinkumSoftware.com Switched to shutil.copytree()
+# 2019-05-05 tc@DinkumSoftware.com refactoring
 
 import sys, os, traceback, argparse
-import textwrap # for getting file docs to screen
+import textwrap # dedent
 
 
 # Other imports from dinkum.x.y.z must wait a bit
 # until PYTHONPATH is set up
+
+# Support code
+def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
+    ''' Starting with "file_or_dir", walks UP the file tree
+    until it finds a directory containing a .git or / directory
+    That directory MUST be named "dinkum" for python imports
+    to work properly.
+
+    An omitted "file_or_dir" starts with currently running
+    executable.
+
+    Returns the dinkum_git_root_dir
+    On error, throws an exception
+    '''
+    # We expect we are running from a git clone copy of dinkumsoftware.
+    # file_or_dir:         <x>/dinkum/a/b/c/whatever
+    # dinkum_git_root_dir: <x>/dinkum
+
+    # Validate the argument of where we start looking
+    wrk_dir = file_or_dir
+    wrk_dir = os.path.expanduser(wrk_dir) # ~ expansion
+    wrk_dir = os.path.abspath(wrk_dir)
+
+    if not os.path.isdir(wrk_dir) :        # Passed a File instead of a directory?
+        wrk_dir = os.path.dirname(wrk_dir) # Yes, get enclosing directory
+
+    # Walk up the filetree, stopping when:
+    #    hit the / directory -or-
+    #    hit a directory with a .git subdir
+    root = '/'
+    git_dirname = '.git'
+    while True :
+        print "## wrk_dir", wrk_dir
+
+        # Validate wrk_dir
+        if not os.path.isdir(wrk_dir) :
+            err_msg = """\
+                Not a directory: {wrk_dir}
+                arg file_or_dir:{file_or_dir} was NOT a valid path.
+                PROBABLE SOFTWARE ERROR."""
+            err_msg = textwrap.dedent(err_msg.format(wrk_dir=wrk_dir,
+                                                     file_or_dir=file_or_dir))
+            raise Exception(err_msg)
+
+        # Hit the top of the file tree ?
+        if wrk_dir == root or not wrk_dir :
+            # Failed to find the dinkum git root
+            err_msg = '''\
+                FAILED to locate dinkum git root dir.
+                Starting looking upward in file system from: {file_or_dir}.
+                Did NOT find a directory with {git_dirname} in it.'''
+            err_msg = textwrap.dedent(err_msg.format(file_or_dir=file_or_dir,
+                                                     git_dirname=git_dirname))
+            raise Exception(err_msg)
+
+        # Is this a git root? i.e containts a .git sub directory
+        if os.path.isdir ( os.path.join( wrk_dir,
+                                         git_dirname)) :
+            # Yes, it is a git root
+            break
+
+        # wrk_dir is NOT a git root dir.
+        # Look upward
+        wrk_dir = os.path.dirname(wrk_dir)
+
+    # We found a git root directory: wrk_dir
+    # Make sure it has the required name
+    dinkum_git_root_reqd_name = "dinkum"
+    if os.path.basename(wrk_dir) != dinkum_git_root_reqd_name :
+        err_msg = '''\
+            Found a git root dir (has a .git subdir): {wrk_dir}
+            BUT it is NOT named:  {dinkum_git_root_reqd_name}
+            It must have that name for python package imports to work.
+            Sure you are running from a good git clone of dinkumsoftware?'''
+        err_msg = textwrap.dedent(err_msg.format(wrk_dir=wrk_dir,
+                                                 dinkum_git_root_reqd_name=dinkum_git_root_reqd_name))
+        raise Exception(err_msg)
+
+    # Life is good, found the required git directory and it is properly name
+    return wrk_dir
 
 #  returned "err_msg" will be printed for user
 def main ():
@@ -90,7 +171,8 @@ directory ~/.dinkum.
 
     Find the git root dir and validate it
     Find and use python library code in git
-    Enumerate all the subdirs to publish
+    Enumerate all the files and subdirs to publish
+    Copy files and recursively copy subdirs
 '''
 
     # Specify and parse the command line arguments
@@ -111,62 +193,19 @@ directory ~/.dinkum.
 
     # these are fragile times as we are a dinkum install
     # program.  Can't make assumptions about where to find
-    # stuff.  We expect we are running from a git clone
-    # copy of dinkumsoftware.
-    # <x>/dinkum                                # git root dir
-    # <x>/dinkum/bin/dinkum-install-from-git    # where we live
-    # <x>/dinkum/                               # Where python package dirs live
+    # stuff, in particular import of dinkum packages.
 
-    # Get our inclosing directory <x>/dinkum/bin
-    our_dir = os.path.dirname (sys.argv[0] ) # <x>/dinkum/bin/dinkum-install-from-git
-    our_dir = os.path.abspath(our_dir)       # <x>/dinkum/bin
+    # We expect we are running from a git clone copy of dinkumsoftware
+    # Find the root, the one with the .git in it
+    git_root_dir = find_dinkum_git_root_dir()
 
-    # Find the git root dir <x>/dinkum
-    # It should be the parent of our_dir
-    # and it must contain a .git directory
-    git_dirname = ".git"
-    git_root_dir = os.path.dirname(our_dir) # <x>/dinkum
-    if not os.path.isdir ( os.path.join( git_root_dir,
-                                         git_dirname)) :
-        # Error
-        err_msg = '''
-ERROR: This program is NOT part of a dinkumsoftware git clone.
-Expecting directory {} to be a git root directory.
-It is not as there is no directory {}.
-Run again with --help switch.
-'''.format(git_root_dir,git_dirname)
-        return err_msg
-
-    # where our python packages in git live
+    # our python packages in git live in the git_root_dir (which is named dinkum)
+    # git_root_dir is known to exist and be properly named
     pkg_dir = git_root_dir
     
-    # Validate the package directory
-    if not os.path.isdir(pkg_dir) :
-        err_msg='''
-ERROR. Directory {} does not exist.
-It is suppose to be the parent directory of dinkum python packages.
-Sure you are running from a good git clone of dinkumsoftware?
-Rerun with --help to see usage and description.
-'''.format(pkg_dir)
-        return err_msg ;
-
-    # Confirm pkg_dir has right name
-    # It must be dinkum in order for python
-    #    import dinkum.whatever
-    # to work.
-    if os.path.basename(pkg_dir) != "dinkum" :
-       err_msg = '''
-ERROR. The git root directory {} is NOT named dinkum.
-Please rerun git clone http://github.com/dinkumsoftware/dinkum.git
-This is required so that python import dinkum.whatever works.
-'''.format(pkg_dir)
-       return err_msg
-# <todo> test the above
-
-    # python imports should work.
+    # diddle PYTHONPATH so that dinkum python imports work.
+    # sys.path must have the PARENT of the dinkum dir
     # insert that at head of search path
-    # So that we can use that software
-    # sys.path has the Parent of the dinkum dir
     sys.path.insert(0, os.path.dirname(pkg_dir))
 
     # We can now use dinkum python package
