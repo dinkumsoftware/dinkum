@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+#filename: dinkum-install-from-git.py
+#repo: http://github.com/dinkumsoftware/dinkum.git
+#path: project/bin/
 
 """
-DESCRIPTION
  This installs all the dinkumsoftware programs & code in ~/.dinkum/git-copy
      by copying files from the git clone of dinkumsoftware.
  It puts symbolic links in ~/doc/dinkum/* to all the documentation
@@ -48,21 +50,23 @@ EXIT STATUS
     2  Some kind of exception tossed
 
 AUTHOR
-    <todo> move this out of docstring
-    2019-04-30 tc@DinkumSoftware.com Initial
-    2019-04-30 tc@DinkumSoftware.com Switched to shutil.copytree()
+    dinkumsoftware.com/tc
 
 LICENSE
     Copyright(c) 2019 Dinkum Software
     Licensed under Apache Version 2.0, January 2004
-    Full text at end of file.
     http://www.apache.org/licenses/
+    Full license text at end of file.
 
 VERSION
-    0.0
+    {program_version}
 """
-# <todo> only put version # one place, f'string?
 program_version = 0.0
+__doc__=__doc__.format(program_version=program_version)
+
+# history:
+# 2019-04-30 tc@DinkumSoftware.com Initial
+# 2019-04-30 tc@DinkumSoftware.com Switched to shutil.copytree()
 
 import sys, os, traceback, argparse
 import textwrap # for getting file docs to screen
@@ -114,14 +118,14 @@ directory ~/.dinkum.
     # <x>/dinkum/                               # Where python package dirs live
 
     # Get our inclosing directory <x>/dinkum/bin
-    our_dir = os.path.dirname (sys.argv[0] )
-    our_dir = os.path.abspath(our_dir)
+    our_dir = os.path.dirname (sys.argv[0] ) # <x>/dinkum/bin/dinkum-install-from-git
+    our_dir = os.path.abspath(our_dir)       # <x>/dinkum/bin
 
     # Find the git root dir <x>/dinkum
     # It should be the parent of our_dir
     # and it must contain a .git directory
     git_dirname = ".git"
-    git_root_dir = os.path.dirname(our_dir)
+    git_root_dir = os.path.dirname(our_dir) # <x>/dinkum
     if not os.path.isdir ( os.path.join( git_root_dir,
                                          git_dirname)) :
         # Error
@@ -198,8 +202,7 @@ if __name__ == '__main__':
         traceback.print_exc()
         os._exit(2)
 
-
-
+# full-license:
 '''
 Apache License
                            Version 2.0, January 2004

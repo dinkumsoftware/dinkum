@@ -1,16 +1,16 @@
-''' install
+#filename: install.py
+#repo: http://github.com/dinkumsoftware/dinkum.git
+#path: project/
 
+'''
 Series of functions to install, uninstall, and support all the software
 produced by dinkum software.
 
-    install_from_git       Copies from a git to .dinkum/git-copy-root and
-                             configures so user can use it
-    remove_install_from_git undoes the above
+Run pydoc to see a table of contents
 
-    helper functions:
-      announce             Handles verbose and dry_run
 '''
-#2019-05-02 tc@DinkumSoftware.com Initial
+# history:
+# 2019-05-02 tc@DinkumSoftware.com Initial
 
 import os       # makedirs
 import shutil   # copytree, rmtree
@@ -35,7 +35,7 @@ def install_from_git(git_root_dir, verbose=False, dry_run=False) :
     once copied the original git at git_root_dir may be deleted.
 
     if verbose is True, announce what is being done
-    if dry_run is Tru, announce what what would be done,
+    if dry_run is True, announce what what would be done,
                         but don't actually do it
 
     Recursively copy from "git_root_dir" to "dinkum_root_copy"
@@ -116,7 +116,7 @@ def remove_install_from_git(verbose=False, dry_run=False) :
     It is NOT an error if none of the files exist
 
     if verbose is True, announce what is being done
-    if dry_run is TRUE, announce what what would be done,
+    if dry_run is True, announce what what would be done,
                         but don't actually do it
 
     '''
