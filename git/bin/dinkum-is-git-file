@@ -8,7 +8,7 @@ USAGE: dinkum-is-git-file <file0> [ .. <fileN>]
   Silently tests all <file*> for being under git control.
   Returns: 0 if ALL files are    under git control.
           33 if any file  is NOT under git control.
-           1 on anyother sort of error
+           1 on any other sort of error
 END_OF_USAGE
 )
 

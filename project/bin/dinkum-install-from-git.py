@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 #filename: dinkum-install-from-git.py
-#repo: http://github.com/dinkumsoftware/dinkum.git
 #path: project/bin/
+#repo: http://github.com/dinkumsoftware/dinkum.git
+
 
 """
 This installs all the dinkumsoftware programs & code in ~/.dinkum/git-copy
@@ -80,17 +81,17 @@ import textwrap    # dedent
 # Support code
 def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
     ''' Starting with "file_or_dir", walks UP the file tree
-    until it finds a directory containing a .git or / directory
+    until it finds a directory containing a .git.
     That directory MUST be named "dinkum" for python imports
-    to work properly.
+    to work properly. Stops looking if hits / directory
 
     An omitted "file_or_dir" starts with currently running
     executable.
 
     Returns the dinkum_git_root_dir
     On error, throws an exception:
-        BadFileorDirArg    file_or_dir is non-valid path
-        NoDotGitDirectory  Could not find parent dir with .git in it
+        BadFileorDirArg        file_or_dir is non-valid path
+        NoDotGitDirectory      Could not find parent dir with .git in it
         GitRootDirHasWrongName Found a git root dir, but not named "dinkum"
     '''
     # We expect we are running from a git clone copy of dinkumsoftware.
@@ -134,7 +135,7 @@ def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
             class NoDotGitDirectory(Exception) : pass
             raise NoDotGitDirectory(err_msg)
 
-        # Is this a git root? i.e containts a .git sub directory
+        # Is this a git root? i.e contains a .git sub directory
         if os.path.isdir ( os.path.join( wrk_dir,
                                          git_dirname)) :
             # Yes, it is a git root
@@ -158,7 +159,7 @@ def find_dinkum_git_root_dir(file_or_dir=sys.argv[0]) :
         class GitRootDirHasWrongName(Exception) : pass
         raise GitRootDirHasWrongName(err_msg)
 
-    # Life is good, found the required git directory and it is properly name
+    # Life is good, found the required git directory and it is properly named
     return wrk_dir
 
 #  returned "err_msg" will be printed for user
@@ -217,11 +218,14 @@ directory ~/.dinkum.
     from dinkum.project.install import install_from_git
     install_from_git(git_root_dir, verbose, dry_run)
 
+    # Life is good
+    print "Successfully installed DinkumSoftware's software from a git clone."
+
     # Warn them if we didn't do anything
     if dry_run :
         print "** This was a DRY-RUN.  Nothing was written or removed. **"
 
-    # Life is good
+
     return None
 
 
