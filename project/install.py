@@ -51,10 +51,12 @@ def install_from_git(git_root_dir, verbose=False, dry_run=False) :
 
     '''
     
-    # Silently remove any existing prior installation
+    # Remove any existing prior installation
     # the shutil.copytree and os.makedirs() complain if there are
     # preexisting files.
-    remove_install_from_git(verbose, dry_run) 
+    if remove_install_from_git(verbose, dry_run) :
+        # Tell caller what we did
+        print '''Removed an existing dinkum-install-from-git.'''
     
     # Everything is copied to dinkum_git_copy_root
     
@@ -126,6 +128,8 @@ def remove_install_from_git(verbose=False, dry_run=False) :
     if dry_run is True, announce what what would be done,
                         but don't actually do it
 
+    Returns True if something is actually removed (or
+    would be removed if this is a dry_run.
     '''
 
     # If ~/.dinkum/git-copy-root file tree exists
@@ -134,6 +138,10 @@ def remove_install_from_git(verbose=False, dry_run=False) :
         announce ("rmdir", verbose, dry_run, None, dinkum_git_copy_root)
         if not dry_run :
             shutil.rmtree( dinkum_git_copy_root)
+        return True # tell caller we removed something
+
+    # Did NOT remove anything
+    return False
 
 def announce(label, verbose, dry_run, src, des) :
     '''

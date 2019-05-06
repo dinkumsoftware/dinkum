@@ -219,7 +219,7 @@ directory ~/.dinkum.
 
     # Warn them if we didn't do anything
     if dry_run :
-        print "** This was a DRY-RUN.  Nothing was written. **"
+        print "** This was a DRY-RUN.  Nothing was written or removed. **"
 
     # Life is good
     return None
