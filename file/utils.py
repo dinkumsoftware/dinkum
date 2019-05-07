@@ -23,6 +23,7 @@ import os
 from shutil    import copy2
 from itertools import chain
 from shutil    import copy2
+from textwrap  import dedent
 
 def copytree(src_dir, des_dir, verbose=0, dry_run=0, ignore_func=None) :
     '''Recursively copies "src_dir" INTO "des_dir".
@@ -62,7 +63,7 @@ def copytree(src_dir, des_dir, verbose=0, dry_run=0, ignore_func=None) :
     # Create the destination directory (same name as basename of src_dir)
     # in the destination parent dir
     des_dir = os.path.join( des_dir, os.path.basename(src_dir))
-    mkdir_with_parents( des_dir, verbose, dry_run)
+    mkdir_with_parents( des_dir, verbose, dry_run, src_dir)
 
     # Get list of src contents to copy
     # These are basenames, i.e. no path
@@ -108,14 +109,14 @@ def copytree(src_dir, des_dir, verbose=0, dry_run=0, ignore_func=None) :
     for f in chain(files, unknowns) :
         src = os.path.join(src_dir, f)
         des = os.path.join(des_dir, f)
-        announce("File", verbose, dry_run, src, des)
+        announce("file", verbose, dry_run, src, des)
         if not dry_run :
             copy2(src, des_dir)
 
     for s in symlinks :
         src = os.path.join(src_dir, s)
         des = os.path.join(des_dir, s)
-        announce("Symlnk", verbose, dry_run, src, des)
+        announce("symlnk", verbose, dry_run, src, des)
         if not dry_run :
             curr_link_contents = os.readlink(src)
             os.symlink( curr_link_contents, des)
@@ -126,32 +127,60 @@ def copytree(src_dir, des_dir, verbose=0, dry_run=0, ignore_func=None) :
         copytree( src, des_dir, verbose, dry_run, ignore_func)
 
 
-def mkdir_with_parents(dir, verbose=0, dry_run=0) :
+def mkdir_with_parents(dir, verbose=0, dry_run=0, src_dir_for_labeling_only=None) :
     '''Creates directory "dir" and all required parents.
     It is an error if it exists.  Exception raised.
 
     if verbose is non-zero, announces what is being done to stdout.
     if dry_run is non-zero, only announces what it WOULD do, but doesn't do it.
+
+    "src_dir_for_labeling_only" is only used for verbose announcements.
+    It is passed along to announce().  If this is part of a copytree() it
+    should be the directory in the source tree which corresponds to "dir"
     '''
 
     # Say what we are going to do
-    announce("mkdir", verbose, dry_run, None, dir )
+    announce("mkdir", verbose, dry_run, src_dir_for_labeling_only, dir )
     if not dry_run :
         # Do it
         os.makedirs( dir )
 
 
+# "static" data for announce()
+#  Set  with label=mkdir
+#  Used with label=file -or- symlnk
+_announce_src_dir    = None
+_announce_des_dir    = None
+_announce_indent_str = ""
+
 def announce(label, verbose, dry_run, src, des) :
     '''
-If either "verbose" or "dry_run" or true, it
+verbose/dry_run tool for copytree() and the like.
+It's job is tell the user what is being copied or
+created.
+
+If either "verbose" or "dry_run" or true, it in general
 prints a line of the form:
   <label>: <src>      =>  <des>
-'''
 
-    label_width = len("symlnk") + 1 # Field width for label, +1 for :
-                                    # This is currently longest label
-    des_offset  = 50 # where to start printing destination
-    arrow = '=> '    # how we separate src and des
+<src> and <des> are expected to be full pathnames
+
+We special case a <label>s of "file","symlnk" or "mkdir" to strip off the pathnames of files
+readability and to keep from running over the alloted width.
+
+An example:
+mkdir: /home/tc/projects/dinkum/               => /home/tc/.dinkum/git-copy-root/dinkum/
+File:   CONVENTIONS.txt                        =>  CONVENTIONS.txt
+File:   LICENSE                                =>  LICENSE
+mkdir: /home/tc/projects/dinkum/backups        => /home/tc/.dinkum/git-copy-root/dinkum/backups
+mkdir: /home/tc/projects/dinkum/backups/bin    => /home/tc/projects/dinkum/backups/bin       
+File:     dinkum-root-rsync-push               =>    dinkum-root-rsync-push
+
+'''
+    # static var's just above where we remember stuff from call to call
+    global _announce_src_dir
+    global _announce_des_dir
+    global _announce_indent_str
 
     # Always be verbose on a dry_run
     if dry_run :
@@ -160,6 +189,88 @@ prints a line of the form:
     # anything to do?
     if not verbose :
         return # nope
+
+    # Format parameters
+    label_width = len("symlnk") + 1 # Field width for label, +1 for :
+                                    # This is currently longest label
+    des_offset  = 50 # where to start printing destination
+    arrow = '=> '    # how we separate src and des
+
+    # Special case files
+    # We test for mkdir to remember des directory
+    if label == "mkdir" :
+        _announce_src_dir = None  # Gets set on first file: label
+        _announce_des_dir = des
+        _announce_indent_str = "" # Gets set on first file label
+    # <todo> tack on a / here
+
+    stripping_paths = (label == "file") or (label == "symlnk")
+
+    if stripping_paths :
+        # First file after a mkdir?
+        if not _announce_src_dir :
+            # Yes, remember the directory of the source
+            _announce_src_dir = os.path.dirname(src)
+
+            # Figure out how much to indent each File
+            # The deeper in the copied tree, the more indent
+            # We start looking from bottom of tree up and
+            # stop when a directory doesn't match
+            spaces_per_depth_in_tree = 2
+            _announce_indent_str = ""
+            src_dirs_in_path = _announce_src_dir.split( os.path.sep )
+            des_dirs_in_path = _announce_des_dir.split( os.path.sep )
+
+            src_dirs_in_path.reverse()    # we will compare from bottom up
+            des_dirs_in_path.reverse()
+            
+            for (sd, dd) in zip(src_dirs_in_path, des_dirs_in_path) :
+                if sd == dd :
+                    # Still in part of tree being copied
+                    _announce_indent_str += ' ' * spaces_per_depth_in_tree
+
+        # Strip off leading pathnames and indent it
+        src_dir = os.path.dirname(src)
+        src = _announce_indent_str + os.path.basename(src)
+
+        des_dir = os.path.dirname(des)
+        des = _announce_indent_str + os.path.basename(des)
+
+        # Sanity check
+        # The dirs we just stripped off should match what
+        # we remember from a call with label=mkdir
+        if src_dir != _announce_src_dir :
+            err_msg = '''\
+                Source Directory paths don't match.
+                prior:{prior} curr:{curr}
+                Probable Software error.
+                Perhaps no intervening announce("mkdir",..) call ? '''
+            err_msg=dedent(err_msg.format( prior=_announce_src_dir,
+                                               curr=src_dir))
+            class SourceDirsDontMatch(Exception) : pass
+            raise SourceDirsDontMatch(err_msg)
+
+        if des_dir != _announce_des_dir :
+            err_msg = '''\
+                Source Directory paths don't match.
+                prior:{prior} curr:{curr}
+                Probable Software error.
+                Perhaps no intervening announce("mkdir",..) call ? '''
+            err_msg=dedent(err_msg.format( prior=_announce_des_dir,
+                                               curr=des_dir))
+            class DestinationDirsDontMatch(Exception) : pass
+            raise DestinationDirsDontMatch(err_msg)
+
+
+        # Modify source and destination
+        # We just use the basename.
+        src = os.path.basename(src)
+        des = os.path.basename(des)
+
+        # We indent it over one space for the depth of the enclosing
+        # directory
+        # Figure out the indent strings
+
 
     # Make up a string to print
 

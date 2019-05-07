@@ -209,7 +209,7 @@ directory ~/.dinkum.
     # all the dinkum executables live in various dinkum/.../.../bin dirs
     # dinkum/bin has symbolic links to all the executables
     # We put dinkum/bin on front of the path
-    os.environ['PATH'] = os.path.join(git_root_dir, "bin") + ':' + os.environ['PATH']
+    os.environ['PATH'] = os.path.join(git_root_dir, "bin") + os.pathsep + os.environ['PATH']
     
 
     # diddle PYTHONPATH so that dinkum python imports work.
