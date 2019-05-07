@@ -199,17 +199,24 @@ directory ~/.dinkum.
 
     # these are fragile times as we are a dinkum install
     # program.  Can't make assumptions about where to find
-    # stuff, in particular import of dinkum packages.
+    # stuff, in particular import of dinkum packages or location
+    # of executables
 
     # We expect we are running from a git clone copy of dinkumsoftware
     # Find the root, the one with the .git in it
     git_root_dir = find_dinkum_git_root_dir()
 
+    # all the dinkum executables live in various dinkum/.../.../bin dirs
+    # dinkum/bin has symbolic links to all the executables
+    # We put dinkum/bin on front of the path
+    os.environ['PATH'] = os.path.join(git_root_dir, "bin") + ':' + os.environ['PATH']
+    
+
+    # diddle PYTHONPATH so that dinkum python imports work.
     # our python packages in git live in the git_root_dir (which is named dinkum)
     # git_root_dir is known to exist and be properly named
     pkg_dir = git_root_dir
     
-    # diddle PYTHONPATH so that dinkum python imports work.
     # sys.path must have the PARENT of the dinkum dir
     # insert that at head of search path
     sys.path.insert(0, os.path.dirname(pkg_dir))

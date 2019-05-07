@@ -1,12 +1,18 @@
 
-project/bin/dinkum-install-from-git.py,57
-def find_dinkum_git_root_dir(81,2525
-def main 159,5780
+git/utils.py,25
+def is_a_gitfile(24,482
 
-project/install.py,90
-def install_from_git(32,876
-def remove_install_from_git(113,4103
-def announce(131,4744
+project/bin/dinkum-install-from-git.py,194
+def find_dinkum_git_root_dir(82,2526
+            class BadFileorDirArg(123,4249
+            class NoDotGitDirectory(135,4862
+        class GitRootDirHasWrongName(159,5951
+def main 166,6198
+
+project/install.py,102
+def install_from_git(43,1267
+    def _handle_ignoring(75,2668
+def remove_install_from_git(112,4023
 
 project/recipe-528877-1.py,17
 def main 40,709
@@ -40,6 +46,18 @@ class Board 20,480
     def debug_set_indent(645,26186
 def pretty_print(733,29557
 
+file/utils.py,222
+def copytree(25,468
+        class srcNotExistingDir(45,1420
+        class srcNotExistingDir(52,1719
+            class ImpossiblePlacePathnameDoesNotExist(89,3156
+def mkdir_with_parents(122,4306
+def announce(137,4794
+
+file/__init__.py,0
+
 project/__init__.py,0
+
+git/__init__.py,0
 
 __init__.py,0

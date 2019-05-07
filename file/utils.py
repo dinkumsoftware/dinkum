@@ -1,12 +1,11 @@
-#filename: install.py
-#path: project/
+#filename: utils.py
+#path: dinkum/file
 #repo: http://github.com/dinkumsoftware/dinkum.git
 
 '''
-Series of functions to install, uninstall, and support all the software
-produced by dinkum software.
+A series of file support utilities.
 
-Run pydoc to see a table of contents
+Run pydoc for a table of contents
 
 AUTHOR
     dinkumsoftware.com/tc
@@ -18,123 +17,172 @@ LICENSE
     Full license text at end of file.
 '''
 # history:
-# 2019-05-02 tc@DinkumSoftware.com Initial
-# 2019-05-06 tc@DinkumSoftware.com Added copyright/license
-#                                  Only install tracked git files
+# 2019-05-06 tc@DinkumSoftware.com Initial
 
 import os
-from shutil            import rmtree
-from dinkum.git.utils  import is_a_gitfile
-from dinkum.file.utils import copytree, mkdir_with_parents, announce
+from shutil    import copy2
+from itertools import chain
+from shutil    import copy2
 
-# Where dinkumsoftware stores "private" stuff
-dinkum_data = "~/.dinkum"
-dinkum_data = os.path.expanduser(dinkum_data) # ~ expansion
-dinkum_data = os.path.abspath( dinkum_data)
+def copytree(src_dir, des_dir, verbose=0, dry_run=0, ignore_func=None) :
+    '''Recursively copies "src_dir" INTO "des_dir".
+    i.e. src_dir=/a/b/c gets copied into des_dir/c/....
+    "src_dir" and "des_dir" must exist. Exceptions raised if not the case
+    Symbolic links are copied "as is", i.e. not referenced
 
+    It does NOT copy over any files or directories.  It raises an exception
+    if this is the case.
 
-# Where part of a "git clone dinkum software is copied to
-# in install_from_git()
-dinkum_git_copy_root = os.path.join(dinkum_data, "git-copy-root")
+    if verbose is non-zero, announces what is being done to stdout.
+    if dry_run is non-zero, only announces what it WOULD do, but doesn't do it.
 
-# If a file named the following exists in a subdirectory of git_root_dir,
-# then that directory is NOT copied into dinkum_git_copy_root
-magic_filename_to_not_publish = 'DINKUM_NOT_TO_PUBLISH'
-
-def install_from_git(git_root_dir, verbose=False, dry_run=False) :
-    ''' Installs a partial COPY of git clone at git_root_dir
-    so the software can be used without the git_root_dir, i.e.
-    once copied the original git at git_root_dir may be deleted.
-
-    if verbose is True, announce what is being done
-    if dry_run is True, announce what what would be done,
-                        but don't actually do it
-
-    Recursively copy from "git_root_dir" to "dinkum_root_copy"
-         We recurisively publish all files/dirs in git_root_dir that are git tracked
-           except: .git dir
-           except: .gitignore
-           except: dirs that contain a file currently named
-             DINKUM_NOT_TO_PUBLISH (See magic_filename_to_no_publish_above)
-
-    Any existing installation from git is UNINSTALLED and then reinstalled.
-    '''
-    
-    # Remove any existing prior installation
-    if remove_install_from_git(verbose, dry_run) :
-        # Tell caller what we did
-        print '''Removed an existing dinkum-install-from-git.'''
-    
-    # Everything is copied to dinkum_git_copy_root
-    
-    # Create the directory, it is an error if already exists
-    mkdir_with_parents (dinkum_git_copy_root, verbose, dry_run) 
-
-    # This is a callable called by copytree in every directory
-    # it traverses.  We use it to select which files/dirs are ignored
-    # We also use it handle verbose
-    def _handle_ignoring(dir, contents) :
-        ''' Required by copytree().  dir is current directory
-        in the src tree and contents are what's in that directory.
-        Return a subset of contents that ARE to be copied.
-
-        '''
-        names_to_ignore = [".git", ".gitignore"]
-
-        not_to_ignore_files_or_dirs = [] # What we return
-        for file_or_dir in contents :
-            # Don't publish stuff we are ignoring
-            if file_or_dir in names_to_ignore :
-                continue
-            
-            # Only publish git tracked files
-            if not is_a_gitfile(os.path.join(dir, file_or_dir)) :
-                continue
-
-            # Don't publish dirs that contain a file
-            # with magic name indicating not to publish it
-            if os.path.isfile( os.path.join(dir, file_or_dir,
-                                            magic_filename_to_not_publish)) :
-                continue 
-                           
-            # We want to publish this one
-            not_to_ignore_files_or_dirs.append(file_or_dir)
-
-        # Give them the answer
-        return not_to_ignore_files_or_dirs
-    #end _handle_ignoring definition
-
-    # Recursively copy the dinkum tree
-    copytree(git_root_dir, dinkum_git_copy_root, verbose, dry_run,
-             ignore_func=_handle_ignoring)    
-        
-        
-
-def remove_install_from_git(verbose=False, dry_run=False) :
-    ''' Undoes an install_from_git().
-        .dinkum/git-copy-root   is recursively deleted.
-    It is NOT an error if none of the files exist
-
-    if verbose is True, announce what is being done
-    if dry_run is True, announce what what would be done,
-                        but don't actually do it
-
-    Returns True if something is actually removed (or
-    would be removed if this is a dry_run.
+    ignore_func(dir, contents) called with the current directory and all
+    the contents of that directory, a la os.listdir().  It is expected to return
+    a list that is a subset of "contents" of the files/dir TO COPY.
     '''
 
-    # If ~/.dinkum/git-copy-root file tree exists
-    if os.path.isdir( dinkum_git_copy_root) :
-        # Wipe it out 
-        announce ("rmtree", verbose, dry_run, None, dinkum_git_copy_root)
+    # Inforce our assumptions
+    if not os.path.isdir(src_dir) :
+        err_msg="{src_dir} is NOT a directory or does not exist.".format(src_dir=src_dir)
+        class srcNotExistingDir(Exception) : pass
+        raise srcNotExistingDir(err_msg)
+    src_dir = os.path.expanduser(src_dir)
+    src_dir = os.path.abspath(src_dir)
+
+    # Since we are called recursively
+    # lower level directories won't exist on a dry_run.
+    # so we can can't check that
+    if not dry_run and not os.path.isdir(des_dir) :
+        err_msg="{des_dir} is NOT a directory or does not exist.".format(des_dir=des_dir)
+        class srcNotExistingDir(Exception) : pass
+        raise srcNotExistingDir(err_msg)
+    des_dir = os.path.expanduser(des_dir)
+    des_dir = os.path.abspath(des_dir)
+
+    # Create the destination directory (same name as basename of src_dir)
+    # in the destination parent dir
+    des_dir = os.path.join( des_dir, os.path.basename(src_dir))
+    mkdir_with_parents( des_dir, verbose, dry_run)
+
+    # Get list of src contents to copy
+    # These are basenames, i.e. no path
+    contents = os.listdir(src_dir)
+    if ignore_func :
+        # let user filter it
+        contents = ignore_func(src_dir, contents)
+
+    # Separate the list into files, symlinks, and dirs
+    # and sort them.  This is so a verbose output is pleasently ordered
+    files = []
+    symlinks = []
+    dirs=[]
+    unknowns=[] # none of the above, treat as files
+    for basename in contents :
+        # construct full pathname for testing type
+        # We will return [] of only basenames (what's in contents)
+        pathname = os.path.join(src_dir, basename) 
+        if os.path.isdir(pathname) :
+            dirs.append(basename)
+        elif os.path.islink(pathname) :
+            symlinks.append(basename)
+        elif os.path.isfile(pathname) :
+            files.append(basename)
+        # we treat everything else as a file (file, socket, fifo)
+        elif os.path.exists(pathname) :
+            unknowns.append(basename)
+        else :
+            # Anything else is an error
+            err_msg = '''IMPOSSIBLE SITUATION: Does not exist: {pathname}'''.format(pathname=pathname)
+            class ImpossiblePlacePathnameDoesNotExist(Exception) : pass
+            raise ImpossiblePlacePathnameDoesNotExist(err_msg)
+
+
+
+    # Sort first so verbose output in alphabetical order
+    for d in [dirs, symlinks, files, unknowns] :
+        d.sort()      # Make the output order pretty
+
+    # Do the copies
+    # We treat unknows (sockets, fifos, whatever) as if they were a file
+    # files,symlinks, and dirs only have basenames in them (no path)
+    for f in chain(files, unknowns) :
+        src = os.path.join(src_dir, f)
+        des = os.path.join(des_dir, f)
+        announce("File", verbose, dry_run, src, des)
         if not dry_run :
-            rmtree( dinkum_git_copy_root)
-        return True # tell caller we removed something
+            copy2(src, des_dir)
 
-    # Did NOT remove anything
-    return False
+    for s in symlinks :
+        src = os.path.join(src_dir, s)
+        des = os.path.join(des_dir, s)
+        announce("Symlnk", verbose, dry_run, src, des)
+        if not dry_run :
+            curr_link_contents = os.readlink(src)
+            os.symlink( curr_link_contents, des)
 
-    
+    # For directories, we just recurse
+    for d in dirs :
+        src = os.path.join(src_dir, d)
+        copytree( src, des_dir, verbose, dry_run, ignore_func)
+
+
+def mkdir_with_parents(dir, verbose=0, dry_run=0) :
+    '''Creates directory "dir" and all required parents.
+    It is an error if it exists.  Exception raised.
+
+    if verbose is non-zero, announces what is being done to stdout.
+    if dry_run is non-zero, only announces what it WOULD do, but doesn't do it.
+    '''
+
+    # Say what we are going to do
+    announce("mkdir", verbose, dry_run, None, dir )
+    if not dry_run :
+        # Do it
+        os.makedirs( dir )
+
+
+def announce(label, verbose, dry_run, src, des) :
+    '''
+If either "verbose" or "dry_run" or true, it
+prints a line of the form:
+  <label>: <src>      =>  <des>
+'''
+
+    label_width = len("symlnk") + 1 # Field width for label, +1 for :
+                                    # This is currently longest label
+    des_offset  = 50 # where to start printing destination
+    arrow = '=> '    # how we separate src and des
+
+    # Always be verbose on a dry_run
+    if dry_run :
+        verbose = True
+
+    # anything to do?
+    if not verbose :
+        return # nope
+
+    # Make up a string to print
+
+    # The label
+    s = label + ":"
+    s = s.ljust(label_width)[:label_width] # space over and truncate
+
+    if src :
+        s += src   
+    s = s.ljust(des_offset)[:des_offset] # space over and truncate
+
+    if src and des :
+        # Put in connecting arrow
+        s = s[:-len(arrow)] # remove chars for arrow
+        s += arrow          # and replace them with the arrow
+
+    if des :
+        s += des
+
+    # Show them
+    print s
+
+
 # full-license:
 '''
 Apache License
