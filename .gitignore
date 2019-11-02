@@ -1,6 +1,10 @@
 # 2019-05-01 tc@DinkumSoftware.com  Ignore python object files
+# 2019-11-02 tc@DinkumSoftware.com  Ignore TAGS
 *.pyc
 *~
 __pycache__
+
+TAGS
+
 
 

@@ -342,10 +342,6 @@ class Board :
         Board.set_depth_cnt -= 1
         return (self.is_solved(), False )
 
-    def is_solved(self) :
-        ''' returns true if board is solved '''
-        # any() returns True if has any key which is True
-        return not any(self._unsolved_cells)
 
 
     def num_unsolved(self) :
@@ -509,14 +505,6 @@ class Board :
             print (self.debug_str())
             raise
 
-    def output(self) :
-        ''' returns list of rows of the Board.
-        Same format as __init__ argument '''
-        arr = []
-        for row in range(0, self.num_cells, self.rcb_size) :
-            row = [ self._cells[row+col][self._cell_indx_value] for col in range(self.rcb_size) ]
-            arr.append(row)
-        return arr
                     
 
     def __str__(self) :
