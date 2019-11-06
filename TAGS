@@ -1,23 +1,39 @@
 
-git/utils.py,25
-def is_a_gitfile(24,482
+sudoku/sudoku.py,996
+class ExcUnsolvable(28,722
+    def __init__(29,755
+class ExcBadPuzzleInput(33,828
+    def __init__(37,979
+def sudoku_solver(42,1045
+class Board 60,1450
+    def __init__(88,2400
+    def solve(177,6360
+    def solve_cells_with_single_possible_value(199,7147
+    def rcb(222,8022
+    def map_row_col_to_indexes(240,8625
+    def is_solved(283,10127
+    def output(288,10248
+    def sanity_check(297,10550
+class RCB 338,12269
+    def __init__(349,12561
+    def __getitem__(362,13013
+    def __setitem__(367,13126
+class Cell 374,13253
+    def __init__(398,14159
+    def set(428,15513
+    def __str__(458,16463
+    def all_neighbors(482,17447
+class TestSudoku(496,17969
+    def test_cell_constructor(498,18007
+            def err_msg(515,18823
+    def test_bad_input_wrong_row_cnt(542,20317
+    def test_bad_input_wrong_row_size(556,20761
+    def test_bad_value(573,21271
+    def test_unsolvable(591,21828
+    def test_presolved(597,22040
+    def test_mindless(610,22593
 
-project/bin/dinkum-install-from-git.py,194
-def find_dinkum_git_root_dir(82,2526
-            class BadFileorDirArg(123,4249
-            class NoDotGitDirectory(135,4862
-        class GitRootDirHasWrongName(159,5951
-def main 166,6198
-
-project/install.py,102
-def install_from_git(43,1267
-    def _handle_ignoring(75,2668
-def remove_install_from_git(112,4023
-
-project/recipe-528877-1.py,17
-def main 40,709
-
-sudoko/bin/sudoko.py,846
+sudoku/temp-working.py,791
 def sudoku_solver(7,148
 class Board 20,480
     def all_cell_values(33,938
@@ -26,38 +42,28 @@ class Board 20,480
     def check_solution_for_uniqueness(229,9440
     def next_unsolved_cell(252,10355
     def set(271,11134
-    def is_solved(345,14378
-    def num_unsolved(351,14557
-    def remove_from_unsolved(356,14818
-    def add_to_unsolved(373,15439
-    def unsolved_neighbors(390,16130
-    def remove_a_possibility(445,18241
-    def sanity_check(473,19265
-    def output(512,21182
-    def __str__(522,21542
-    def debug_str(541,22076
-    def hash_str(578,23420
-    def __hash__(592,23850
-    def __eq__(603,24203
-    def __ne__(609,24436
-    def debug_solve_label(617,24664
-    def debug_solve_indent(627,25205
-    def debug_set_label(633,25401
-    def debug_set_indent(645,26186
-def pretty_print(733,29557
+    def num_unsolved(347,14380
+    def remove_from_unsolved(352,14641
+    def add_to_unsolved(369,15262
+    def unsolved_neighbors(386,15953
+    def remove_a_possibility(441,18064
+    def sanity_check(469,19088
+    def __str__(510,21027
+    def debug_str(529,21561
+    def hash_str(566,22905
+    def __hash__(580,23335
+    def __eq__(591,23688
+    def __ne__(597,23921
+    def debug_solve_label(605,24149
+    def debug_solve_indent(615,24690
+    def debug_set_label(621,24886
+    def debug_set_indent(633,25671
+def pretty_print(721,29042
 
-file/utils.py,222
-def copytree(25,468
-        class srcNotExistingDir(45,1420
-        class srcNotExistingDir(52,1719
-            class ImpossiblePlacePathnameDoesNotExist(89,3156
-def mkdir_with_parents(122,4306
-def announce(137,4794
+sudoku/bin/dinkum_print_sudoku_worksheet.py,120
+def top_or_bottom_lines(46,1489
+def horz_separator_lines(57,1874
+def col_label_lines(86,2601
+def worksheet(106,3204
 
-file/__init__.py,0
-
-project/__init__.py,0
-
-git/__init__.py,0
-
-__init__.py,0
+sudoku/__init__.py,0
