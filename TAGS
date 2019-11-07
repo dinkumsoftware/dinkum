@@ -60,10 +60,12 @@ class Board 20,480
     def debug_set_indent(633,25671
 def pretty_print(721,29042
 
-sudoku/bin/dinkum_print_sudoku_worksheet.py,120
-def top_or_bottom_lines(46,1489
-def horz_separator_lines(57,1874
-def col_label_lines(86,2601
-def worksheet(106,3204
+sudoku/bin/dinkum_print_sudoku_worksheet.py,176
+def top_or_bottom_lines(63,2028
+def horz_separator_lines(90,2968
+def col_label_lines(111,3618
+def row_line(130,4283
+def worksheet(164,5626
+def replace_substr_at(192,6390
 
 sudoku/__init__.py,0
