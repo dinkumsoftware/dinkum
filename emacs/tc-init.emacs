@@ -37,6 +37,7 @@
 ;;                                  changed names (tc-init.emacs) and locations (~/.emacs.c)
 ;;                                  do  not change background color
 ;;   
+;; 2019-11-07 tc@DinkumSoftware.com get emacs shells to read ~/.bashrc
 ;;;-----------------------------------------------------------------------
 ;; Set an emacs variable with this directory name (where tc.emacs lives)
 ;; Any stuff that gets added on, ought to be go in it's own sub-directory
@@ -87,7 +88,9 @@
     ;; always end a file with a newline
     (setq require-final-newline 'query)
 
-
-
-
+    ;; get emacs shells to use bash and read ~/.bashrc
+    ;; Thanks to
+    ;; https://stackoverflow.com/questions/12224909/is-there-a-way-to-get-my-emacs-to-recognize-my-bash-aliases-and-custom-functions/12229404#12229404
+    (setq shell-file-name "bash")
+    (setq shell-command-switch "-ic")
 
