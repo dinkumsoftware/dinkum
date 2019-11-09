@@ -7,6 +7,8 @@ A list of emacs commands that I never seem to remember
 2016-12-11 tc@DinkumSoftware.com  Added sudo::
 2017-02-06 tc@DinkumSoftware.com  Added note about disown'ing emacs
 2017-02-13 tc@DinkumSoftware.com  Added Edit remote file as root
+2019-11-08 tc@DinkumSoftware.com  Notes about compile ^X^E
+                                  Summary of xref-xxx (find-tags replacement)
 
 # tramp
 # A way to edit remote files and files owned by root
@@ -23,9 +25,31 @@ Find File: /ssh:you@remotehost|sudo:remotehost:/path/to/file
 # Launch emacs from unity(and maybe gnome)
 # At least on Ubuntu 14.04, if you launch emacs from desktop button, it
 # doesn't read .bashrc, instead reading .profile.
+# To fix that add to .emacs.d/<somewhere>
+    (setq shell-file-name "bash")
+    (setq shell-command-switch "-ic")
+# That still does make (compile) ^X^E read .bashrc
+# Only workaround I found is:
+    ^X^E
+    Compile Command: bash -ic <desired command>
+
 # If you launch it from a terminal, it dies when terminal is killed
 # This launches it from a terminal and disowns it so emacs is not killed
 # when terminal is killed.
     emacs &
     [1] 10480    ; job# and process id
     disown %1    ; where 1 is the job number.
+
+# Tag commands that work in version 25
+# M == <esc>
+M-.’       (‘xref-find-definitions’) – find a tag, that is, use a tags file to look up a definition.
+           If the backend returns multiple hits with the same name, a window will pop up showing all the hits,
+           use ‘n’ and ‘p’ to navigate and press ‘RET’ to jump to a particular match.
+
+`C-x 4 .’  (‘xref-find-definitions-other-window’) – select the buffer containing a tag’s definition in another window,
+           and move point there.
+
+`M-,’      (‘xref-pop-marker-stack’) – jump back
+`C-M-.’    (‘xref-find-apropos’) – find all meaningful symbols that match a regexp or word list
+`M-?’      (‘xref-find-references’) – find all references to the identifier at point
+
