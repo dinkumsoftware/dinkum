@@ -7,6 +7,8 @@ Solution technique does NOT involve guessing.
 It only fills in cells that have no alternative.
 '''
 
+# 2019-11-01 tc@DinkumSoftware.com Initial
+# 2019-11-07 tc@DinkumSoftware.com Made Board(None) return empty board
 
 ###################
 #<todo>
@@ -85,9 +87,11 @@ class Board :
 
     # End of class variables
 
-    def __init__(self, arr) :
+    def __init__(self, arr=None) :
         ''' constructor of a Board
         arr is list of row-lists
+        If arr is None, an empty board will be created.
+
         raise ExcBadPuzzleInput if "arr" is bad
         various assertion failures if things aren't right.
         '''
@@ -132,6 +136,10 @@ class Board :
                 if not self.rows[rcb_num][indx] : assert "Unpopulated row:% entry:%d" % (rcb_num, indx)
                 if not self.cols[rcb_num][indx] : assert "Unpopulated col:% entry:%d" % (rcb_num, indx)
                 if not self.blks[rcb_num][indx] : assert "Unpopulated blk:% entry:%d" % (rcb_num, indx)
+
+        # Is there any input to set cells with?
+        if not arr :
+            return # nope
 
         ############################
         (sanity_check_passed, err_msg) = self.sanity_check()
@@ -258,16 +266,16 @@ class Board :
             # Get (x,y) of what block we are in
             blk_x = col_num // Board.blk_size
             blk_y = row_num // Board.blk_size
-            print ("blk_x/y", blk_x,blk_y) #######################3
+######            PRINT ("BLK_X/Y", BLK_X,BLK_Y) #######################3
 
             # convert to blk_num
             blk_num = blk_y * blks_per_row + blk_x
 
-            # Get (x,y) of cell in blk
+            # get (x,y) of cell in blk
             cell_x_in_blk = col_num % Board.blk_size
             cell_y_in_blk = row_num % Board.blk_size
 
-            print ("cell_x/y_in_blk", cell_x_in_blk, cell_y_in_blk) ############################
+#########            print ("CELL_X/Y_IN_BLK", CELL_X_IN_BLK, CELL_Y_IN_BLK) ############################
 
             # Compute index of cell in block
             blk_idx = cell_y_in_blk * Board.blk_size + cell_x_in_blk
@@ -522,7 +530,7 @@ class TestSudoku(unittest.TestCase):
             self.assertEqual( cell.cell_num, cell_num_should_be,
                               err_msg(cell.cell_num, "rows", cell.row_num, cell.row_idx, cell_num_should_be))
 
-            # cos                              
+            # cols
             cell_num_should_be = cell.col_idx * Board.rcb_size + cell.col_num
             self.assertEqual( cell.cell_num, cell_num_should_be,
                               err_msg(cell.cell_num, "cols", cell.col_num, cell.col_idx, cell_num_should_be))
@@ -538,6 +546,18 @@ class TestSudoku(unittest.TestCase):
             self.assertEqual( cell.cell_num, cell_num_should_be,
                               err_msg(cell.cell_num, "blks", cell.blk_num, cell.blk_idx, cell_num_should_be))
 
+
+    def test_empty_board(self) :
+        board = Board() # No cells should be set
+
+        # Confirm none set
+        for cell in board.cells :
+            self.assertEqual (cell.value, Cell.unsolved_cell_value,
+                         "Cell# %d should be unset, it is: %d" % (cell.cell_num, cell.value))
+            # All values should be possible
+            self.assertSetEqual (cell.possible_values, Cell.all_cell_values,
+                                 "Cell# %d: num_possibles should have all possible values" %cell.cell_num)
+        
 
     def test_bad_input_wrong_row_cnt(self) :
         # Only 7 rows, values don't matter

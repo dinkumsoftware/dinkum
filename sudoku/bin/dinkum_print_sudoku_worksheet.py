@@ -27,18 +27,6 @@ ruler used to write the code
 
 '''
 
-# <todo> remove this when package is sorted out
-# We are in directory: .../dinkum/sudoku/bin 
-# We need to import:   .../dinkum/sudoku/sudoku.py
-import sys
-import os
-# Put dinkum directory on sys.path
-dinkum_parent_dirname  = os.path.abspath(sys.argv[0])        # ".../whatever/dinkum/sudoku/bin/ourname.py"
-for i in range(4) :
-    dinkum_parent_dirname = os.path.dirname( dinkum_parent_dirname) # ".../whatever
-sys.path = [dinkum_parent_dirname] + sys.path               # put at head of path
-
-
 from dinkum.sudoku.sudoku import Board
 
 # What we make lines with
@@ -49,16 +37,16 @@ vert_line_char = '|'
 # includes rightmost | and topmost -
 # does NOT include leftmost | and bottom -
 cell_width   = 6
-cell_height  = 6
+cell_height  = 4
 
 # Width of whole printed board
 left_offset_to_first_cell = 2     # Accounts for row label and one |
-right_pad_after_last_cell = 3     # last cell | + | + row_label
+right_pad_after_last_cell = 2     # | + row_label
 output_width = left_offset_to_first_cell + cell_width * Board.rcb_size + right_pad_after_last_cell
 
 # Height of whole printed board
 top_offset_to_first_cell = 2 # column label + '-'
-bot_pad_after_last_cell = 3  # bottom cell '-' + '-' + column_label
+bot_pad_after_last_cell  = 2 # bottom cell '-' + '-' + column_label
 
 def top_or_bottom_lines(is_top) :
     ''' returns [] of [column label line, horz separator line. e.g.
@@ -75,8 +63,7 @@ def top_or_bottom_lines(is_top) :
 
     else :
         # bottom
-        ret_list  = horz_separator_lines(vert_line_char, vert_line_char)  # |---------------|
-        ret_list += horz_separator_lines('\\', '/')                       # \---------------/ 
+        ret_list =  horz_separator_lines('\\', '/')                       # \---------------/ 
         ret_list += col_label_lines()                                     #     0     1   2 ...
 
         assert len(ret_list) == bot_pad_after_last_cell
@@ -99,9 +86,15 @@ def horz_separator_lines(first_char, last_char) :
     # and overwrite what we need to
     sep_line = horz_line_char * output_width
 
+    # Overwrite first and last chars with spaces
+    # to account for row label's
+
+    sep_line = replace_substr_at(sep_line, ' ',  0)
+    sep_line = replace_substr_at(sep_line, ' ' , -1)
+
     # overwrite first and last chars that were passed in                    
-    sep_line = replace_substr_at(sep_line, first_char,  0)
-    sep_line = replace_substr_at(sep_line, last_char , -1)
+    sep_line = replace_substr_at(sep_line, first_char,  1)
+    sep_line = replace_substr_at(sep_line, last_char , -2)
 
     # All done
     return [sep_line]
@@ -136,28 +129,55 @@ def row_line(row_num) :
     included in returned lines.
     '''
 
+    # An empty sudoku board. Each cell in that board
+    # knows it's cell number, row number, etc
+    # We make use of that so we don't have to compute it.
+    board = Board()
+
     # What we return.  Gets filled in below                     
     ret_lines= [None] * cell_height
 
-    # Start with a separator line
-    ret_lines[0] = horz_separator_lines(vert_line_char, vert_line_char)
+    # A cell consists of the left and top border, spaces inside,
+    # but NOT the bottom and right border
 
+    # Start with a separator line. This is top line of all cells in
+    # the row
+    # <todo> example here
+    ret_lines = horz_separator_lines(vert_line_char, vert_line_char)
+
+    # Each individual row is made of multiple output lines.
+    # Iterate over them
     for line_num_in_row in range(1, cell_height) :
+        # <todo> examples
         line = ' ' * output_width # start with line of spaces
-        line = replace_substr_at(line,  1, vert_line_char)  # outside left vert line
-        line = replace_substr_at(line, -2, vert_line_char)  # outside right vert line
+        line = replace_substr_at(line, vert_line_char, 1)  # outside left vert line
+        line = replace_substr_at(line, vert_line_char,-2)  # outside right vert line
                      
+        # We iterate over a row of Cells in a Board so
+        # we don't have to do the arithmetic for cell#, block#, etc
+        # Output the left edge and appropriate number of spaces
+        for cell in board.rows[row_num] :
+
+            # cell's left edge
+            line = replace_substr_at(line, vert_line_char,
+                                     left_offset_to_first_cell + cell.col_num * cell_width)
+
+        # Left cell's left border
+        line = replace_substr_at(line, vert_line_char, -3)
+
         # Time to place row label on outside ?
         if line_num_in_row == cell_height//2 :
-            line = replace_substr_at(line,  0, str(row_num))  # outside left vert line
-            line = replace_substr_at(line, -1, str(row_num))  # outside right vert line
+            line = replace_substr_at(line,  str(row_num),  0)  # outside left vert line
+            line = replace_substr_at(line,  str(row_num), -1)  # outside right vert line
             
         # All done composing line
         assert len(line) == output_width
 
         # Set our result in the [] we return
-        ret_lines[line_num_in_row] = line
-        assert len(ret_lines) == cell_height
+        ret_lines.append(line)
+
+    assert len(ret_lines) == cell_height
+    return ret_lines
 
 def worksheet() :
     ''' creates a blank sudoku worksheet, i.e.
@@ -178,9 +198,8 @@ def worksheet() :
 
     # Stuff in the middle, e.g.
     # 1|  9 10 11 | 12 13 14 | 15 16 17 |1
-################################################
-#    for row_num in range(Board.rcb_size) :
-#        ws += row_line(row_num)
+    for row_num in range(Board.rcb_size) :
+        ws += row_line(row_num)
 
     # \ --------------------------------/ #
     #    0  1  2 ...
