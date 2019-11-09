@@ -41,7 +41,7 @@ cell_height  = 4
 
 # Width of whole printed board
 left_offset_to_first_cell = 2     # Accounts for row label and one |
-right_pad_after_last_cell = 2     # | + row_label
+right_pad_after_last_cell = 3     # || + row_label
 output_width = left_offset_to_first_cell + cell_width * Board.rcb_size + right_pad_after_last_cell
 
 # Height of whole printed board
@@ -124,9 +124,9 @@ def row_line(row_num) :
     <todo> replace
       1|  9 10 11 | 12 13 14 | 15 16 17 |1
 
-    The top line and leftmost line each cell is included in
-    returned lines.  The bottom and rightmost lines are NOT
-    included in returned lines.
+    The top line, left, and right cell outlines are include
+    in returned lines.  The bottom cell lines are NOT in 
+    the returned lines.
     '''
 
     # An empty sudoku board. Each cell in that board
@@ -149,29 +149,36 @@ def row_line(row_num) :
     # Iterate over them
     for line_num_in_row in range(1, cell_height) :
         # <todo> examples
-        line = ' ' * output_width # start with line of spaces
-        line = replace_substr_at(line, vert_line_char, 1)  # outside left vert line
-        line = replace_substr_at(line, vert_line_char,-2)  # outside right vert line
-                     
+        line = '' # start with an empty line and append to it
+                  # moving left to right
+
+        # Time to place row label on outside ?
+        line += str(row_num) if line_num_in_row == cell_height//2 else ' '
+
+        line += vert_line_char 
+
         # We iterate over a row of Cells in a Board so
         # we don't have to do the arithmetic for cell#, block#, etc
         # Output the left edge and appropriate number of spaces
         for cell in board.rows[row_num] :
 
             # cell's left edge
-            line = replace_substr_at(line, vert_line_char,
-                                     left_offset_to_first_cell + cell.col_num * cell_width)
+            line += vert_line_char
+
+            # spaces of the cell
+            line += ' ' * (cell_width-1) # The -1 is for vert_line_char we just printed
 
         # Left cell's left border
-        line = replace_substr_at(line, vert_line_char, -3)
+        line += vert_line_char 
+
+        # Outside line
+        line += vert_line_char 
 
         # Time to place row label on outside ?
-        if line_num_in_row == cell_height//2 :
-            line = replace_substr_at(line,  str(row_num),  0)  # outside left vert line
-            line = replace_substr_at(line,  str(row_num), -1)  # outside right vert line
-            
+        line += str(row_num) if line_num_in_row == cell_height//2 else ' '
+
         # All done composing line
-        assert len(line) == output_width
+        assert len(line) == output_width, "is: %d, should be:%d" %(len(line), output_width)
 
         # Set our result in the [] we return
         ret_lines.append(line)
