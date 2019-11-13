@@ -14,6 +14,7 @@ Frequently used git commands.
 2016-12-14 tc@DinkumSoftware.com git reset --hard HEAD
 2017-05-09 tc@DinkumSoftware.com git merge-base branchA branchB
 2017-05-11 tc@DinkumSoftware.com bunch of additions
+2019-11-13 tc                    Listed some git gui's
 
 Table of contents
     *** Creating stuff
@@ -23,6 +24,7 @@ Table of contents
     *** Publishing Stuff
     *** Determining state
     *** username/password caching
+    *** List of ubuntu packaged git guis
 ==================================================
 *** Creating stuff
 # Initial copy of a repo from GitHub
@@ -145,3 +147,9 @@ git clone https://<USERNAME>@github.com/whatever/repo.git
 # Associate remote USERNAME with a REPO
 # Thanks to http://superuser.com/questions/199507/how-do-i-ensure-git-doesnt-ask-me-for-my-github-username-and-password
 git config --global url."https://username@github.com/REPO".insteadOf "https://github.com/REPO"
+
+
+*** List of ubuntu packaged git guis
+git cola   gui for git command lines
+git dat    history visualizer (comes with git cola)
+gitg       gui for git command lines
