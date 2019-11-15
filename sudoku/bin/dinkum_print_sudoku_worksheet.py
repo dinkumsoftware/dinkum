@@ -26,6 +26,7 @@ Ignore the lines above, they are just a
 ruler used to write the code
 
 '''
+# 2019-11-13 tc Initial development
 
 from dinkum.sudoku.sudoku import Board
 
@@ -104,17 +105,32 @@ def col_label_lines() :
     Each line is NOT \n terminated.
     '''
 
-    # Start with full line of spaces
-    col_label_line = ' ' * output_width
+    
+    # Start with stuff on left before first Cell
+    # "   "
+    col_label_line = left_pad()
+    
 
-    for col_num in range(Board.rcb_size) :
-        # Replace the space at left_offset_to_first_cell + half of cell_width + cell_width * col_num
-        # with the column number.
-        # Extra half cell_width above centers justifies the column_label in cell
-        offset = left_offset_to_first_cell + cell_width//2 + col_num * cell_width
+    # Do the stuff above a row of cells
+    # We don't care which row
+    row = Board().rows[0]
 
-        col_label_line = replace_substr_at(col_label_line, str(col_num), offset)
+    for cell in row :
+        # A cell_width blank string
+        cell_line = '' * cell_width
 
+        # Write column label in the middle
+        cell_line = replace_substr_at(cell_line, str(cell.col_num),
+                                      len(cell_line)//2 )
+        
+        # Tack it on
+        col_label_line += cell_line
+    
+    # Fill out the rest of the line
+    # "   "
+    col_label_line += right_pad()
+
+    # Give them back list of our one generated line
     return [col_label_line]
     
         
@@ -186,6 +202,41 @@ def row_line(row_num) :
     assert len(ret_lines) == cell_height
     return ret_lines
 
+def left_pad() :
+    ''' Returns a string that makes up the left edge of the output board.
+    <todo> support row label
+    <todo> provide example
+    '''
+    ret_str = '  '
+    assert len(ret_str) == left_offset_to_first_cell
+    return ret_str
+
+    return ""
+
+
+def right_pad() :
+    ''' Returns a string that makes up the right edge of the output board.
+    <todo> support row label
+    <todo> provide example
+    '''
+    ret_str = vert_line_char + '  '
+    assert len(ret_str) == right_pad_after_last_cell
+
+    return ret_str
+
+
+
+
+def cell_output_line(cell) :
+    ''' returns a string representing cell's output.
+    It includes the vertical separator on left side, but
+    NOT the right side.
+    It includes the top line but NOT the bottom line
+    '''
+
+    return "     "
+
+
 def worksheet() :
     ''' creates a blank sudoku worksheet, i.e.
         print this to get a labeled sudoku board
@@ -214,6 +265,9 @@ def worksheet() :
         
     return ws
 
+# <todo> move to dinkum.utils.str_utils.py
+# <todo> change default num_substr_chars to len(substr)
+# <todo> default offset_into_s to 0 ? swap order offset and num ?
 def replace_substr_at(s, substr, offset_into_s, num_substr_chars=1) :
     ''' Replaces num_substr_chars at s[offset_into_s] with
     first num_substr_chars in substr and returns the new s
