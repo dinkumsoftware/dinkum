@@ -3,18 +3,19 @@ git/git-cheatsheet.txt
 
 Frequently used git commands.
 
-2016-11-21 tc@DinkumSoftware.com Initial
-2016-11-22 tc@DinkumSoftware.com add Changing state.
-2016-11-23 tc@DinkumSoftware.com add Deleting commits
-2016-11-28 tc@DinkumSoftware.com add How to tell if file under git
-2016-11-29 tc@DinkumSoftware.com how to delete a branch
+2016-11-21 tc Initial
+2016-11-22 tc add Changing state.
+2016-11-23 tc add Deleting commits
+2016-11-28 tc add How to tell if file under git
+2016-11-29 tc how to delete a branch
                                  how to pretty log
-2016-12-02 tc@DinkumSoftware.com Added username/password caching
-2016-12-05 tc@DinkumSoftware.com squashing since last push
-2016-12-14 tc@DinkumSoftware.com git reset --hard HEAD
-2017-05-09 tc@DinkumSoftware.com git merge-base branchA branchB
-2017-05-11 tc@DinkumSoftware.com bunch of additions
-2019-11-13 tc                    Listed some git gui's
+2016-12-02 tc Added username/password caching
+2016-12-05 tc squashing since last push
+2016-12-14 tc git reset --hard HEAD
+2017-05-09 tc git merge-base branchA branchB
+2017-05-11 tc bunch of additions
+2019-11-13 tc Listed some git gui's
+2019-11-14 tc moved gui listing to git-tools.txt
 
 Table of contents
     *** Creating stuff
@@ -148,8 +149,3 @@ git clone https://<USERNAME>@github.com/whatever/repo.git
 # Thanks to http://superuser.com/questions/199507/how-do-i-ensure-git-doesnt-ask-me-for-my-github-username-and-password
 git config --global url."https://username@github.com/REPO".insteadOf "https://github.com/REPO"
 
-
-*** List of ubuntu packaged git guis
-git cola   gui for git command lines
-git dat    history visualizer (comes with git cola)
-gitg       gui for git command lines
