@@ -1,0 +1,134 @@
+
+keno/keno.py,285
+def ncr(10,134
+class Bet(22,384
+    def __init__(28,555
+class MassKeno(35,737
+    def restricted_payout(111,3080
+    def bonus_sanity_check(150,4770
+    def __init__(161,5079
+    def odds(228,7867
+class KenoTest(256,8676
+    def test_ncr(257,8712
+    def test_odds(267,9027
+
+git/utils.py,25
+def is_a_gitfile(24,482
+
+sudoku/bin/dinkum_print_sudoku_worksheet.py,222
+def top_or_bottom_lines(54,1634
+def horz_separator_lines(78,2428
+def col_label_lines(105,3267
+def row_line(139,4101
+def left_pad(207,6353
+def right_pad(219,6616
+def cell_output_line(232,6886
+def worksheet(242,7132
+
+sudoku/sudoku.py,1033
+class ExcUnsolvable(30,836
+    def __init__(31,869
+class ExcBadPuzzleInput(35,942
+    def __init__(39,1093
+def sudoku_solver(44,1159
+class Board 62,1564
+    def __init__(90,2514
+    def solve(185,6632
+    def solve_cells_with_single_possible_value(207,7419
+    def rcb(230,8294
+    def map_row_col_to_indexes(248,8897
+    def is_solved(291,10414
+    def output(296,10535
+    def sanity_check(305,10837
+class RCB 346,12556
+    def __init__(357,12848
+    def __getitem__(370,13300
+    def __setitem__(375,13413
+class Cell 382,13540
+    def __init__(406,14446
+    def set(436,15800
+    def __str__(466,16750
+    def all_neighbors(490,17734
+class TestSudoku(504,18256
+    def test_cell_constructor(506,18294
+            def err_msg(523,19110
+    def test_empty_board(550,20575
+    def test_bad_input_wrong_row_cnt(562,21119
+    def test_bad_input_wrong_row_size(576,21563
+    def test_bad_value(593,22073
+    def test_unsolvable(611,22630
+    def test_presolved(617,22842
+    def test_mindless(630,23395
+
+sudoku/temp-working.py,791
+def sudoku_solver(7,148
+class Board 20,480
+    def all_cell_values(33,938
+    def __init__(58,1752
+    def solve(135,5271
+    def check_solution_for_uniqueness(229,9440
+    def next_unsolved_cell(252,10355
+    def set(271,11134
+    def num_unsolved(347,14380
+    def remove_from_unsolved(352,14641
+    def add_to_unsolved(369,15262
+    def unsolved_neighbors(386,15953
+    def remove_a_possibility(441,18064
+    def sanity_check(469,19088
+    def __str__(510,21027
+    def debug_str(529,21561
+    def hash_str(566,22905
+    def __hash__(580,23335
+    def __eq__(591,23688
+    def __ne__(597,23921
+    def debug_solve_label(605,24149
+    def debug_solve_indent(615,24690
+    def debug_set_label(621,24886
+    def debug_set_indent(633,25671
+def pretty_print(721,29042
+
+utils/str_utils.py,98
+def replace_substr_at(11,322
+class TestStrUtils(84,2770
+    def test_replace_substr_at(85,2809
+
+project/bin/dinkum-install-from-git.py,194
+def find_dinkum_git_root_dir(82,2526
+            class BadFileorDirArg(123,4249
+            class NoDotGitDirectory(135,4862
+        class GitRootDirHasWrongName(159,5951
+def main 166,6198
+
+project/install.py,102
+def install_from_git(44,1304
+    def _handle_ignoring(76,2705
+def remove_install_from_git(113,4060
+
+project/recipe-528877-1.py,17
+def main 40,709
+
+file/utils.py,323
+def copytree(28,556
+        class srcNotExistingDir(48,1509
+        class srcNotExistingDir(58,1951
+            class ImpossiblePlacePathnameDoesNotExist(97,3525
+def mkdir_with_parents(130,4657
+def announce(156,5577
+            class SourceDirsDontMatch(250,9302
+            class DestinationDirsDontMatch(261,9811
+
+file/__init__.py,0
+
+project/TEMPLATES/python.py,0
+
+project/__init__.py,0
+
+utils/__init__.py,0
+
+sudoku/__init__.py,0
+
+git/__init__.py,0
+
+keno/keno_best_bet.py,0
+
+__init__.py,0

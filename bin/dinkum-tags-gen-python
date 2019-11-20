@@ -1,0 +1,20 @@
+#!/bin/bash
+# dinkum/bin/
+# dinkum-tags-gen-python
+#
+# Generate a dinkum/PTAGS file of all the python
+# modules in dinkum
+#
+# 2019-11-19 tc Initial
+
+# Get to project directory
+DINKUM_DIR=$(dirname "$0")/..
+cd $DINKUM_DIR    # a/b/dinkum
+
+# generate PTAGS from all the python files
+etags -o $DINKUM_DIR/PTAGS $(find . -name '*'.py)
+
+
+
+
+
