@@ -1,10 +1,17 @@
-# 2019-05-01 tc@DinkumSoftware.com  Ignore python object files
-# 2019-11-02 tc@DinkumSoftware.com  Ignore TAGS
+# 2019-05-01 tc Ignore python object files
+# 2019-11-02 tc Ignore TAGS
+# 2019-11-20 tc Ignore eclipse "state files"
+#               No longer ignore TAGS as PTAGS under git control
+# 
+# Python
 *.pyc
 *~
 __pycache__
 
-TAGS
+# Eclipse "state" files
+.project
+.pydevproject
+
 
 
 
