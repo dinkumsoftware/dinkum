@@ -1,0 +1,81 @@
+# dinkum/eclipse/doc
+# eclipse-install-and-setup-notes.txt
+#
+# Describes briefly how to install and setup up eclipse
+# Primary focus on python development
+#
+# 2019-11-20 tc Initial
+
+# Table of contents
+#    Overview of eclipse installation
+#    How to install eclipse:
+#    Install PyDev
+#    Tweaks to eclipse/pydev
+
+*** Overview of eclipse installation
+    This was done under ubuntu 18.04.3 LTS,
+    but should apply to most linux systems
+
+The eclipse installation is confusing to say the least.
+Once installed it seems to work.  It has a myrid of
+features (which is good), but make it confusing to
+new user.
+
+You can install os supplied packages using apt.
+    I tried this and it failed.  Primarily (I think)
+    because the 18.04.3 LTS is so old.
+You can install from snap which under ubuntu is
+    some kind of third party packing organization.
+    Don't really understand it. Didn't try it
+You can use eclipse oxygen installer
+    No idea what this is and didn't try it.
+You can download and install directly from eclipse
+    This oddly enough is what eclipse recommends.
+    This is what I did and it worked.
+
+*** How to install eclipse:
+    https://www.eclipse.org/downloads/packages/installer
+
+    eclipse.org/downloads
+    download tools/eclipse/eclipse-inst-linux64.tar.gz
+
+    Couldn't add eclipse icon to tool bar.  Fix via:
+    https://askubuntu.com/questions/1082340/how-to-add-eclipse-to-favorites
+    Created ~/.local/share/applications/.desktop
+
+    .bashrc: export PATH="$HOME/eclipse/java-2019-09/eclipse:$PATH"
+       
+*** Install PyDev
+    This gets a python development environment and more importantly
+    the only reasonable python debugger I could find.
+
+    https://www.pydev.org/manual_101_root.html
+
+    I configured pydev for python 3.6 as I wanted python 3.  Ubuntu 18.04 ships with
+    both python 2 and 3, but python 2 is default.
+    See http://www.pydev.org/manual_101_interpreter.html
+
+    One can set up an eclipse/pydev project that runs from another source tree,
+    i.e. one NOT under ..../eclipse.
+
+    See https://www.pydev.org/manual_101_project_conf.html#CreatingaProjectfromexistingsources
+
+*** Tweaks to eclipse/pydev
+
+    .gitignore:
+        add .project .pydevproject
+    These are eclipse state files left in outside source tree.
+    One could imagine putting them under git control, but I
+    elected not to as they have local filesystem paths in them.
+
+    eclipse: Turn on auto-refresh
+         windows=>preferences check both "refresh on access" and "refresh using native hooks or polling"
+    I do most of my code writing and early work in emacs.  I switch to eclipse when I need a debugger.
+    This step makes the source files changed in emacs automagically show up in eclipse/pydev without
+    hitting a refresh button.
+
+    eclipse: switch to emacs-like keystrokes
+        windows=>preferences=>general=>keys
+        scheme: emacs
+        
+

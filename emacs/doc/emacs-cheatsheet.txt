@@ -3,12 +3,12 @@ emacs/emacs-cheatsheet.txt
 
 A list of emacs commands that I never seem to remember
 
-2016-11-30 tc@DinkumSoftware.com  Initial
-2016-12-11 tc@DinkumSoftware.com  Added sudo::
-2017-02-06 tc@DinkumSoftware.com  Added note about disown'ing emacs
-2017-02-13 tc@DinkumSoftware.com  Added Edit remote file as root
-2019-11-08 tc@DinkumSoftware.com  Notes about compile ^X^E
-                                  Summary of xref-xxx (find-tags replacement)
+2016-11-30 tc  Initial
+2016-12-11 tc  Added sudo::
+2017-02-06 tc  Added note about disown'ing emacs
+2017-02-13 tc  Added Edit remote file as root
+2019-11-08 tc  Notes about compile ^X^E
+               Summary of xref-xxx (find-tags replacement)
 
 # tramp
 # A way to edit remote files and files owned by root
@@ -53,3 +53,11 @@ M-.’       (‘xref-find-definitions’) – find a tag, that is, use a tags f
 `C-M-.’    (‘xref-find-apropos’) – find all meaningful symbols that match a regexp or word list
 `M-?’      (‘xref-find-references’) – find all references to the identifier at point
 
+# Get line numbers to display on left side of buffer
+# From https://www.emacswiki.org/emacs/LineNumbers
+In emacs ver 26+
+    alt-x [global]-display-linenumbers-mode  # global    => every buffer
+                                             # otherwise => just this buffer
+
+For older emacs:
+    M-x linum-mode  # For current buffer only
