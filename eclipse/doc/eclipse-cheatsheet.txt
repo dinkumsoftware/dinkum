@@ -1,0 +1,34 @@
+dinkum/eclipse/doc/eclipse-cheatsheet.txt
+
+Things I can't remember from eclipse.
+
+2019-11-22 tc Initial
+
+Key Mappings in Debug Perspective:
+
+Debug                   F11
+Run                     Ctrl+F11
+Terminate               Ctrl+F2
+
+Resume                  F8
+
+Step Into               F5
+Set Into Selection      Ctrl+F5
+Step Over               F6
+Step Return             F7
+Set Next Statement      Ctrl+Alt+R
+Run to Line             Ctrl+R
+Use Step Filters        Shift+F5
+
+Toggle Breakpoint       Shift+Ctrl+B
+Skip All Breakpoints    Ctrl+Alt+B
+
+All Instances          Shift+Ctrl+N
+Instance Count Inspect Shift+Ctrl+I
+Instance Count Display Shift+Ctrl+D
+
+Execute                Ctrl+U
+Force Return           Shift-Alt-F
+Coverage               Shift+Ctrl+F11
+
+

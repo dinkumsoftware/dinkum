@@ -1,0 +1,52 @@
+dinkum/python/doc/python-debuggers.txt
+
+A synopis of some available python debuggers.
+
+2019-11-22 tc Initial
+
+For a full answer see:
+See https://wiki.python.org/moin/PythonDebuggingTools
+
+My answer:
+
+I settled on eclipse and pydev.
+[See dinkum/eclipse/doc/eclipse-install-and-setup-notes.txt]
+Lots of overhead to get it setup, but seems to work well and
+I couldn't find a better solution.
+
+
+Here's some I considered but rejected:
+
+winpdb      I used this in the past and it worked well.
+            It is no longer maintained. The apt package
+            that came with ubuntu 18.04 didn't work.
+            There were various issues with python 2
+            vs python 3
+
+            Someone picked up winpdb's maintain and
+            released it as winpdb-reborn:
+            https://pypi.org/project/winpdb-reborn/
+
+            Did a pip install.  It seems to generally
+            work BUT local variables didn't show up.
+            This is called "namespace not working" bug
+            which mimics my symptons, but no answers.
+            It Pointed to old original winpdb bug:
+              https://sourceforge.net/p/winpdb/discussion/485189/thread/2689b421/
+
+            Various version woes.  rpdb2.py needs set from ver <= 2.6.  I'm
+            running ver 2.7 with no 2.6 on my system.
+
+            Thought of half a dozen possible answers to these problems,
+            but I gave up.
+
+pud         command line debugger. 
+            Packaged for ubuntu
+
+pudb        "gui" using a curses-like terminal.
+             I found it non-intuitive in 10 minutes usage.
+             Probably works just fine. Packaged for ubuntu
+
+
+
+

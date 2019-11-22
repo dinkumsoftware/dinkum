@@ -1,0 +1,23 @@
+dinkum/git/git-tools.txt
+
+A short description of some useful git tools.
+
+2019-11-22 tc Initial
+
+All of these install via apt [from ubuntu 18.04]
+
+git-standup    command line tool to show synopis of last days
+               git work.  Seemed to just work.  Time frame
+               is programable.  Packaged for ubuntu
+
+GUIs:
+    gitg        Lots of information displayed.  I've used it in
+                the past and it works. Packaged for ubuntu
+    git-cola    Seemed intuitive in 5 minutes usage.  Includes
+                git-dag. Packaged for ubuntu
+    git-dag     git history viewer. Packaged for ubuntu
+
+    
+
+
+

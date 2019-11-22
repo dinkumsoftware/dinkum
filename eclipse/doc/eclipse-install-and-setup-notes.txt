@@ -1,5 +1,4 @@
-# dinkum/eclipse/doc
-# eclipse-install-and-setup-notes.txt
+# dinkum/eclipse/doc/eclipse-install-and-setup-notes.txt
 #
 # Describes briefly how to install and setup up eclipse
 # Primary focus on python development

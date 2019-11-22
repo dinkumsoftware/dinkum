@@ -27,6 +27,8 @@ ruler used to write the code
 
 '''
 # 2019-11-13 tc Initial development
+# 2019-11-19 tc refactored replace_substr_at() into dinkum.utils.str_utils.py
+
 
 from dinkum.sudoku.sudoku import Board
 
@@ -264,49 +266,6 @@ def worksheet() :
     ws += top_or_bottom_lines(is_top=False)
         
     return ws
-
-# <todo> move to dinkum.utils.str_utils.py
-# <todo> change default num_substr_chars to len(substr)
-# <todo> default offset_into_s to 0 ? swap order offset and num ?
-def replace_substr_at(s, substr, offset_into_s, num_substr_chars=1) :
-    ''' Replaces num_substr_chars at s[offset_into_s] with
-    first num_substr_chars in substr and returns the new s
-
-    if offset_into_s is negative, counts from end of s, a la 
-    slice (:).  i.e. -1 refers to last char of s
-
-    offset_into_s and num_substr_chars are clipped to insure
-    that they refer to valid chars in both s and substr.
-
-    The length of s will never change.  The number of
-    chars extracted from substr always equal the number
-    of chars in s that are returned
-    '''
-    original_s_length = len(s) 
-
-    # Handle offsets from end of string
-    # Clip to first char on big negative offsets
-    if offset_into_s < 0 :
-        offset_into_s = len(s) + offset_into_s
-        if offset_into_s < 0 :
-            offset_into_s = 0  # clip
-
-    # clip to make sure offset_in_s and num_substr_chars
-    # refer to chars in both s and substr, i.e. not off the end
-    min_length = min(len(s), len(substr) )
-    if offset_into_s + num_substr_chars > min_length :
-        num_substr_char = min_length - offset_into_s
-
-    # Do the replacement
-    # example: s:abcdefg substr:123 offset_into_s:3 num_substr_chars:1
-    leading_s   = s[:offset_into_s]                   # abc
-    replacement = substr[:num_substr_chars]           # 1
-    trailing_s  = s[offset_into_s+num_substr_chars:]  # efg
-
-    s = leading_s + replacement + trailing_s          #abc1efg
-
-    assert len(s) == original_s_length
-    return s 
 
 
 if __name__ == "__main__" :
