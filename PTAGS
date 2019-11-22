@@ -15,15 +15,17 @@ class KenoTest(256,8676
 git/utils.py,25
 def is_a_gitfile(24,482
 
-sudoku/bin/dinkum_print_sudoku_worksheet.py,222
-def top_or_bottom_lines(54,1634
-def horz_separator_lines(78,2428
-def col_label_lines(105,3267
-def row_line(139,4101
-def left_pad(207,6353
-def right_pad(219,6616
-def cell_output_line(232,6886
-def worksheet(242,7132
+sudoku/bin/dinkum_print_sudoku_worksheet.py,342
+def top_or_bottom_lines(59,1901
+def row_line(82,2694
+def horz_separator_lines(162,5403
+def col_label_lines(189,6272
+def cell_is_rightmost_in_block_and_internal(225,7297
+def cell_is_bottom_most_in_block_and_internal(232,7549
+def cell_is_in_middle_of_block(239,7808
+def left_pad(246,7987
+def right_pad(258,8250
+def worksheet(268,8471
 
 sudoku/sudoku.py,1033
 class ExcUnsolvable(30,836

@@ -16,17 +16,17 @@ Frequently used git commands.
 2017-05-11 tc bunch of additions
 2019-11-13 tc Listed some git gui's
 2019-11-14 tc moved gui listing to git-tools.txt
-2019-11-22 tc Added meld notes
+2019-11-22 tc Added meld and git-cat-files notes
 
 Table of contents
     *** Creating stuff
+    *** Looking at stuff
     *** Changing state
     *** Fixing stuff
     *** Deleting stuff
     *** Publishing Stuff
     *** Determining state
     *** username/password caching
-    *** using meld
 ==================================================
 *** Creating stuff
 # Initial copy of a repo from GitHub
@@ -42,6 +42,16 @@ git checkout -b  LOCAL origin/REMOTE
 # Change who you "pull" from
 git branch --set-upstream-to origin/REMOTE
 
+*** Looking at stuff
+Using meld as a diff viewer
+    git difftool <files, etc>
+
+printing a file in git:
+    git ver >= 2.24.0 :
+        git-cat-file
+    otherwise:
+        from https://stackoverflow.com/questions/11007552/git-whole-file-to-stdout
+        git show HEAD:<file>
 
 *** Changing state
 git add -A .  # stages All in current directory
@@ -150,7 +160,3 @@ git clone https://<USERNAME>@github.com/whatever/repo.git
 # Thanks to http://superuser.com/questions/199507/how-do-i-ensure-git-doesnt-ask-me-for-my-github-username-and-password
 git config --global url."https://username@github.com/REPO".insteadOf "https://github.com/REPO"
 
-*** using meld
-
-Using meld as a diff viewer
-    git difftool <files, etc>

@@ -11,8 +11,11 @@ git-standup    command line tool to show synopis of last days
                is programable.  Packaged for ubuntu
 
 GUIs:
-    gitg        Lots of information displayed.  I've used it in
-                the past and it works. Packaged for ubuntu
+    A BUNCH more at: https://git-scm.com/download/gui/linux
+
+    gitk        Comes with git.  Lots of information displayed.  I've used it in
+                the past and it works. 
+    gitg        Lots of information displayed.  Packaged for ubuntu
     git-cola    Seemed intuitive in 5 minutes usage.  Includes
                 git-dag. Packaged for ubuntu
     git-dag     git history viewer. Packaged for ubuntu
