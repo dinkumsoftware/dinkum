@@ -6,9 +6,6 @@ labeled with number.  An example is shown below:
 <todo> replace this with actual example
 <todo> replace ALL examples with real examples
 Ignore next two lines, just ruler used to write the code
-0         1         2         3
--123456789-123456789-123456789-123456789
-
 
     0  1  2 |  3  4  5 |  6  7  8 
  /--------------------------------\
@@ -19,11 +16,6 @@ Ignore next two lines, just ruler used to write the code
 8| 72 73 74 | 75 76 77 | 78 79 80 |8
  \ --------------------------------/
     0  1  2 |  3  4  5 |  6  7  8 
-
--123456789-123456789-123456789-123456789
-0         1         2         3
-Ignore the lines above, they are just a
-ruler used to write the code
 
 '''
 # 2019-11-13 tc Initial development
@@ -108,7 +100,8 @@ def row_line(row_num) :
     # but NOT the bottom and right border
 
     # Start with a separator line. This is top line of all cells in
-    # the row.  block number labels will be inserted into this line below
+    # the row.  block number labels will be inserted into this line
+    # above and below the middle cell in the block
     # <todo> example here
     ret_lines = horz_separator_lines()
 
@@ -129,6 +122,12 @@ def row_line(row_num) :
         # we don't have to do the arithmetic for cell#, block#, etc
         # Output the left edge and appropriate number of spaces
         for cell in board.rows[row_num] :
+            # Need to label the block in prior line?
+            if line_num_in_row == first_line_of_cell_content and is_cell_in_middle_of_block(cell) :
+                # Yes, Replace a - in prior line with a block label
+                # <todo> examples
+                ret_lines[0] = replace_substr_at(ret_lines[0], str(cell.blk_num),
+                                                 block_label_offset_in_line(cell))
 
             # Do we need to label block number of the cell ABOVE us
             # in our top separater line (which is bottom line of the
@@ -141,18 +140,22 @@ def row_line(row_num) :
                 ret_lines[0] = replace_substr_at(ret_lines[0], str(cell.blk_num),
                                                  block_label_offset_in_line(cell))
 
-
             # cell's left edge
             line += vert_line_char
 
             # spaces of the cell
             cell_content = ' ' * (cell_width-1) # The -1 is for vert_line_char we just printed
 
-            # on top line only, label the cell number
-            if line_num_in_row == first_line_of_cell_content:
-                cell_content = replace_substr_at(cell_content, "%2d" % cell.cell_num, 0)
-
             line += cell_content # Tack it on
+
+            # We have entirely written the output associated with this cell
+
+            # on top line only, label the cell number
+            # We overwrite the left vertical separater and the
+            # first char in cell_content
+            if line_num_in_row == first_line_of_cell_content:
+                cell_label = "%d" % cell.cell_num
+                line = replace_substr_at(line, cell_label, -cell_width)
 
             # Time to place an internal (not on edges) vertical block separator ?
             if is_cell_rightmost_in_block_and_internal(cell.col_num) :
@@ -260,6 +263,13 @@ def is_cell_bottom_most_in_block_and_internal(row_num) :
     return row_num==2 or row_num==5
 
 def is_cell_above_in_middle_of_block(cell) :
+    ''' returns TRUE if cell is the center cell
+    of it's block
+    '''
+    return cell.row_num in [1,4,7] and cell.col_num in [1,4,7]
+
+
+def is_cell_in_middle_of_block(cell) :
     ''' returns TRUE if cell is the center cell
     in the bottom row of it's block.
     '''
