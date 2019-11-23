@@ -29,6 +29,7 @@ ruler used to write the code
 # 2019-11-13 tc Initial development
 # 2019-11-19 tc refactored replace_substr_at() into dinkum.utils.str_utils.py
 # 2019-11-22 tc debugging and putting in block separaters 
+# 2019-11-23 tc labeling cell# and blk#
 
 from dinkum.sudoku.sudoku   import Board
 from dinkum.utils.str_utils import *
@@ -107,7 +108,7 @@ def row_line(row_num) :
     # but NOT the bottom and right border
 
     # Start with a separator line. This is top line of all cells in
-    # the row
+    # the row.  block number labels will be inserted into this line below
     # <todo> example here
     ret_lines = horz_separator_lines()
 
@@ -129,6 +130,18 @@ def row_line(row_num) :
         # Output the left edge and appropriate number of spaces
         for cell in board.rows[row_num] :
 
+            # Do we need to label block number of the cell ABOVE us
+            # in our top separater line (which is bottom line of the
+            # cell above us
+            if is_cell_above_in_middle_of_block(cell) :
+                # yes, put the label in our top line which is their
+                # bottom line.
+
+                # Replace the - with a block label
+                ret_lines[0] = replace_substr_at(ret_lines[0], str(cell.blk_num),
+                                                 block_label_offset_in_line(cell))
+
+
             # cell's left edge
             line += vert_line_char
 
@@ -137,18 +150,18 @@ def row_line(row_num) :
 
             # on top line only, label the cell number
             if line_num_in_row == first_line_of_cell_content:
-                replace_substr_at(cell_content, "%2d" % cell.cell_num, 0)
+                cell_content = replace_substr_at(cell_content, "%2d" % cell.cell_num, 0)
 
             line += cell_content # Tack it on
 
             # Time to place an internal (not on edges) vertical block separator ?
-            if cell_is_rightmost_in_block_and_internal(cell.col_num) :
+            if is_cell_rightmost_in_block_and_internal(cell.col_num) :
                 line += vert_line_char
 
-        # Right cell's right border
+        # right border of last cell in the row (the one we just output)
         line += vert_line_char 
 
-        # Outside line
+        # Outside right line
         line += vert_line_char 
 
         # Time to place row label on outside ?
@@ -164,7 +177,7 @@ def row_line(row_num) :
 
     # If this is the bottom row of an internal block, we need
     # to separate it by adding another line of ----------'s
-    if cell_is_bottom_most_in_block_and_internal(row_num) :
+    if is_cell_bottom_most_in_block_and_internal(row_num) :
         ret_lines += horz_separator_lines()
 
     return ret_lines
@@ -219,7 +232,7 @@ def col_label_lines() :
 
         # We have to account for vertical block separators
         # to keep the center alignment of column numbers
-        if cell_is_rightmost_in_block_and_internal(cell.col_num) :
+        if is_cell_rightmost_in_block_and_internal(cell.col_num) :
             cell_line += ' '
 
         # Tack it on
@@ -232,26 +245,52 @@ def col_label_lines() :
     # Give them back list of our one generated line
     return [col_label_line]
     
-def cell_is_rightmost_in_block_and_internal(col_num) :
+def is_cell_rightmost_in_block_and_internal(col_num) :
     ''' Returns true if cell in col_num needs a block
     separator to it's right AND it isn't the last cell
     on the line.  Hence the internal word
     '''
     return col_num==2  or col_num==5
 
-def cell_is_bottom_most_in_block_and_internal(row_num) :
+def is_cell_bottom_most_in_block_and_internal(row_num) :
     ''' Returns True if the row at row_num is the
     bottommost row of the block AND and not on the
     bottom row of the board, hence the use of internal.
     '''
     return row_num==2 or row_num==5
 
-def cell_is_in_middle_of_block(cell) :
+def is_cell_above_in_middle_of_block(cell) :
     ''' returns TRUE if cell is the center cell
-    of it's block.
+    in the bottom row of it's block.
     '''
-    return cell.row_num in [1,4,7] and cell.col_num in [1,4,7]
+    return cell.row_num in [2,5,8] and cell.col_num in [1,4,7]
 
+
+def block_label_offset_in_line(cell) :
+    ''' Returns the offset in a full output where
+    the block label of cell should be placed.
+    <todo> example
+    '''
+
+    # We assume it's in a middle column of the board and
+    # put it in the middle of the line.  We then
+    # move it left or right as appropriate
+    middle_col = 4    # Assumed cell column number
+    block_label_offset = output_width // 2   # Put it in the middle
+
+    # How much to move it left or right if it's not in the middle
+    vertical_block_separation_line_width = 1    # account for extra | chars
+    block_label_separation = 3 * cell_width + vertical_block_separation_line_width
+
+    # Now move it as required
+    # A left block ?
+    if cell.col_num < middle_col :
+        # yes
+        block_label_offset -= block_label_separation # more position left
+    if cell.col_num > middle_col :
+        block_label_offset += block_label_separation # more position left
+
+    return block_label_offset
 
 def left_pad() :
     ''' Returns a string that makes up the left edge of the output board.
