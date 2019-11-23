@@ -15,19 +15,26 @@ class KenoTest(256,8676
 git/utils.py,25
 def is_a_gitfile(24,482
 
-sudoku/bin/dinkum_print_sudoku_worksheet.py,342
-def top_or_bottom_lines(59,1901
-def row_line(82,2694
-def horz_separator_lines(162,5403
-def col_label_lines(189,6272
-def cell_is_rightmost_in_block_and_internal(225,7297
-def cell_is_bottom_most_in_block_and_internal(232,7549
-def cell_is_in_middle_of_block(239,7808
-def left_pad(246,7987
-def right_pad(258,8250
-def worksheet(268,8471
+sudoku/labeled_print.py,586
+def top_or_bottom_lines(42,1367
+def row_line(65,2160
+def horz_separator_lines(178,6615
+def col_label_lines(205,7484
+def is_cell_rightmost_in_block_and_internal(241,8509
+def is_cell_bottom_most_in_block_and_internal(248,8761
+def is_cell_above_in_middle_of_block(255,9020
+def is_cell_in_middle_of_block(262,9204
+def block_label_offset_in_line(269,9401
+def left_pad(295,10374
+def right_pad(305,10622
+def worksheet(315,10843
+class PrintLabeledBoard 347,11674
+def __init__(352,11838
+def output(359,11983
+class Test_labeled_print(370,12200
+    def test_empty_board(420,15465
 
-sudoku/sudoku.py,1033
+sudoku/sudoku.py,1034
 class ExcUnsolvable(30,836
     def __init__(31,869
 class ExcBadPuzzleInput(35,942
@@ -51,16 +58,16 @@ class Cell 382,13540
     def set(436,15800
     def __str__(466,16750
     def all_neighbors(490,17734
-class TestSudoku(504,18256
-    def test_cell_constructor(506,18294
-            def err_msg(523,19110
-    def test_empty_board(550,20575
-    def test_bad_input_wrong_row_cnt(562,21119
-    def test_bad_input_wrong_row_size(576,21563
-    def test_bad_value(593,22073
-    def test_unsolvable(611,22630
-    def test_presolved(617,22842
-    def test_mindless(630,23395
+class Test_sudoku(504,18256
+    def test_cell_constructor(506,18295
+            def err_msg(523,19111
+    def test_empty_board(550,20576
+    def test_bad_input_wrong_row_cnt(562,21120
+    def test_bad_input_wrong_row_size(576,21564
+    def test_bad_value(593,22074
+    def test_unsolvable(611,22631
+    def test_presolved(617,22843
+    def test_mindless(630,23396
 
 sudoku/temp-working.py,791
 def sudoku_solver(7,148
@@ -126,6 +133,8 @@ project/TEMPLATES/python.py,0
 project/__init__.py,0
 
 utils/__init__.py,0
+
+sudoku/bin/dinkum_print_sudoku_worksheet.py,0
 
 sudoku/__init__.py,0
 

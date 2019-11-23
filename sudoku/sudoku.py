@@ -501,7 +501,7 @@ class Cell :
 # Test code
 import unittest
 
-class TestSudoku(unittest.TestCase):
+class Test_sudoku(unittest.TestCase):
 
     def test_cell_constructor(self):
 
