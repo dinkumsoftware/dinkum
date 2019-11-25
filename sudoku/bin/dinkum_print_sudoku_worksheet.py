@@ -30,12 +30,10 @@ if __name__ == "__main__" :
 
     # [] of lines making up output
     # each is NOT terminated by \n
-    # With no oard supplied, it prints empty board
+    # With no board supplied, it prints empty board
     # which is what we want for a worksheet
-    lines = print_labeled_board()
+    print_labeled_board()
 
-    for l in lines :
-        print (l) 
 
 
 

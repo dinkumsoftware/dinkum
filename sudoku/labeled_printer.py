@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # dinkum/sudoku/labeled_printer.py
-''' Has a function, print_labeled_board, which outputs a human-readable
+''' Has a function, print_labeled_board, which prints a human-readable
 board with all the cell numbers, row numbers, column numbers, and
 block numbers labeled.  Cell values are shown.
 
@@ -10,7 +10,11 @@ It's a rather busy printout, probably only of interest to developers.
 '''
 
 # 2019-11-23 tc Refactored from dinkum_print_sukoku_worksheet.py
-#                               worksheet() ==> print_labeled_board()
+#                  worksheet() ==> print_labeled_board()
+#               added cell values             
+# 2019-11-25 tc print_labeled_board() ==> labeled_board_lines()
+#               Made print_labeled_board() actually print the lines
+#               Added cell values
 
 #--------------------------------------------------------------
 from dinkum.sudoku.sudoku   import Board
@@ -40,6 +44,17 @@ top_offset_to_first_cell = 2 # column label + '-'
 bot_pad_after_last_cell  = 2 # bottom cell '-' + '-' + column_label
 
 def print_labeled_board(board=None) :
+    ''' prints the output of labeled_board() resulting
+    in a human-readable board showing cell values with
+    everything (cell#,row#, col#,blk#) labeled.
+
+    If board isn't supplied, produces output for an empty board.
+    '''
+    for l in labeled_board(board) :
+        print (l) 
+
+
+def labeled_board(board=None) :
     ''' outputs board with all column, row, block, and
     cell's labeled along with the cell values in human
     readable format.
@@ -399,13 +414,32 @@ class Test_labeled_printer(unittest.TestCase):
 
     def test_empty_board(self) :
         # Make empty board with all the labels
-        got = print_labeled_board()
+        got = labeled_board()
         self.assertEqual(got, Test_labeled_printer.expected_empty_output)
 
         
     def test_caller_supplied_empty(self) :
-        got = print_labeled_board( Board() )
+        got = labeled_board( Board() )
         self.assertEqual(got, Test_labeled_printer.expected_empty_output)
+
+    test_board = [\
+          [0, 0, 6, 1, 0, 0, 0, 0, 8], 
+          [0, 8, 0, 0, 9, 0, 0, 3, 0], 
+          [2, 0, 0, 0, 0, 5, 4, 0, 0], 
+          [4, 0, 0, 0, 0, 1, 8, 0, 0], 
+          [0, 3, 0, 0, 7, 0, 0, 4, 0], 
+          [0, 0, 7, 9, 0, 0, 0, 0, 3], 
+          [0, 0, 8, 4, 0, 0, 0, 0, 6], 
+          [0, 2, 0, 0, 5, 0, 0, 8, 0], 
+          [1, 0, 0, 0, 0, 2, 5, 0, 0]
+    ]
+    test_board_output = "<todo>"
+
+    def test_populated_board(self) :
+        board = Board(Test_labeled_printer.test_board)
+        got = labeled_board( board )
+        print_labeled_board (board)
+        ## self.assertEqual(got, Test_labeled_printer.expected_test_board_output)
 
 if __name__ == "__main__" :
     # Run the unittests
