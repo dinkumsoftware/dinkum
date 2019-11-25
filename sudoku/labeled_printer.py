@@ -6,7 +6,49 @@ block numbers labeled.  Cell values are shown.
 
 It's a rather busy printout, probably only of interest to developers.
 
-<todo> provide example here?
+Example empty board:
+    0     1     2      3     4     5      6     7     8     
+ /---------------------------------------------------------\ 
+ |0------------------1------------------2------------------| 
+ |0     1     2     |3     4     5     |6     7     8     || 
+0||     |     |     ||     |     |     ||     |     |     ||0
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |9     10    11    |12    13    14    |15    16    17    || 
+1||     |     |     ||     |     |     ||     |     |     ||1
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |18    19    20    |21    22    23    |24    25    26    || 
+2||     |     |     ||     |     |     ||     |     |     ||2
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |3------------------4------------------5------------------| 
+ |27    28    29    |30    31    32    |33    34    35    || 
+3||     |     |     ||     |     |     ||     |     |     ||3
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |36    37    38    |39    40    41    |42    43    44    || 
+4||     |     |     ||     |     |     ||     |     |     ||4
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |45    46    47    |48    49    50    |51    52    53    || 
+5||     |     |     ||     |     |     ||     |     |     ||5
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |6------------------7------------------8------------------| 
+ |54    55    56    |57    58    59    |60    61    62    || 
+6||     |     |     ||     |     |     ||     |     |     ||6
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |63    64    65    |66    67    68    |69    70    71    || 
+7||     |     |     ||     |     |     ||     |     |     ||7
+ ||     |     |     ||     |     |     ||     |     |     || 
+ |---------------------------------------------------------| 
+ |72    73    74    |75    76    77    |78    79    80    || 
+8||     |     |     ||     |     |     ||     |     |     ||8
+ ||     |     |     ||     |     |     ||     |     |     || 
+ \---------------------------------------------------------/ 
+     0     1     2      3     4     5      6     7     8     
 '''
 
 # 2019-11-23 tc Refactored from dinkum_print_sukoku_worksheet.py
@@ -88,8 +130,9 @@ def labeled_board(board=None) :
 
 def top_or_bottom_lines(is_top) :
     ''' returns [] of [column label line, horz separator line. e.g.
-    <todo> example here
-    is_top controls whether top or bottom lines
+    is_top controls whether top or bottom lines.  Example of a top line
+        0     1     2      3     4     5      6     7     8     
+    /---------------------------------------------------------\ 
     '''
 
     if is_top :
@@ -111,9 +154,7 @@ def top_or_bottom_lines(is_top) :
 
 def row_line(row) :
     ''' returns [] of lines that make up a row of cells
-    lines are NOT \n terminated.  e.g.
-    <todo> replace
-      1|  9 10 11 | 12 13 14 | 15 16 17 |1
+    lines are NOT \n terminated.
 
     The top line, left, and right cell outlines are include
     in returned lines.  A horizontal block separator may
@@ -123,6 +164,13 @@ def row_line(row) :
 
     The cell number is written in the upper left corner of
     the cell area
+
+    Example return:
+     |---------------------------------------------------------| 
+     |9     10    11    |12    13    14    |15    16    17    || 
+    1||     |     |     ||     |     |     ||     |     |     ||1
+     ||     |     |     ||     |     |     ||     |     |     || 
+
     '''
 
     # Which row we are working on
@@ -138,15 +186,16 @@ def row_line(row) :
 
     # Start with a separator line. This is top line of all cells in
     # the row.  block number labels will be inserted into this line
-    # above and below the middle cell in the block
-    # <todo> example here
+    # above and below the middle cell in the block. Example:
+    #  |---------------------------------------------------------| 
     ret_lines = horz_separator_lines()
 
     # Each individual row is made of multiple output lines.
     # Iterate over them
     first_line_of_cell_content = 1 # skips horz_separator_lines
     for line_num_in_row in range(first_line_of_cell_content, cell_height) :
-        # <todo> examples
+        # example:
+        #    1||     |     |     ||     |     |     ||     |     |     ||1
         line = '' # start with an empty line and append to it
                   # moving left to right
 
@@ -160,7 +209,9 @@ def row_line(row) :
         # Output the left edge and appropriate number of spaces
         for cell in row :
             # Need to label the block in prior line?
-            # <todo> examples
+            # example: 
+            #  |3------------------4------------------5------------------| 
+            #  |27    28    29    |30    31    32    |33    34    35    || 
             if line_num_in_row == first_line_of_cell_content and cell.blk_idx == 0 :
                 # yes, it's first cell in block
                 ret_lines[0] = replace_substr_at(ret_lines[0], str(cell.blk_num),
@@ -173,7 +224,15 @@ def row_line(row) :
             cell_content = ' ' * (cell_width-1) # The -1 is for vert_line_char we just printed
 
             # Time to write the cell's value (if there is one)?
-            # example <todo>
+            # example:
+            #   |72    73    74    |75    76    77    |78    79    80    ||
+            #  8||  1  |     |     ||     |     |  2  ||  5  |     |     ||8
+            #   ||     |     |     ||     |     |     ||     |     |     ||
+            #   \---------------------------------------------------------/
+
+            # Note: This is so complicated because I originally indended
+            #       to write the value multiple times in a square.  I thought
+            #       this looked better, but I left the more general code in.
             value_label_vert_offset_in_cell = 2
             value_label_vert_num = 1
             value_label_horz_offset_in_cell = 2
@@ -227,7 +286,9 @@ def row_line(row) :
 def horz_separator_lines(first_char=vert_line_char, last_char=vert_line_char) :
     ''' Returns [] of lines making up top or bottom
     lines, e.g.
-        <todo> put example here
+           0     1     2      3     4     5      6     7     8     
+       /---------------------------------------------------------\ 
+
     The first and last chars of each line are set to
     first_char and last_char
     lines are NOT new line terminated.
@@ -318,7 +379,8 @@ def is_cell_in_middle_of_block(cell) :
 def block_label_offset_in_line(cell) :
     ''' Returns the offset in a full output line where
     the block label of cell should be placed.
-    <todo> example
+    :example
+      |0------------------1------------------2------------------| 
     '''
 
     # The label is in the upper right corner of the first
@@ -334,8 +396,6 @@ def block_label_offset_in_line(cell) :
 
 def left_pad() :
     ''' Returns a string that makes up the left edge of the output board.
-    <todo> support row label
-    <todo> provide example
     '''
     ret_str = '  '
     assert len(ret_str) == left_offset_to_first_cell
