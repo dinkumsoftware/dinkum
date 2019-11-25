@@ -7,8 +7,10 @@ Solution technique does NOT involve guessing.
 It only fills in cells that have no alternative.
 '''
 
-# 2019-11-01 tc@DinkumSoftware.com Initial
-# 2019-11-07 tc@DinkumSoftware.com Made Board(None) return empty board
+# 2019-11-01 tc Initial
+# 2019-11-07 tc Made Board(None) return empty board
+# 2019-11-23 tc Bug fix in sanity_check()
+# 2019-11-25 tc various bug fixes
 
 ###################
 #<todo>
@@ -141,11 +143,6 @@ class Board :
         if not arr :
             return # nope
 
-        ############################
-        (sanity_check_passed, err_msg) = self.sanity_check()
-        assert sanity_check_passed, "sanity_check() failed:"+err_msg
-        ############################
-
 
         # Go thru and set each cell value from our input,
         # set() adjusts all the data structures
@@ -208,12 +205,18 @@ class Board :
         '''Sets all unsolved cells on the board that have a single possible value.
         Returns True if any cell was set.
         '''
+
+        # We are going to iterate thru this
+        # We have to make a copy because self.unsolved_cells
+        # will change during the iteration
+        unsolved_cells = self.unsolved_cells.copy()
+
         we_set_a_cell = False
-        for cell in self.unsolved_cells :
+        for cell in unsolved_cells :
             if len(cell.possible_values) == 1 :
                 # Extract the only element in the set.  Leave num_possible_values intact
                 # See https://stackoverflow.com/questions/20625579/access-the-sole-element-of-a-set
-                [value] = self.possible_value
+                [value] = cell.possible_values
 
                 # and set that value into the cell
                 # This also adjusts all the row/col/blk of cell
@@ -266,7 +269,6 @@ class Board :
             # Get (x,y) of what block we are in
             blk_x = col_num // Board.blk_size
             blk_y = row_num // Board.blk_size
-######            PRINT ("BLK_X/Y", BLK_X,BLK_Y) #######################3
 
             # convert to blk_num
             blk_num = blk_y * blks_per_row + blk_x
@@ -274,8 +276,6 @@ class Board :
             # get (x,y) of cell in blk
             cell_x_in_blk = col_num % Board.blk_size
             cell_y_in_blk = row_num % Board.blk_size
-
-#########            print ("CELL_X/Y_IN_BLK", CELL_X_IN_BLK, CELL_Y_IN_BLK) ############################
 
             # Compute index of cell in block
             blk_idx = cell_y_in_blk * Board.blk_size + cell_x_in_blk
@@ -309,8 +309,6 @@ class Board :
         err_msg_if_failed will be None if passed
         '''
 
-        ####################### self.cols[5][8] = None
-
         # Make sure cells/rows/cols/blks all refer to the same cell
         # Raster scan cells/rows/cols/blks
         cell_num = 0
@@ -320,7 +318,7 @@ class Board :
                 # We compare each row/col/blk to this cell
                 cell_by_cells = self.cells[cell_num] # cells[] are in raster order
 
-                # Do all rows/cols/blks
+                # Do all rows/cols/blks for this cell
                 for rcb_type in self.all_rcb_types :
                     # Translate row and column into indexes in row/col/blks and correspond cells[]
                     (arr_indx,cell_indx) = Board.map_row_col_to_indexes(rcb_type, row_num, col_num)
@@ -336,9 +334,9 @@ class Board :
                                   arr_indx, cell_indx,
                                   cell_num,
                                   row_num, col_num))
-
-                    # Advance to next cell
-                    cell_num += 1
+                    
+                # Advance to next cell
+                cell_num += 1
 
         # If all out of loop... all went well
         return (True, None )
@@ -431,7 +429,7 @@ class Cell :
 
         # Mark us unsolved with all possibles
         self.value = Cell.unsolved_cell_value
-        self.possible_values = Cell.all_cell_values
+        self.possible_values = Cell.all_cell_values.copy()
 
     def set(self, value) :
         '''Sets value into cell
@@ -488,14 +486,16 @@ class Cell :
 
 
     def all_neighbors(self) :
-        ''' Returns [] of cells which are in same row, col, and blk
-        as us.  self is NOT in the list
+        ''' Returns set of cells which are in same row, col, and blk
+        as us.  self is NOT in the list.  No cell is duplicated, hence
+        the set
         '''
-        row_neighbors = [cell for cell in self.board.rows[self.row_num].rcb if cell != self]
-        col_neighbors = [cell for cell in self.board.cols[self.col_num].rcb if cell != self]
-        blk_neighbors = [cell for cell in self.board.blks[self.blk_num].rcb if cell != self]
 
-        return row_neighbors + col_neighbors + blk_neighbors
+        row_neighbors = set([cell for cell in self.board.rows[self.row_num] if cell != self])
+        col_neighbors = set([cell for cell in self.board.cols[self.col_num] if cell != self])
+        blk_neighbors = set([cell for cell in self.board.blks[self.blk_num] if cell != self])
+
+        return row_neighbors.union(col_neighbors,blk_neighbors)
 
 
 # Test code
@@ -536,13 +536,12 @@ class Test_sudoku(unittest.TestCase):
                               err_msg(cell.cell_num, "cols", cell.col_num, cell.col_idx, cell_num_should_be))
 
             # blks
-            row_num_should_be = (cell.blk_num // Board.blk_size) * Board.rcb_size + \
+            row_num_should_be = (cell.blk_num // Board.blk_size) * Board.blk_size + \
                                  cell.blk_idx // Board.blk_size
             col_num_should_be = (cell.blk_num  % Board.blk_size) * Board.blk_size + \
                                  cell.blk_idx  % Board.blk_size
             cell_num_should_be = row_num_should_be * Board.rcb_size + col_num_should_be
 
-            print (cell) ###############################################
             self.assertEqual( cell.cell_num, cell_num_should_be,
                               err_msg(cell.cell_num, "blks", cell.blk_num, cell.blk_idx, cell_num_should_be))
 
