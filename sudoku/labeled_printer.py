@@ -17,7 +17,7 @@ It's a rather busy printout, probably only of interest to developers.
 #               Added cell values
 
 #--------------------------------------------------------------
-from dinkum.sudoku.sudoku   import Board
+from dinkum.sudoku.sudoku   import Board, Cell
 from dinkum.utils.str_utils import *
 
 # What we make lines with
@@ -181,6 +181,19 @@ def row_line(row) :
 
             # spaces of the cell
             cell_content = ' ' * (cell_width-1) # The -1 is for vert_line_char we just printed
+
+            # Time to write the cell's value (if there is one)?
+            # example <todo>
+            value_label_vert_offset_in_cell = 2
+            value_label_vert_num = 1
+            value_label_horz_offset_in_cell = 2
+            value_label_horz_num = 1
+            if cell.value != Cell.unsolved_cell_value :
+                # There is value to print, on the right line?
+                if value_label_vert_offset_in_cell <= line_num_in_row < (value_label_vert_offset_in_cell + value_label_vert_num) :
+                    # Yes, replace the chars
+                    cell_content = replace_substr_at(cell_content, str(cell.value) * value_label_horz_num,
+                                                     value_label_horz_offset_in_cell)
 
             line += cell_content # Tack it on
 
