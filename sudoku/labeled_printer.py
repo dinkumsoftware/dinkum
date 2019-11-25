@@ -15,6 +15,7 @@ It's a rather busy printout, probably only of interest to developers.
 # 2019-11-25 tc print_labeled_board() ==> labeled_board_lines()
 #               Made print_labeled_board() actually print the lines
 #               Added cell values
+#               Moved block label location
 
 #--------------------------------------------------------------
 from dinkum.sudoku.sudoku   import Board, Cell
@@ -159,20 +160,9 @@ def row_line(row) :
         # Output the left edge and appropriate number of spaces
         for cell in row :
             # Need to label the block in prior line?
-            if line_num_in_row == first_line_of_cell_content and is_cell_in_middle_of_block(cell) :
-                # Yes, Replace a - in prior line with a block label
-                # <todo> examples
-                ret_lines[0] = replace_substr_at(ret_lines[0], str(cell.blk_num),
-                                                 block_label_offset_in_line(cell))
-
-            # Do we need to label block number of the cell ABOVE us
-            # in our top separater line (which is bottom line of the
-            # cell above us
-            if is_cell_above_in_middle_of_block(cell) :
-                # yes, put the label in our top line which is their
-                # bottom line.
-
-                # Replace the - with a block label
+            # <todo> examples
+            if line_num_in_row == first_line_of_cell_content and cell.blk_idx == 0 :
+                # yes, it's first cell in block
                 ret_lines[0] = replace_substr_at(ret_lines[0], str(cell.blk_num),
                                                  block_label_offset_in_line(cell))
 
@@ -326,28 +316,19 @@ def is_cell_in_middle_of_block(cell) :
 
 
 def block_label_offset_in_line(cell) :
-    ''' Returns the offset in a full output where
+    ''' Returns the offset in a full output line where
     the block label of cell should be placed.
     <todo> example
     '''
 
-    # We assume it's in a middle column of the board and
-    # put it in the middle of the line.  We then
-    # move it left or right as appropriate
-    middle_col = 4    # Assumed cell column number
-    block_label_offset = output_width // 2   # Put it in the middle
+    # The label is in the upper right corner of the first
+    # cell (upper left) in the block
+    block_label_offset = top_offset_to_first_cell # offset for cell 0
 
-    # How much to move it left or right if it's not in the middle
-    vertical_block_separation_line_width = 1    # account for extra | chars
-    block_label_separation = 3 * cell_width + vertical_block_separation_line_width
-
-    # Now move it as required
-    # A left block ?
-    if cell.col_num < middle_col :
-        # yes
-        block_label_offset -= block_label_separation # more position left
-    if cell.col_num > middle_col :
-        block_label_offset += block_label_separation # more position left
+    # Move it over as required
+    blk_in_line = cell.blk_num %  Board.blk_size # 0,1,or 2
+    num_vert_separator_lines = blk_in_line  # How many internal |s there are
+    block_label_offset +=  blk_in_line * Board.blk_size * cell_width + num_vert_separator_lines
 
     return block_label_offset
 
@@ -382,46 +363,46 @@ class Test_labeled_printer(unittest.TestCase):
         [\
          "     0     1     2      3     4     5      6     7     8     ",
          " /---------------------------------------------------------\ ",
-         " |---------------------------------------------------------| ",
+         " |0------------------1------------------2------------------| ",
          " |0     1     2     |3     4     5     |6     7     8     || ",
          "0||     |     |     ||     |     |     ||     |     |     ||0",
          " ||     |     |     ||     |     |     ||     |     |     || ",
-         " |---------0------------------1------------------2---------| ",
+         " |---------------------------------------------------------| ",
          " |9     10    11    |12    13    14    |15    16    17    || ",
          "1||     |     |     ||     |     |     ||     |     |     ||1",
          " ||     |     |     ||     |     |     ||     |     |     || ",
-         " |---------0------------------1------------------2---------| ",
+         " |---------------------------------------------------------| ",
          " |18    19    20    |21    22    23    |24    25    26    || ",
          "2||     |     |     ||     |     |     ||     |     |     ||2",
          " ||     |     |     ||     |     |     ||     |     |     || ",
          " |---------------------------------------------------------| ",
-         " |---------------------------------------------------------| ",
+         " |3------------------4------------------5------------------| ",
          " |27    28    29    |30    31    32    |33    34    35    || ",
          "3||     |     |     ||     |     |     ||     |     |     ||3",
          " ||     |     |     ||     |     |     ||     |     |     || ",
-         " |---------3------------------4------------------5---------| ",
+         " |---------------------------------------------------------| ",
          " |36    37    38    |39    40    41    |42    43    44    || ",
          "4||     |     |     ||     |     |     ||     |     |     ||4",
          " ||     |     |     ||     |     |     ||     |     |     || ",
-         " |---------3------------------4------------------5---------| ",
+         " |---------------------------------------------------------| ",
          " |45    46    47    |48    49    50    |51    52    53    || ",
          "5||     |     |     ||     |     |     ||     |     |     ||5",
          " ||     |     |     ||     |     |     ||     |     |     || ",
          " |---------------------------------------------------------| ",
-         " |---------------------------------------------------------| ",
+         " |6------------------7------------------8------------------| ",
          " |54    55    56    |57    58    59    |60    61    62    || ",
          "6||     |     |     ||     |     |     ||     |     |     ||6",
          " ||     |     |     ||     |     |     ||     |     |     || ",
-         " |---------6------------------7------------------8---------| ",
+         " |---------------------------------------------------------| ",
          " |63    64    65    |66    67    68    |69    70    71    || ",
          "7||     |     |     ||     |     |     ||     |     |     ||7",
          " ||     |     |     ||     |     |     ||     |     |     || ",
-         " |---------6------------------7------------------8---------| ",
+         " |---------------------------------------------------------| ",
          " |72    73    74    |75    76    77    |78    79    80    || ",
          "8||     |     |     ||     |     |     ||     |     |     ||8",
          " ||     |     |     ||     |     |     ||     |     |     || ",
          " \---------------------------------------------------------/ ",
-         "     0     1     2      3     4     5      6     7     8     "
+         "     0     1     2      3     4     5      6     7     8     ",
         ]
 
 
@@ -446,13 +427,54 @@ class Test_labeled_printer(unittest.TestCase):
           [0, 2, 0, 0, 5, 0, 0, 8, 0], 
           [1, 0, 0, 0, 0, 2, 5, 0, 0]
     ]
-    test_board_output = "<todo>"
-
+    test_board_output = [\
+          "     0     1     2      3     4     5      6     7     8     ",
+          " /---------------------------------------------------------\ ",
+          " |0------------------1------------------2------------------| ",
+          " |0     1     2     |3     4     5     |6     7     8     || ",
+          "0||     |     |  6  ||  1  |     |     ||     |     |  8  ||0",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |9     10    11    |12    13    14    |15    16    17    || ",
+          "1||     |  8  |     ||     |  9  |     ||     |  3  |     ||1",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |18    19    20    |21    22    23    |24    25    26    || ",
+          "2||  2  |     |     ||     |     |  5  ||  4  |     |     ||2",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |3------------------4------------------5------------------| ",
+          " |27    28    29    |30    31    32    |33    34    35    || ",
+          "3||  4  |     |     ||     |     |  1  ||  8  |     |     ||3",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |36    37    38    |39    40    41    |42    43    44    || ",
+          "4||     |  3  |     ||     |  7  |     ||     |  4  |     ||4",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |45    46    47    |48    49    50    |51    52    53    || ",
+          "5||     |     |  7  ||  9  |     |     ||     |     |  3  ||5",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |6------------------7------------------8------------------| ",
+          " |54    55    56    |57    58    59    |60    61    62    || ",
+          "6||     |     |  8  ||  4  |     |     ||     |     |  6  ||6",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |63    64    65    |66    67    68    |69    70    71    || ",
+          "7||     |  2  |     ||     |  5  |     ||     |  8  |     ||7",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " |---------------------------------------------------------| ",
+          " |72    73    74    |75    76    77    |78    79    80    || ",
+          "8||  1  |     |     ||     |     |  2  ||  5  |     |     ||8",
+          " ||     |     |     ||     |     |     ||     |     |     || ",
+          " \---------------------------------------------------------/ ",
+          "     0     1     2      3     4     5      6     7     8     ",
+    ]
     def test_populated_board(self) :
         board = Board(Test_labeled_printer.test_board)
         got = labeled_board( board )
-        print_labeled_board (board)
-        ## self.assertEqual(got, Test_labeled_printer.expected_test_board_output)
+        self.assertEqual(got, Test_labeled_printer.test_board_output)
 
 if __name__ == "__main__" :
     # Run the unittests

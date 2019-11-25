@@ -15,59 +15,40 @@ class KenoTest(256,8676
 git/utils.py,25
 def is_a_gitfile(24,482
 
-sudoku/labeled_print.py,586
-def top_or_bottom_lines(42,1367
-def row_line(65,2160
-def horz_separator_lines(178,6615
-def col_label_lines(205,7484
-def is_cell_rightmost_in_block_and_internal(241,8509
-def is_cell_bottom_most_in_block_and_internal(248,8761
-def is_cell_above_in_middle_of_block(255,9020
-def is_cell_in_middle_of_block(262,9204
-def block_label_offset_in_line(269,9401
-def left_pad(295,10374
-def right_pad(305,10622
-def worksheet(315,10843
-class PrintLabeledBoard 347,11674
-def __init__(352,11838
-def output(359,11983
-class Test_labeled_print(370,12200
-    def test_empty_board(420,15465
-
 sudoku/sudoku.py,1034
-class ExcUnsolvable(30,836
-    def __init__(31,869
-class ExcBadPuzzleInput(35,942
-    def __init__(39,1093
-def sudoku_solver(44,1159
-class Board 62,1564
-    def __init__(90,2514
-    def solve(185,6632
-    def solve_cells_with_single_possible_value(207,7419
-    def rcb(230,8294
-    def map_row_col_to_indexes(248,8897
-    def is_solved(291,10414
-    def output(296,10535
-    def sanity_check(305,10837
-class RCB 346,12556
-    def __init__(357,12848
-    def __getitem__(370,13300
-    def __setitem__(375,13413
-class Cell 382,13540
-    def __init__(406,14446
-    def set(436,15800
-    def __str__(466,16750
-    def all_neighbors(490,17734
-class Test_sudoku(504,18256
-    def test_cell_constructor(506,18295
-            def err_msg(523,19111
-    def test_empty_board(550,20576
-    def test_bad_input_wrong_row_cnt(562,21120
-    def test_bad_input_wrong_row_size(576,21564
-    def test_bad_value(593,22074
-    def test_unsolvable(611,22631
-    def test_presolved(617,22843
-    def test_mindless(630,23396
+class ExcUnsolvable(32,874
+    def __init__(33,907
+class ExcBadPuzzleInput(37,980
+    def __init__(41,1131
+def sudoku_solver(46,1197
+class Board 64,1602
+    def __init__(92,2552
+    def solve(182,6465
+    def solve_cells_with_single_possible_value(204,7252
+    def rcb(233,8325
+    def map_row_col_to_indexes(251,8928
+    def is_solved(291,10264
+    def output(296,10385
+    def sanity_check(305,10687
+class RCB 344,12376
+    def __init__(355,12668
+    def __getitem__(368,13120
+    def __setitem__(373,13233
+class Cell 380,13360
+    def __init__(404,14266
+    def set(434,15627
+    def __str__(464,16577
+    def all_neighbors(488,17561
+class Test_sudoku(504,18138
+    def test_cell_constructor(506,18177
+            def err_msg(523,18993
+    def test_empty_board(549,20385
+    def test_bad_input_wrong_row_cnt(561,20929
+    def test_bad_input_wrong_row_size(575,21373
+    def test_bad_value(592,21883
+    def test_unsolvable(610,22440
+    def test_presolved(616,22652
+    def test_mindless(629,23205
 
 sudoku/temp-working.py,791
 def sudoku_solver(7,148
@@ -95,6 +76,25 @@ class Board 20,480
     def debug_set_label(621,24886
     def debug_set_indent(633,25671
 def pretty_print(721,29042
+
+sudoku/labeled_printer.py,634
+def print_labeled_board(47,1655
+def labeled_board(58,1982
+def top_or_bottom_lines(89,2751
+def row_line(112,3544
+def horz_separator_lines(228,8240
+def col_label_lines(255,9109
+def is_cell_rightmost_in_block_and_internal(291,10134
+def is_cell_bottom_most_in_block_and_internal(298,10386
+def is_cell_above_in_middle_of_block(305,10645
+def is_cell_in_middle_of_block(312,10829
+def block_label_offset_in_line(319,11026
+def left_pad(336,11638
+def right_pad(346,11886
+class Test_labeled_printer(360,12137
+    def test_empty_board(410,15404
+    def test_caller_supplied_empty(416,15598
+    def test_populated_board(433,16173
 
 utils/str_utils.py,98
 def replace_substr_at(11,322
