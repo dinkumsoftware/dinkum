@@ -29,6 +29,9 @@ class Board :
 
       rows,cols,blks  [] of Cells in that entity.  Indexed by {row/col/blk}_num
                       Can be retrieved by rcb()
+
+    Board()[row][col] can be used to get Cell at (row,col)
+
     '''
 
     def __init__(self, arr=None, name=None, desc="") :
@@ -192,6 +195,11 @@ class Board :
         return we_set_a_cell
 
     
+    def __getitem__(self, row) :
+        ''' Returns our RCB at row
+            Allows Board()[row][col] to return a cell
+        '''
+        return self.rows[row]
 
     def rcb(self, rcb_type) :
         ''' Return [] of RCBs, rows[], cols[], or blks[]
@@ -417,6 +425,37 @@ class Test_board(unittest.TestCase):
 
         non_subset_board=Board(non_subset_spec, "non subset board")
         self.assertFalse ( non_subset_board.is_subset_of(some_board) )
+
+    def test_cell_all_neighbors(self) :
+        # By rights it should be in the unittest for cell.py
+        # but it can't because it would mean cyclical imports
+        # so... we test it here
+
+        board = Board()
+
+        # Test a few at random
+        cell = board[3][7]
+        cell_neighbors_are = cell.all_neighbors()
+
+        cell_neighbors_should_be  = [board.cells[idx] for idx in range(27, 36   ) if idx != cell.cell_num] # row
+        cell_neighbors_should_be += [board.cells[idx] for idx in range( 7, 80, 9) if idx != cell.cell_num] # col
+        cell_neighbors_should_be += [board.cells[idx] for idx in [42, 44, 51, 53]] # blk: that aren't in row/col
+        cell_neighbors_should_be = set( cell_neighbors_should_be)
+
+        self.assertEqual( cell_neighbors_are, cell_neighbors_should_be)
+                                     
+
+        cell = board[2][4]
+        cell_neighbors_are = cell.all_neighbors()
+
+        cell_neighbors_should_be  = [board.cells[idx] for idx in range(18, 27   ) if idx != cell.cell_num] # row
+        cell_neighbors_should_be += [board.cells[idx] for idx in range( 4, 81, 9) if idx != cell.cell_num] # col
+        cell_neighbors_should_be += [board.cells[idx] for idx in [3,5,12,14]] # blk: that aren't in row/col
+        cell_neighbors_should_be = set( cell_neighbors_should_be)
+
+        self.assertEqual( cell_neighbors_are, cell_neighbors_should_be)
+
+        
 
 
 

@@ -105,11 +105,15 @@ class Cell :
         the set
         '''
 
-        row_neighbors = set([cell for cell in self.board.rows[self.row_num] if cell != self])
-        col_neighbors = set([cell for cell in self.board.cols[self.col_num] if cell != self])
-        blk_neighbors = set([cell for cell in self.board.blks[self.blk_num] if cell != self])
+        # put all our neighbors together
+        ans = set(self.row().cells + \
+                  self.col().cells + \
+                  self.blk().cells   )
 
-        return row_neighbors.union(col_neighbors,blk_neighbors)
+        # and take thyself out
+        ans.remove(self) 
+
+        return ans
 
     def row(self) :
         ''' returns the row this cell belongs to.
