@@ -58,9 +58,10 @@ Example empty board:
 #               Made print_labeled_board() actually print the lines
 #               Added cell values
 #               Moved block label location
+# 2019-11-26 tc Fixed import problem
 
 #--------------------------------------------------------------
-from dinkum.sudoku.sudoku   import Board, Cell
+from dinkum.sudoku.board    import *
 from dinkum.utils.str_utils import *
 
 # What we make lines with
@@ -79,7 +80,7 @@ left_offset_to_first_cell = 2           # Accounts for row label and one |
 right_pad_after_last_cell = 3           # || + row_label
 width_of_internal_block_separators = 2  # Two internal |'s
 
-output_width = left_offset_to_first_cell + cell_width * Board.rcb_size +     \
+output_width = left_offset_to_first_cell + cell_width * RCB_SIZE +     \
                width_of_internal_block_separators + right_pad_after_last_cell
 
 # Height of whole printed board
@@ -108,7 +109,7 @@ def labeled_board(board=None) :
     If board is not supplied, produces output for an empty board
     '''
     if not board :
-        board = Board()
+        board = Board("created by labeled_board()")
 
     ws = [] # What we return
 
@@ -388,9 +389,9 @@ def block_label_offset_in_line(cell) :
     block_label_offset = top_offset_to_first_cell # offset for cell 0
 
     # Move it over as required
-    blk_in_line = cell.blk_num %  Board.blk_size # 0,1,or 2
+    blk_in_line = cell.blk_num %  BLK_SIZE # 0,1,or 2
     num_vert_separator_lines = blk_in_line  # How many internal |s there are
-    block_label_offset +=  blk_in_line * Board.blk_size * cell_width + num_vert_separator_lines
+    block_label_offset +=  blk_in_line * BLK_SIZE * cell_width + num_vert_separator_lines
 
     return block_label_offset
 
@@ -532,7 +533,7 @@ class Test_labeled_printer(unittest.TestCase):
           "     0     1     2      3     4     5      6     7     8     ",
     ]
     def test_populated_board(self) :
-        board = Board(Test_labeled_printer.test_board)
+        board = Board("created by test_populated_board()", Test_labeled_printer.test_board)
         got = labeled_board( board )
         self.assertEqual(got, Test_labeled_printer.test_board_output)
 

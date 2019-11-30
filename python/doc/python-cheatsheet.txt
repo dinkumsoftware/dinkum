@@ -1,0 +1,17 @@
+dinkum/projects/python/src/python-cheatsheet.txt
+
+2019-11-28 tc Initial
+
+unit tests: recursively running all 
+    # For help:
+    python3 -m unittest --help
+
+    # Recursively run all the unit tests in *.py files in current directory
+    python3 -m unittest discover -v -p '*'.py
+
+    # Recursively run all the unit tests in *.py files in <dir>
+    python3 -m unittest discover -v -s <dir> -p '*'.py
+
+    # Useful arguments
+      -v, --verbose         Verbose output
+      -f, --failfast        Stop on first fail or error

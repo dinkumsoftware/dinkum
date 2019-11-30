@@ -4,11 +4,21 @@ CONVENTIONS.txt
 
 This is list of conventions followed in the dinkum repo (see above)
 
-2019-04-30 tc@DinkumSoftware.com Initial
+2019-04-30 tc Initial
+2019-11-26 tc Added some python requirements
 
-All executables start with dinkum-
+All executables start with dinkum- or dinkum_
 
 Anything starting with tc- is NON-generic and are the author's desired customization.
+
+document lives in ./doc directory
+
+<todo> rethink this... currently dinkum/package/package/module.py
+                                 dinkum/package/package/bin/dinkum_executable_code.py
+                                 with sym-links of dinkum-executable-code => dinkum_executable_code.py
+                                      in both the bin directory AND dinkum/bin directory
+       If I stay with below, consider python => python_src
+       As I type this, I like the below better
 
 All the python library source will be in:
     dinkum/python/dinkum/a/b/*.py    # In package library code
@@ -17,3 +27,8 @@ All the python library source will be in:
     dinkum/bin ; sym links.e.g.
           dinkum-* ==> ../python/bin/dinkum-*.py
 
+Python unit testing:
+    All non-bin *.py files will have unittest code
+    class Test_<module_name>(unittest.TestCase):
+    individual tests start with: test_
+    Any required data lives in ./test_data
