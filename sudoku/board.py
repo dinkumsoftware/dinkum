@@ -6,6 +6,7 @@ sudoku board full of Cells with values.
 
 # 2019-11-25 tc Initial
 # 2019-11-26 tc Gave names to boards
+# 2019-11-30 tc Added board description
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -19,6 +20,8 @@ class Board :
 
     Various data:
       name            Name of the board, set in constructor
+      description     Description of the board, set in constructor
+    
 
       cells           List of all Cells in raster order,
                       i.e. left to right, top to bottom
@@ -28,22 +31,26 @@ class Board :
                       Can be retrieved by rcb()
     '''
 
-    def __init__(self, name=None, arr=None) :
+    def __init__(self, arr=None, name=None, desc="") :
         ''' constructor of a Board
+        arr is list of row-lists
+        If arr is None, an empty board will be created.
+
         name is used as the name of the board.
         If None, a unique name will be chosen, something on
         the order of:
             board-<lots of numbers which represent the curr time> 
 
-        arr is list of row-lists
-        If arr is None, an empty board will be created.
+        desc is description of the board, i.e. it's source or
+        characteristics.  It defaults to empty string.
 
         raise ExcBadPuzzleInput if "arr" is bad
         various assertion failures if things aren't right.
         '''
 
-        # Deal with the name
+        # Deal with the name/description
         self.name = name if name else self.unique_board_name()
+        self.description = desc
         
         # We are generating new board from list of row-lists
         # We create empty data structs and have set() adjust them
@@ -318,20 +325,15 @@ class Test_board(unittest.TestCase):
                        
     def test_board_name(self) :
         name = "I never know what to call you"
-        board = Board(name)
+        board = Board(None, name)
         self.assertEqual(name, board.name)
+        self.assertEqual(board.description, "")  # No description supplied, default ""
 
-
-
-##########################################
-#         self.assertIsEqual(board.desc, "")  # No description supplied, default ""
-
-
-#        name = "The world is a touch place"
-#        desc = "Isn't that cynical?"
-#        board = Board(None, name, desc)
-#        self.assertEqual(name, board.name)
-#        self.assertIsEqual(board.desc, "")  # No description supplied, default ""
+        name = "The world is a tough place"
+        desc = "Isn't that cynical?"
+        board = Board(None, name, desc)
+        self.assertEqual(name, board.name)
+        self.assertEqual(board.description, desc)
 
     def test_unique_board_names(self) :
 
@@ -357,7 +359,7 @@ class Test_board(unittest.TestCase):
                     [5, 9, 8, 4, 1, 3, 7, 2, 6],
                     [6, 2, 4, 7, 5, 9, 3, 8, 1],
                     [1, 7, 3, 8, 6, 2, 5, 9, 4]]
-        some_board = Board("some_board", some_board_spec)
+        some_board = Board(some_board_spec, "some_board" )
 
         # An empty board is a subset of everything
         empty_board=Board()
@@ -373,7 +375,7 @@ class Test_board(unittest.TestCase):
         subset_spec[2][3] = 0
         subset_spec[8][1] = 0
         subset_spec[4][0] = 0
-        subset_board=Board("subset_board", subset_spec)
+        subset_board=Board(subset_spec, "subset_board", "For unit testing")
         self.assertTrue (subset_board.is_subset_of(some_board))        
 
         # Create a non-subset 
@@ -383,7 +385,7 @@ class Test_board(unittest.TestCase):
                             [0]*8 + [9]      # was a 4 in some_board
         ]
 
-        non_subset_board=Board("non subset board", non_subset_spec)
+        non_subset_board=Board(non_subset_spec, "non subset board")
         self.assertFalse ( non_subset_board.is_subset_of(some_board) )
 
 

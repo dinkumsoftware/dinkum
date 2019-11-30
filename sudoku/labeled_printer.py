@@ -109,7 +109,7 @@ def labeled_board(board=None) :
     If board is not supplied, produces output for an empty board
     '''
     if not board :
-        board = Board("created by labeled_board()")
+        board = Board(None, None, "created by labeled_board()")
 
     ws = [] # What we return
 
@@ -533,7 +533,7 @@ class Test_labeled_printer(unittest.TestCase):
           "     0     1     2      3     4     5      6     7     8     ",
     ]
     def test_populated_board(self) :
-        board = Board("created by test_populated_board()", Test_labeled_printer.test_board)
+        board = Board(Test_labeled_printer.test_board, None, "created by test_populated_board()", )
         got = labeled_board( board )
         self.assertEqual(got, Test_labeled_printer.test_board_output)
 

@@ -21,7 +21,7 @@ def sudoku_solver(puzzle):
     puzzle should be [] of row-lists
     '''
 
-    board = Board("created by sudoku_solver()", puzzle)
+    board = Board(puzzle, None, "created by sudoku_solver()")
 
     # Return a board that solves board
     solution=board.solve()

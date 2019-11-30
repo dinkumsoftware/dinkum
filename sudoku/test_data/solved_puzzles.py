@@ -37,27 +37,31 @@ class SolvedPuzzle :
     Constructs and remembers input_board and solution_board.
     '''
 
-    def __init__(self, name, input_spec, solution_spec) :
+    def __init__(self, name, desc, input_spec, solution_spec) :
         ''' Constructor. Inputs
-        name            Name of input board
+        name            Optional Name of input board
+        desc            Optional Description of it
 
         input_spec      [[1,3,...][2,9,0,...]....]
         solution_spec       ditto
 
         Keeps a copy of it's arguments, plus
-        solution_name   Name of solution board
         input_board     Board(input_spec)
+        solution_name   Name of solution board
+        solution_description Same description as input_board
         solution_board  Board(solution_spec)
         '''
 
         self.name          = name
+        self.desc          = desc
         self.solution_name = name + "-solution"
 
         self.input_spec = input_spec
-        self.input_board = Board(name, input_spec)
+        self.input_board = Board(input_spec, name, desc)
 
         self.solution_spec  = solution_spec
-        self.solution_board = Board(self.solution_name, solution_spec)
+        self.solution_board = Board(solution_spec,
+                                    self.solution_name, self.input_board.description )
 
 
 # all_known_[un]solved_puzzles are lists of all puzzles that
@@ -73,8 +77,7 @@ all_known_unsolved_puzzles = []
 
 
 # *** pre_solved
-# <todo> add Board.description filed
-# "All cells filled in initially"
+desc= "All cells filled in initially"
 input_spec =   [[0, 4, 6, 1, 2, 7, 9, 5, 8], 
                 [7, 0, 5, 6, 9, 4, 1, 3, 2], 
                 [2, 1, 9, 3, 8, 5, 4, 6, 7], 
@@ -94,14 +97,14 @@ solution_spec= [[3, 4, 6, 1, 2, 7, 9, 5, 8],
                 [5, 9, 8, 4, 1, 3, 7, 2, 6],
                 [6, 2, 4, 7, 5, 9, 3, 8, 1],
                 [1, 7, 3, 8, 6, 2, 5, 9, 4]]
-pre_solved = SolvedPuzzle("pre_solved", input_spec, solution_spec)
+pre_solved = SolvedPuzzle("pre_solved", desc, input_spec, solution_spec)
 all_known_solved_puzzles.append(pre_solved)
 
 
 
 
 # *** real_easy
-# "only one cell to solve"
+desc="only one cell to solve"
 real_easy  =      [[3, 4, 6, 1, 2, 7, 9, 5, 8], 
                    [7, 8, 5, 6, 9, 4, 1, 3, 2], 
                    [2, 1, 9, 3, 0, 5, 4, 6, 7], 
@@ -121,12 +124,13 @@ real_easy_ans = [[3, 4, 6, 1, 2, 7, 9, 5, 8],
                  [5, 9, 8, 4, 1, 3, 7, 2, 6],
                  [6, 2, 4, 7, 5, 9, 3, 8, 1],
                  [1, 7, 3, 8, 6, 2, 5, 9, 4]]
-real_easy = SolvedPuzzle("real_easy", real_easy, real_easy_ans)
+real_easy = SolvedPuzzle("real_easy", desc, real_easy, real_easy_ans)
 all_known_solved_puzzles.append(real_easy)
 
 
 
 # *** puzzle
+desc="Unsure lineage, maybe kato"
 puzzle_in = [[0, 0, 6, 1, 0, 0, 0, 0, 8], 
              [0, 8, 0, 0, 9, 0, 0, 3, 0], 
              [2, 0, 0, 0, 0, 5, 4, 0, 0], 
@@ -146,17 +150,11 @@ puzzle_ans = [[3, 4, 6, 1, 2, 7, 9, 5, 8],
               [5, 9, 8, 4, 1, 3, 7, 2, 6],
               [6, 2, 4, 7, 5, 9, 3, 8, 1],
               [1, 7, 3, 8, 6, 2, 5, 9, 4]]
-puzzle = SolvedPuzzle("puzzle", puzzle_in, puzzle_ans)
+puzzle = SolvedPuzzle("puzzle", desc, puzzle_in, puzzle_ans)
 all_known_unsolved_puzzles.append(puzzle) # Can't solve it yet
-
-# An after the fact table of contents
-# 0 pre_solved
-# 1 real_easy
-# 2 puzzle
 
 # All the puzzles we know about
 all_known_puzzles = all_known_solved_puzzles + all_known_unsolved_puzzles
-
 
 # Sanity checks here
 for sp in all_known_solved_puzzles :
@@ -191,10 +189,14 @@ class Test_solved_puzzles(unittest.TestCase) :
 
     def test_simple_construction(self) :
         name = "whatever"
-        sp = SolvedPuzzle(name, input_spec, solution_spec) 
+        desc = "who knows?"
+        sp = SolvedPuzzle(name, desc, input_spec, solution_spec) 
     
         self.assertEqual (name,             sp.name         )
         self.assertEqual (name+"-solution", sp.solution_name)
+
+        self.assertEqual (desc, sp.input_board.description)
+        self.assertEqual (desc, sp.solution_board.description)
 
         self.assertEqual (input_spec,     sp.input_spec     )
         self.assertEqual (solution_spec,  sp.solution_spec  )
