@@ -19,6 +19,8 @@ class Cell :
     possible_values set of potential values, empty if value has been set
     board           The Board we belong to
 
+    row(),col(),blk() return the RCB the cell belongs to
+
     cell_num   0 to Board.num_cells-1
 
     All of these run 0 to Board.rcb_size-1 
@@ -108,6 +110,20 @@ class Cell :
         blk_neighbors = set([cell for cell in self.board.blks[self.blk_num] if cell != self])
 
         return row_neighbors.union(col_neighbors,blk_neighbors)
+
+    def row(self) :
+        ''' returns the row this cell belongs to.
+        '''
+        return self.board.rows[self.row_num]
+    def col(self) :
+        ''' returns the col this cell belongs to.
+        '''
+        return self.board.cols[self.col_num]
+    def blk(self) :
+        ''' returns the blk this cell belongs to.
+        '''
+        return self.board.blks[self.blk_num]
+
 
     def map_row_col_to_indexes(self, rcb_type, row_num, col_num) :
         ''' Given row_num, col_num of a cell in the board,

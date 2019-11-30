@@ -15,3 +15,8 @@ unit tests: recursively running all
     # Useful arguments
       -v, --verbose         Verbose output
       -f, --failfast        Stop on first fail or error
+
+    # To run unit tests under emacs compile mode
+    # quotes required! python3 required on ubuntu 18.04 (and others) as
+    # it has python 2.7 installed by default
+      ^X^E bash -ic "python3 -m unittest --failfast board.Test_board"

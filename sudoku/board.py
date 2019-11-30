@@ -52,13 +52,13 @@ class Board :
         self.name = name if name else self.unique_board_name()
         self.description = desc
         
-        # We are generating new board from list of row-lists
+        # We are generating new board from a list of row-lists
         # We create empty data structs and have set() adjust them
 
         # Create all rows/cols/blocks.  Make them empty
-        self.rows = [ None ] * RCB_SIZE
-        self.cols = [ None ] * RCB_SIZE
-        self.blks = [ None ] * RCB_SIZE
+        self.rows = [ RCB(self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.cols = [ RCB(self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.blks = [ RCB(self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
 
         # List of all Cells indexed by cell#
         # Is inited to unsolved and all values possible
@@ -75,35 +75,24 @@ class Board :
 
         # Populate all rows/cols/blocks
         for cell in self.cells :
-            # If need be, create the RCB itself
-            # Initial RCB has all Cells set to None
-            if not self.rows[cell.row_num] : self.rows[cell.row_num] = RCB(self, cell.row_num)
-            if not self.cols[cell.col_num] : self.cols[cell.col_num] = RCB(self, cell.col_num)
-            if not self.blks[cell.blk_num] : self.blks[cell.blk_num] = RCB(self, cell.blk_num)
-
             # Populate all the rows/cols/blks that this cell belongs to
             self.rows[cell.row_num][cell.row_idx] = cell
             self.cols[cell.col_num][cell.col_idx] = cell
             self.blks[cell.blk_num][cell.blk_idx] = cell
 
-        # Sanity check.  Make sure all rows/cols/blks got populated
-        for rcb_num in range(RCB_SIZE) :
-            for indx in range(RCB_SIZE) :
-                if not self.rows[rcb_num][indx] : assert "Unpopulated row:% entry:%d" % (rcb_num, indx)
-                if not self.cols[rcb_num][indx] : assert "Unpopulated col:% entry:%d" % (rcb_num, indx)
-                if not self.blks[rcb_num][indx] : assert "Unpopulated blk:% entry:%d" % (rcb_num, indx)
-
         # Is there any input to set cells with?
         if not arr :
-            return # nope
+            return # nope, all done
 
+
+        # We have a valid empty board at this point
+        # We need to populate it with values as spec'ed by the caller
 
         # Go thru and set each cell value from our input,
         # set() adjusts all the data structures
         if len(arr) != RCB_SIZE :    # Sanity check input
             raise ExcBadPuzzleInput( "Wrong number of rows: %d" % len(arr) )
 
-        # <todo> ######################### don't need cell/row num here.... retrieve from cell
         cell_num=0
         row_num =0
         for row in arr :
@@ -113,26 +102,44 @@ class Board :
 
             col_num = 0
             for value in row :
+                # who we are testing
+                cell=self.cells[cell_num]
+                
                 # Skip unknown values, all data bases init'ed for all unknown
                 if value != Cell.unsolved_cell_value:
                     # Sanity check the value
                     if value not in Cell.all_cell_values :
                         raise ExcBadPuzzleInput( "Bad value: %d at (row,col) (%d,%d)" % (value, row_num, col_num))
 
-                    cell=self.cells[cell_num]
+                    # Common error msg for duplicate entries, which Should be formated with
+                    # (cell_num, row_num, col_num, value, "row/col/blk"
+                    err_fmt_str = "cell#%d at (%d,%d) value:%d is duplicated in cell's %s"
+
+                    # We know that cell is currently unset
+                    assert cell.value == Cell.unsolved_cell_value
+
+                    # Can't have duplicate values in a row/col/blk
+                    if value in [ cell.value for cell in cell.row()] :
+                        raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
+                                                                value, "row"))
+                    if value in [ cell.value for cell in cell.col()] :
+                        raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
+                                                                value, "col"))
+                    if value in [ cell.value for cell in cell.blk()] :
+                        raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
+                                                                value, "blk"))
+
+                    # All looks good, set it
                     cell.set(value)
 
                 cell_num += 1
                 col_num += 1
             row_num += 1
 
-        # ##################################################
-        # <todo> check for duplicate numbers in rows/cols/blks
-
-        # Sanity check(s)
-        (sanity_check_passed, err_msg) = self.sanity_check()
-        assert sanity_check_passed, "sanity_check() failed:"+err_msg
-        
+        # Sanity check(s) A whole bunch of asserts
+        # Could move this into unittest code....
+        # but we aren't time sensitive at construction time
+        self.sanity_check()
 
 
     def solve(self) :
@@ -219,6 +226,18 @@ class Board :
 
         return arr
 
+    def __str__(self) :
+        ''' returns human readable terse picture of a sudoku.
+        The last line is terminated by a new line.
+        '''
+        ret_str = ""
+        for row in self.rows :
+            for cell in row :
+                ret_str += "%2d" % cell.value
+            ret_str += '\n'
+
+        return ret_str
+
     def unique_board_name(self) :
         ''' Picks a unique name for the board comprised of:
         board-<current_time as bunch of numbers>
@@ -262,16 +281,15 @@ class Board :
 
     def sanity_check(self) :
         ''' Runs a variety of checks on the data structures.
-        returns a touple: (passed, err_msg_if_failed)
-        It stops testing and returns on the first failure
-        err_msg_if_failed will be None if passed
+        assert's on first failure.
         '''
 
-        # ##################################
-        return (True, None)
-    # ##################################
-
-
+        # Make sure all rows/cols/blks got populated
+        for rcb_num in range(RCB_SIZE) :
+            for indx in range(RCB_SIZE) :
+                if not self.rows[rcb_num][indx] : assert "Unpopulated row:% entry:%d" % (rcb_num, indx)
+                if not self.cols[rcb_num][indx] : assert "Unpopulated col:% entry:%d" % (rcb_num, indx)
+                if not self.blks[rcb_num][indx] : assert "Unpopulated blk:% entry:%d" % (rcb_num, indx)
 
         # Make sure cells/rows/cols/blks all refer to the same cell
         # Raster scan cells/rows/cols/blks
@@ -279,27 +297,38 @@ class Board :
         for row_num in range(RCB_SIZE) :
             for col_num in range(RCB_SIZE) :
 
+                # cells[] are in raster order
+                cell = self.cells[cell_num]
+
+                # Confirm cell number matches
+                assert cell.cell_num == cell_num, "Cell.num %d should be %d" % (cell.cell_num, cell_num)
+
+                # Confirm raster order
+                assert cell.row_num == row_num, "cell%d has row#%d, should be %d" % (cell.cell_num,
+                                                                                     cell.row_num, row_num)
+                assert cell.col_num == col_num, "cell%d has col#%d, should be %d"  % (cell.cell_num,
+                                                                                      cell.col_num, col_num)
+                # We don't check blk because too hard to compute block number here.
+
+                # The cells notion of row  should match ours
+                assert cell.row() is self.rows[cell.row_num], "Cell %d: row() is wrong"
+                assert cell.col() is self.cols[cell.col_num], "Cell %d: col() is wrong"
+
                 # We compare each row/col/blk to this cell
-                cell_by_cells = self.cells[cell_num] # cells[] are in raster order
+                cell_by_rows  = cell.row()[cell.row_idx]
+                cell_by_cols  = cell.col()[cell.col_idx]
+                cell_by_blks  = cell.blk()[cell.blk_idx]                
 
-                # Do all rows/cols/blks for this cell
-                # <todo> fix this NOT to use Cell.map_row_col_to_indexes
-                for rcb_type in self.all_rcb_types :
-                    # Translate row and column into indexes in row/col/blks and correspond cells[]
-                    (arr_indx,cell_indx) = Board.map_row_col_to_indexes(rcb_type, row_num, col_num)
-
-                    # Fetch and compare the cells
-                    cell_by_rcb  = self.rcb(rcb_type)[arr_indx][cell_indx]
-
-                    # Compare them and complain if un-equal
-                    if cell_by_cells != cell_by_rcb :
-                        return ( False,
-                                 "%s[%d].cell[%d] != cells[%d] @ row/col (%d,%d)" %
-                                 (Board.rcb_names[rcb_type],
-                                  arr_indx, cell_indx,
-                                  cell_num,
-                                  row_num, col_num))
-                    
+                # They should all be the same
+                assert cell_by_rows is cell, "Cell#%d is not same as cell in rows[%d][%d]" % (cell_num,
+                                                                                              cell.row_num,
+                                                                                              cell.row_idx)
+                assert cell_by_cols is cell, "Cell#%d is not same as cell in cols[%d][%d]" % (cell_num,
+                                                                                              cell.col_num,
+                                                                                              cell.col_idx)
+                assert cell_by_blks is cell, "Cell#%d is not same as cell in blks[%d][%d]" % (cell_num,
+                                                                                              cell.blk_num,
+                                                                                              cell.blk_idx)
                 # Advance to next cell
                 cell_num += 1
 
@@ -308,6 +337,7 @@ class Board :
 
 # Test code
 import unittest
+import copy
 
 class Test_board(unittest.TestCase):
 
@@ -388,6 +418,100 @@ class Test_board(unittest.TestCase):
         non_subset_board=Board(non_subset_spec, "non subset board")
         self.assertFalse ( non_subset_board.is_subset_of(some_board) )
 
+
+
+    def test_input_bad_input_wrong_row_cnt(self) :
+        # Only 7 rows, values don't matter
+        puzzle = [ [0] * 9 for i in range(7) ]
+
+        # Make sure it raise the exception
+        self.assertRaises(ExcBadPuzzleInput, Board, puzzle)
+
+        # Verify the error message
+        try :
+            Board(puzzle)
+        except ExcBadPuzzleInput as exc :
+            self.assertEqual(exc.message, 'Wrong number of rows: 7')
+
+
+    def test_input_bad_value(self) :
+        # 9 rows, , values don't matter
+        puzzle = [ [0] * 9 for i in range(9) ]
+        
+        # Make a single bad value
+        puzzle[3][6] = 18
+
+        # Make sure it raise the exception
+        self.assertRaises(ExcBadPuzzleInput, Board, puzzle)
+
+        # Verify the error message
+        try :
+            Board(puzzle)
+        except ExcBadPuzzleInput as exc :
+            self.assertEqual(exc.message,
+                             'Bad value: 18 at (row,col) (3,6)')
+
+    def test_input_bad_input_wrong_row_size(self) :
+        # 9 rows, , values don't matter
+        puzzle = [ [0] * 9 for i in range(9) ]
+
+        # remove an cell from a row
+        puzzle[4] = puzzle[4][1:]
+
+        # Make sure it raise the exception
+        self.assertRaises(ExcBadPuzzleInput, Board, puzzle)
+
+        # Verify the error message
+        try :
+            Board(puzzle)
+        except ExcBadPuzzleInput as exc :
+            self.assertEqual(exc.message, 'Row 4: Wrong size: 8')
+
+    def test_input_duplicate_values(self) :
+        some_board_spec = [ \
+                            [0, 4, 6, 1, 2, 7, 9, 5, 8], # 0 row
+                            [7, 0, 0, 6, 9, 4, 1, 3, 2], # 1 row
+                            [2, 1, 9, 0, 0, 0, 4, 6, 7], # 2 row
+                            [4, 6, 2, 5, 3, 1, 0, 0, 0], # 3 row
+                            [0, 3, 0, 2, 0, 8, 0, 0, 0], # 4 row
+                            [8, 5, 7, 9, 4, 6, 2, 0, 3], # 5 row
+                            [0, 9, 8, 4, 1, 3, 7, 2, 6], # 6 row
+                            [6, 2, 4, 7, 5, 9, 3, 8, 1], # 7 row
+                            [1, 7, 3, 8, 6, 2, 5, 9, 4]  # 8 row
+                #       col  0  1  2  3  4  5  6  7  8
+        ]
+
+        # Make some illegal input
+        # duplicate value in a row
+        dup_in_row = copy.deepcopy(some_board_spec)
+        dup_in_row[3][7] = 1
+        expected_err_msg = "cell#34 at (3,7) value:1 is duplicated in cell's row"
+        self.assertRaises(ExcBadPuzzleInput, Board, dup_in_row) # Make sure it raise the exception
+        try:                        
+            board = Board(dup_in_row)
+        except ExcBadPuzzleInput as exc :
+            self.assertEqual(exc.message, expected_err_msg)  # with right error message
+
+        # duplicate value in a col
+        dup_in_col = copy.deepcopy(some_board_spec)
+        dup_in_col[4][7] = 5
+        dup_in_col[3][3] = 0 # avoid duplicate in the block
+        expected_err_msg = "cell#43 at (4,7) value:5 is duplicated in cell's col"
+        self.assertRaises(ExcBadPuzzleInput, Board, dup_in_col) # Make sure it raise the exception
+        try:                        
+            board = Board(dup_in_col)
+        except ExcBadPuzzleInput as exc :
+            self.assertEqual(exc.message, expected_err_msg)  # with right error message
+            
+        # duplicate value in a blk
+        dup_in_blk = copy.deepcopy(some_board_spec)
+        dup_in_blk[6][7] = 4
+        expected_err_msg = "cell#61 at (6,7) value:4 is duplicated in cell's row"
+        self.assertRaises(ExcBadPuzzleInput, Board, dup_in_blk) # Make sure it raise the exception
+        try:                        
+            board = Board(dup_in_blk)
+        except ExcBadPuzzleInput as exc :
+            self.assertEqual(exc.message, expected_err_msg)  # with right error message
 
 
 if __name__ == "__main__" :

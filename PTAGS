@@ -21,55 +21,33 @@ class ExcUnsolvable(30,863
 class ExcBadPuzzleInput(35,969
     def __init__(39,1120
 
-sudoku/board.py,329
-class Board 13,274
-    def __init__(29,822
-    def solve(126,4865
-    def solve_cells_with_single_possible_value(148,5652
-    def rcb(177,6725
-    def is_solved(196,7229
-    def output(201,7350
-    def sanity_check(210,7646
-class Test_board(259,9542
-    def test_empty_board(261,9580
-    def test_board_name(272,10138
+sudoku/board.py,497
+class Board 16,327
+    def __init__(34,947
+    def solve(138,5324
+    def solve_cells_with_single_possible_value(160,6111
+    def rcb(189,7184
+    def is_solved(208,7688
+    def output(213,7809
+    def unique_board_name(222,8105
+    def is_subset_of(230,8366
+    def __eq__(248,8974
+    def sanity_check(263,9479
+class Test_board(307,11259
+    def test_empty_board(310,11298
+    def test_board_name(321,11856
+    def test_unique_board_names(333,12315
+    def test_subset(345,12623
 
 sudoku/sudoku.py,273
-def sudoku_solver(18,490
-class Test_sudoku(43,958
-    def test_bad_input_wrong_row_cnt(45,997
-    def test_bad_value(59,1441
-    def test_bad_input_wrong_row_size(76,1974
-    def test_unsolvable(93,2484
-    def test_presolved(99,2696
-    def test_mindless(112,3249
-
-sudoku/temp-working.py,791
-def sudoku_solver(7,148
-class Board 20,480
-    def all_cell_values(33,938
-    def __init__(58,1752
-    def solve(135,5271
-    def check_solution_for_uniqueness(229,9440
-    def next_unsolved_cell(252,10355
-    def set(271,11134
-    def num_unsolved(347,14380
-    def remove_from_unsolved(352,14641
-    def add_to_unsolved(369,15262
-    def unsolved_neighbors(386,15953
-    def remove_a_possibility(441,18064
-    def sanity_check(469,19088
-    def __str__(510,21027
-    def debug_str(529,21561
-    def hash_str(566,22905
-    def __hash__(580,23335
-    def __eq__(591,23688
-    def __ne__(597,23921
-    def debug_solve_label(605,24149
-    def debug_solve_indent(615,24690
-    def debug_set_label(621,24886
-    def debug_set_indent(633,25671
-def pretty_print(721,29042
+def sudoku_solver(18,464
+class Test_sudoku(43,938
+    def test_bad_input_wrong_row_cnt(45,977
+    def test_bad_value(59,1421
+    def test_bad_input_wrong_row_size(76,1954
+    def test_unsolvable(93,2464
+    def test_presolved(99,2676
+    def test_mindless(112,3229
 
 sudoku/rcb.py,159
 class RCB 11,257
@@ -79,30 +57,30 @@ class RCB 11,257
 class Test_rcb(51,1353
     def test_construction(53,1389
 
-sudoku/test_data/solved_puzzles.py,129
-class SolvedPuzzle 21,507
-    def __init__(30,783
-class Test_solved_puzzles(85,2614
-    def test_simple_construction(87,2662
+sudoku/test_data/solved_puzzles.py,132
+class SolvedPuzzle 31,935
+    def __init__(40,1211
+class Test_solved_puzzles(186,6602
+    def test_simple_construction(190,6754
 
 sudoku/labeled_printer.py,638
 def print_labeled_board(90,4271
 def labeled_board(101,4598
-def top_or_bottom_lines(132,5395
-def row_line(156,6318
-def horz_separator_lines(287,11931
-def col_label_lines(316,12905
-def is_cell_rightmost_in_block_and_internal(352,13930
-def is_cell_bottom_most_in_block_and_internal(359,14182
-def is_cell_above_in_middle_of_block(366,14441
-def is_cell_in_middle_of_block(373,14625
-def block_label_offset_in_line(380,14822
-def left_pad(398,15501
-def right_pad(406,15693
-class Test_labeled_printer(420,15944
-    def test_empty_board(470,19212
-    def test_caller_supplied_empty(476,19406
-    def test_populated_board(535,23130
+def top_or_bottom_lines(132,5407
+def row_line(156,6330
+def horz_separator_lines(287,11943
+def col_label_lines(316,12917
+def is_cell_rightmost_in_block_and_internal(352,13942
+def is_cell_bottom_most_in_block_and_internal(359,14194
+def is_cell_above_in_middle_of_block(366,14453
+def is_cell_in_middle_of_block(373,14637
+def block_label_offset_in_line(380,14834
+def left_pad(398,15513
+def right_pad(406,15705
+class Test_labeled_printer(420,15956
+    def test_empty_board(470,19224
+    def test_caller_supplied_empty(476,19418
+    def test_populated_board(535,23142
 
 sudoku/cell.py,375
 class Cell 16,392
@@ -155,6 +133,8 @@ project/TEMPLATES/python.py,0
 project/__init__.py,0
 
 utils/__init__.py,0
+
+sudoku/test_data/__init__.py,0
 
 sudoku/bin/dinkum_print_sudoku_worksheet.py,0
 
