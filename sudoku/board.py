@@ -301,10 +301,9 @@ class Board :
 
 # Test code
 import unittest
-from dinkum.sudoku.test_data.solved_puzzles import *
-
 
 class Test_board(unittest.TestCase):
+
 
     def test_empty_board(self) :
         board = Board() # No cells should be set
@@ -321,6 +320,18 @@ class Test_board(unittest.TestCase):
         name = "I never know what to call you"
         board = Board(name)
         self.assertEqual(name, board.name)
+
+
+
+##########################################
+#         self.assertIsEqual(board.desc, "")  # No description supplied, default ""
+
+
+#        name = "The world is a touch place"
+#        desc = "Isn't that cynical?"
+#        board = Board(None, name, desc)
+#        self.assertEqual(name, board.name)
+#        self.assertIsEqual(board.desc, "")  # No description supplied, default ""
 
     def test_unique_board_names(self) :
 
@@ -375,14 +386,6 @@ class Test_board(unittest.TestCase):
         non_subset_board=Board("non subset board", non_subset_spec)
         self.assertFalse ( non_subset_board.is_subset_of(some_board) )
 
-    def test_solving_boards(self) :
-        ''' test a bunch of sample boards '''
-        for sp in all_solved_puzzles :
-            # sp.input_board is board to solve
-            # which should equal sp.solution_board.
-            our_solution = sp.input_board.solve() 
-
-            self.assertEqual (our_solution, sp.solution_board, "mis-solved_board: " + sp.name )
 
 
 if __name__ == "__main__" :
