@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-# dinkum/sudoku/sudoku.py
+# dinkum/sudoku/kata.py
 ''' sudoku_solver() solves a sudoku puzzle
 
 Solution technique does NOT involve guessing.
 It only fills in cells that have no alternative.
+
+It is the format required by an on-line sudoku/python
+site:
+https://www.codewars.com/kata/hard-sudoku-solver-1
+
 '''
 
 # 2019-11-01 tc Initial
@@ -12,6 +17,7 @@ It only fills in cells that have no alternative.
 # 2019-11-25 tc various bug fixes
 # 2019-11-25 tc move Board/RCB/Cell into own files
 # 2019-11-30 tc trimmed imports
+# 2019-11-30 tc Renamed kata.py
 
 from dinkum.sudoku.board import *
 
@@ -40,7 +46,7 @@ def sudoku_solver(puzzle):
 # Test code
 import unittest
 
-class Test_sudoku(unittest.TestCase):
+class Test_kata(unittest.TestCase):
 
     def test_unsolvable(self) :
         # Try to solve a puzzle with all unknowns... Can't be done
