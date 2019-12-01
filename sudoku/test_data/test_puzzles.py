@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# dinkum/sudoku/solved_puzzles.py
+# dinkum/sudoku/test_puzzles.py
 ''' Provides a test suite of sudoku puzzles.
 The class SolvedPuzzle will contain:
     name of the input board
@@ -17,6 +17,8 @@ The class SolvedPuzzle will contain:
 
     all_known_unsolved_puzzles is a [] of puzzles which can't be solved and/or
     do not solution recorded
+
+    all_known_names is a {} of all_known_puzzles.  Key:name Value:SolvedPuzzle
 
     Performs a couple of sanity checks which trigger a
     failed assertion on any errors.
@@ -156,6 +158,11 @@ all_known_unsolved_puzzles.append(puzzle) # Can't solve it yet
 # All the puzzles we know about
 all_known_puzzles = all_known_solved_puzzles + all_known_unsolved_puzzles
 
+# Make a dictionary of names
+all_known_puzzle_names = {}
+for sp in all_known_puzzles :
+    all_known_puzzle_names[sp.name] = sp
+
 # Sanity checks here
 for sp in all_known_solved_puzzles :
     # All solved puzzles must have solution
@@ -183,7 +190,7 @@ for sp in all_known_solved_puzzles :
 # Test code
 import unittest
 
-class Test_solved_puzzles(unittest.TestCase) :
+class Test_test_puzzles(unittest.TestCase) :
     # Much of the test code is run in sanity check
     # above at import time with an assertion failure
 
@@ -200,6 +207,12 @@ class Test_solved_puzzles(unittest.TestCase) :
 
         self.assertEqual (input_spec,     sp.input_spec     )
         self.assertEqual (solution_spec,  sp.solution_spec  )
+
+    def test_all_known_puzzle_names(self) :
+        # Make sure every puzzle is in the dictionary
+        for sp in all_known_puzzles :
+            self.assertIn (sp.name, all_known_puzzle_names)
+            self.assertIs (sp, all_known_puzzle_names[sp.name])
 
 
 if __name__ == "__main__" :
