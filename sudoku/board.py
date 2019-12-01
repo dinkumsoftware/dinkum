@@ -122,13 +122,13 @@ class Board :
                     assert cell.value == Cell.unsolved_cell_value
 
                     # Can't have duplicate values in a row/col/blk
-                    if value in [ cell.value for cell in cell.row()] :
+                    if value in [ cell.value for cell in cell.row] :
                         raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
                                                                 value, "row"))
-                    if value in [ cell.value for cell in cell.col()] :
+                    if value in [ cell.value for cell in cell.col] :
                         raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
                                                                 value, "col"))
-                    if value in [ cell.value for cell in cell.blk()] :
+                    if value in [ cell.value for cell in cell.blk] :
                         raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
                                                                 value, "blk"))
 
@@ -318,14 +318,16 @@ class Board :
                                                                                       cell.col_num, col_num)
                 # We don't check blk because too hard to compute block number here.
 
-                # The cells notion of row  should match ours
-                assert cell.row() is self.rows[cell.row_num], "Cell %d: row() is wrong"
-                assert cell.col() is self.cols[cell.col_num], "Cell %d: col() is wrong"
+                # The cells notion of row/col/blk should match ours
+                # <todo> make common error msg
+                assert cell.row is self.rows[cell.row_num], "Cell.row is wrong"
+                assert cell.col is self.cols[cell.col_num], "Cell.col is wrong"
+                assert cell.blk is self.blks[cell.blk_num], "Cell.blk is wrong"
 
                 # We compare each row/col/blk to this cell
-                cell_by_rows  = cell.row()[cell.row_idx]
-                cell_by_cols  = cell.col()[cell.col_idx]
-                cell_by_blks  = cell.blk()[cell.blk_idx]                
+                cell_by_rows  = cell.row[cell.row_idx]
+                cell_by_cols  = cell.col[cell.col_idx]
+                cell_by_blks  = cell.blk[cell.blk_idx]
 
                 # They should all be the same
                 assert cell_by_rows is cell, "Cell#%d is not same as cell in rows[%d][%d]" % (cell_num,

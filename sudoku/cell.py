@@ -9,6 +9,7 @@ it belongs to.
 '''
 
 # 2019-11-25 tc Moved fom sudoku.py
+# 2019-12-01 tc changes row/col/blk from () to class variable
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
 
@@ -18,8 +19,7 @@ class Cell :
     value           can be unsolved_cell_value or 1-9
     possible_values set of potential values, empty if value has been set
     board           The Board we belong to
-
-    row(),col(),blk() return the RCB the cell belongs to
+    row/col/blk     The RCB we belong to
 
     cell_num   0 to Board.num_cells-1
 
@@ -34,6 +34,8 @@ class Cell :
     blk_num    which blk we are  (Index into Board.blks)
     blk_idx    which Cell in blk (Index into Board.blks[blk_num].cells)
 
+    row/col/blk The RCBs we belong to, e.g. board.rows[row_idx]
+
     '''
     unsolved_cell_value = 0 # Used to signal cell hasn't been set()
     num_values = RCB_SIZE
@@ -45,8 +47,14 @@ class Cell :
         and Board.num_cells-1 is lower right
 
         The cell will have an unsolved value.
+        row/col/blk are non-None if board is provided
         '''
         self.board = board # The board we belong to
+
+        # Assume board is None. If not, these are overwritten in a bit
+        self.row = None
+        self.col = None
+        self.blk = None
 
         # Sanity checks
         assert 0 <= cell_num < NUM_CELLS
@@ -68,6 +76,13 @@ class Cell :
         # Mark us unsolved with all possibles
         self.value = Cell.unsolved_cell_value
         self.possible_values = Cell.all_cell_values.copy()
+
+        # Remember our RCBs
+        if board :
+            self.row = self.board.rows[self.row_num]
+            self.col = self.board.cols[self.col_num]
+            self.blk = self.board.blks[self.blk_num]
+            
 
     def set(self, value) :
         '''Sets value into cell
@@ -105,28 +120,16 @@ class Cell :
         the set
         '''
 
+        #<todo> iterate thru self.rcbs() when RCB iterator works
         # put all our neighbors together
-        ans = set(self.row().cells + \
-                  self.col().cells + \
-                  self.blk().cells   )
+        ans = set(self.row.cells + \
+                  self.col.cells + \
+                  self.blk.cells   )
 
         # and take thyself out
         ans.remove(self) 
 
         return ans
-
-    def row(self) :
-        ''' returns the row this cell belongs to.
-        '''
-        return self.board.rows[self.row_num]
-    def col(self) :
-        ''' returns the col this cell belongs to.
-        '''
-        return self.board.cols[self.col_num]
-    def blk(self) :
-        ''' returns the blk this cell belongs to.
-        '''
-        return self.board.blks[self.blk_num]
 
 
     def map_row_col_to_indexes(self, rcb_type, row_num, col_num) :
