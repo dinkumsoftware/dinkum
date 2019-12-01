@@ -19,7 +19,9 @@ class Cell :
     value           can be unsolved_cell_value or 1-9
     possible_values set of potential values, empty if value has been set
     board           The Board we belong to
+
     row/col/blk     The RCB we belong to
+    rcbs            [] of row,col, and blk
 
     cell_num   0 to Board.num_cells-1
 
@@ -55,6 +57,7 @@ class Cell :
         self.row = None
         self.col = None
         self.blk = None
+        self.rcbs = [None] * 3
 
         # Sanity checks
         assert 0 <= cell_num < NUM_CELLS
@@ -82,6 +85,8 @@ class Cell :
             self.row = self.board.rows[self.row_num]
             self.col = self.board.cols[self.col_num]
             self.blk = self.board.blks[self.blk_num]
+
+            self.rcbs = [self.row, self.col, self.blk]
             
 
     def set(self, value) :
@@ -120,11 +125,13 @@ class Cell :
         the set
         '''
 
-        #<todo> iterate thru self.rcbs() when RCB iterator works
+        # iterate thru self.rcbs() when RCB iterator works
         # put all our neighbors together
-        ans = set(self.row.cells + \
-                  self.col.cells + \
-                  self.blk.cells   )
+        ans = set()  # What we return
+
+        # Put unique cells into ans
+        for rcb in self.rcbs :
+            ans = ans.union( set(list(rcb)) )
 
         # and take thyself out
         ans.remove(self) 

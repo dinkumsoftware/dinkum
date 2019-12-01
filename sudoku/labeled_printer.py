@@ -59,6 +59,7 @@ Example empty board:
 #               Added cell values
 #               Moved block label location
 # 2019-11-26 tc Fixed import problem
+# 2019-12-01 tc minor todo knockoff.  get row# from rgb rather than cell
 
 #--------------------------------------------------------------
 from dinkum.sudoku.board    import *
@@ -175,9 +176,7 @@ def row_line(row) :
     '''
 
     # Which row we are working on
-    # <todo>  derive Row/Col/Blk from RGB
-    #         each should have a row/col/blk_num as appropriate
-    row_num = row[0].row_num
+    row_num = row.rcb_num
 
     # What we return.  Gets filled in below                     
     ret_lines= [None] * cell_height

@@ -59,9 +59,9 @@ class Board :
         # We create empty data structs and have set() adjust them
 
         # Create all rows/cols/blocks.  Make them empty
-        self.rows = [ RCB(self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
-        self.cols = [ RCB(self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
-        self.blks = [ RCB(self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.rows = [ RCB(RCB_TYPE_ROW, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.cols = [ RCB(RCB_TYPE_ROW, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.blks = [ RCB(RCB_TYPE_ROW, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
 
         # List of all Cells indexed by cell#
         # Is inited to unsolved and all values possible
@@ -319,7 +319,6 @@ class Board :
                 # We don't check blk because too hard to compute block number here.
 
                 # The cells notion of row/col/blk should match ours
-                # <todo> make common error msg
                 assert cell.row is self.rows[cell.row_num], "Cell.row is wrong"
                 assert cell.col is self.cols[cell.col_num], "Cell.col is wrong"
                 assert cell.blk is self.blks[cell.blk_num], "Cell.blk is wrong"
