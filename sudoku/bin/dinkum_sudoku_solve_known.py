@@ -3,13 +3,13 @@
 #path: sudoku/bin/
 #repo: http://github.com/dinkumsoftware/dinkum.git
 """
-This program attempts to solve one of the sudoku boards
-in module test_data.test_puzzles.
+This program attempts to solve one or more of the sudoku boards
+in module dinkum.sudoku.test_data.test_puzzles whose puzzle names
+are taken from the command line.
 
-USAGE: dinkum_sudoku_solve_known.py    # List all the puzzle names/descriptions
-       dinkum_sudoku_solve_known.py  [puzzle_name] .. [puzzle_name]
-
-  -h, --help     show this help message and exit
+If a puzzle is solved, the solution is printed.
+If the puzzle is unsolved, lots of debugging
+information is printed.
 
 EXIT STATUS
     0  All puzzles solved
@@ -17,21 +17,7 @@ EXIT STATUS
     2  Some puzzle wasn't solved
     3  Some kind of exception thrown
 
-AUTHOR
-    dinkumsoftware.com/tc
-
-LICENSE
-    Copyright(c) 2019 Dinkum Software
-    Licensed under Apache Version 2.0, January 2004
-    http://www.apache.org/licenses/
-    Full license text at end of file.
-
-VERSION
-    {program_version}
 """
-program_version = 0.0
-__doc__=__doc__.format(program_version=program_version)
-
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -39,6 +25,7 @@ import textwrap    # dedent
 from dinkum.sudoku.test_data.test_puzzles import all_known_puzzles 
 from dinkum.sudoku.test_data.test_puzzles import all_known_puzzle_names
 from dinkum.sudoku.test_data.test_puzzles import all_known_solved_puzzles
+from dinkum.sudoku.labeled_printer        import print_labeled_board
 
 # history:
 # 2019-12-01 tc Initial
@@ -62,8 +49,13 @@ def main ():
     '''
 
     # Specify and parse the command line arguments
-    parser = argparse.ArgumentParser()
-
+    parser = argparse.ArgumentParser(
+        # print document string "as is" on --help
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(__doc__)
+    )
+    
+    # puzzles names
     parser.add_argument('puzzle_names', metavar="puzzle_name",  # singular in -h, plural for [] generated
                         help="name(s) of puzzle in dinkum/sudoku/test_data/known_puzzles.py",
                         nargs='*')
@@ -101,10 +93,21 @@ def main ():
         # did we?
         if not solved_board :
             # nope, board is unsolved
-            print ("%s:Unsolvable puzzle:%s" % (sys.argv[0], puzzle_name),
-                                                file = sys.stderr)
+            print ("%-20s: UNSOLVED!" % puzzle_name)
+
+            # sp.input_board was  changed in-place
+            partial_solution = sp.input_board
+
+            # print partial soltion.  
+            print (partial_solution)
+            print_labeled_board( partial_solution )
+            
+                                   
             return ret_val_some_not_solved
 
+        # Puzzle is solved, show them the solution
+        print ("%-20s: Solved!" % puzzle_name)
+        print (solved_board)
 
     # All went OK                   
     print ("%s:All puzzles solved!" % sys.argv[0])

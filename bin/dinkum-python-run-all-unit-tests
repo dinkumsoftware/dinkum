@@ -1,0 +1,40 @@
+#!/bin/bash
+# dinkum-python-run-all-unit-tests
+# dinkum/bin
+#
+# Usage: dinkum-python-run-all-unit-tests [--dir <start_dir>] [args passed along to python -m unittest]
+#
+# Recursively run all python unit tests from "start_dir"
+# which defaults to current directory if not supplied
+#
+# <todo> Note that top directory is hard coded to ~/projects so it will run
+#        under emacs ^X^E
+
+set -e    # Die on error
+
+# The starting directory is either supplied on the
+# command line --or-- defaults to current directory
+
+
+# Look for --dir <start_dir> on cmd line    
+start_dir="." # Assume no --dir <start_dir>
+if [[ $# -ge 2 &&   ${1} == '--dir' ]] ; then
+   shift # Eat the --dir
+   start_dir=$1
+   shift          # Eat the <start_dir.
+fi
+
+echo "sd" $start_dir
+echo $@
+
+cd $start_dir    # Make sure directory exists
+                 # count on -e above to bail
+
+# Run the unit tests
+# Pass along any arguments left on the command line
+# NOTE WELL: <todo> top dir hardcoded for gosnold
+python3 -m unittest discover -t ~/projects \
+                             -s $start_dir \
+                             -p '*'.py     \
+                             "$@"
+                             

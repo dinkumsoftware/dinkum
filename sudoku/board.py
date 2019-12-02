@@ -7,6 +7,7 @@ sudoku board full of Cells with values.
 # 2019-11-25 tc Initial
 # 2019-11-26 tc Gave names to boards
 # 2019-11-30 tc Added board description
+# 2019-12-02 tc Added some spaces in __str__() output
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -237,11 +238,36 @@ class Board :
     def __str__(self) :
         ''' returns human readable terse picture of a sudoku.
         The last line is terminated by a new line.
+
+        Example:
+         3 4 6  1 2 7  9 5 8
+         7 8 5  6 9 4  1 3 2
+         2 1 9  3 8 5  4 6 7
+
+         4 6 2  5 3 1  8 7 9
+         9 3 1  2 7 8  6 4 5
+         8 5 7  9 4 6  2 1 3
+
+         5 9 8  4 1 3  7 2 6
+         6 2 4  7 5 9  3 8 1
+         1 7 3  8 6 2  5 9 4
+
         '''
         ret_str = ""
         for row in self.rows :
+            # row separator?
+            if row.rcb_num and not row.rcb_num % BLK_SIZE :
+                ret_str += '\n'
+                
+            # Print the cell values
             for cell in row :
+                # Vertial block separator?
+                if cell.col_num and not cell.col_num % BLK_SIZE :
+                    ret_str += ' '
+
+                # Cell's value
                 ret_str += "%2d" % cell.value
+
             ret_str += '\n'
 
         return ret_str

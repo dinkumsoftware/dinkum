@@ -27,8 +27,13 @@ The class SolvedPuzzle will contain:
 # 2019-11-26 tc Initial
 # 2019-11-30 tc bug fix for cyclic import of Board
 #               added all_known_[un]solved_puzzles
+# 2019-12-02 tc Added empty_board
 
+from copy                import deepcopy
+
+from dinkum.sudoku       import *
 from dinkum.sudoku.board import Board
+
 
 class SolvedPuzzle :
     ''' Constructor receives spec for input_board,
@@ -76,6 +81,14 @@ all_known_unsolved_puzzles = []
 # one of these lists
 
 # Define some puzzles        
+# *** empty
+empty_row  = [0]*RCB_SIZE
+input_spec = [ deepcopy(empty_row) for i in range(RCB_SIZE)]
+desc="No initial values, unsolvable"
+
+empty = SolvedPuzzle("empty", desc, input_spec, None)
+all_known_unsolved_puzzles.append(empty)
+
 
 
 # *** pre_solved
