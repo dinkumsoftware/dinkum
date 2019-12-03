@@ -28,6 +28,7 @@ The class SolvedPuzzle will contain:
 # 2019-11-30 tc bug fix for cyclic import of Board
 #               added all_known_[un]solved_puzzles
 # 2019-12-02 tc Added empty_board
+# 2019-12-03 tc Added a couple of globe puzzles
 
 from copy                import deepcopy
 
@@ -142,9 +143,76 @@ real_easy_ans = [[3, 4, 6, 1, 2, 7, 9, 5, 8],
 real_easy = SolvedPuzzle("real_easy", desc, real_easy, real_easy_ans)
 all_known_solved_puzzles.append(real_easy)
 
+# ***
+name="globe_mon_2019_12_02"
+desc="Boston Globe mon, 2019-12-02, www.sudoku.com"
+puzzle_in  = '''
+001 605 400
+028 000 760
+000 080 000
+
+600 804 005
+072 000 940
+100 209 008
+
+000 050 000
+057 000 310
+009 106 200
+'''
+
+puzzle_ans = '''
+731 695 482
+528 413 769
+964 782 531
+
+693 874 125
+872 561 943
+145 239 678
+
+216 357 894
+457 928 316
+389 146 257
+'''
+puzzle = SolvedPuzzle(name, desc, puzzle_in, puzzle_ans)
+all_known_solved_puzzles.append(puzzle)
 
 
-# *** puzzle
+# ***
+name="globe_sat_2019_11_02"
+desc="Boston Globe sat, 2019-11-02, www.sudoku.com"
+puzzle_in  = '''
+001 603 000
+900 047 010
+000 000 700
+
+390 025 600
+000 000 000
+004 360 059
+
+003 000 000
+040 170 006
+000 206 500
+'''
+
+puzzle_ans = '''
+781 653 942
+962 847 315
+435 912 768
+
+398 425 671
+156 789 423
+274 361 859
+
+623 594 187
+549 178 236
+817 236 594
+'''
+puzzle = SolvedPuzzle(name, desc, puzzle_in, puzzle_ans)
+all_known_unsolved_puzzles.append(puzzle)
+
+
+# ***
+name="kato_puzzle"
 desc="Unsure lineage, maybe kato"
 puzzle_in = [[0, 0, 6, 1, 0, 0, 0, 0, 8], 
              [0, 8, 0, 0, 9, 0, 0, 3, 0], 
@@ -165,7 +233,7 @@ puzzle_ans = [[3, 4, 6, 1, 2, 7, 9, 5, 8],
               [5, 9, 8, 4, 1, 3, 7, 2, 6],
               [6, 2, 4, 7, 5, 9, 3, 8, 1],
               [1, 7, 3, 8, 6, 2, 5, 9, 4]]
-puzzle = SolvedPuzzle("puzzle", desc, puzzle_in, puzzle_ans)
+puzzle = SolvedPuzzle(name, desc, puzzle_in, puzzle_ans)
 all_known_unsolved_puzzles.append(puzzle) # Can't solve it yet
 
 # All the puzzles we know about
@@ -198,7 +266,7 @@ for sp in all_known_solved_puzzles :
     # Verify we can't solvable the unsolvable
     for sp in all_known_unsolved_puzzles :
         our_solution = sp.input_board.solve()
-        assert not our_solution, "%s: we can solve and unsolvable puzzle"
+        assert not our_solution, "%s: we can solv and unsolvable puzzle"
 
 # Test code
 import unittest

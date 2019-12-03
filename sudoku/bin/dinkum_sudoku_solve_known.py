@@ -5,11 +5,8 @@
 """
 This program attempts to solve one or more of the sudoku boards
 in module dinkum.sudoku.test_data.test_puzzles whose puzzle names
-are taken from the command line.
-
-If a puzzle is solved, the solution is printed.
-If the puzzle is unsolved, lots of debugging
-information is printed.
+are taken from the command line.  If no puzzles are listed on
+the command line, all known puzzles are attempted.
 
 EXIT STATUS
     0  All puzzles solved
@@ -29,6 +26,7 @@ from dinkum.sudoku.labeled_printer        import print_labeled_board
 
 # history:
 # 2019-12-01 tc Initial
+# 2019-12-03 tc changed cmd line usage, added -v and -l
 
 # What main() can return
 ret_val_good             = 0
@@ -41,8 +39,14 @@ ret_val_exception_raised = 3
 def main ():
     ''' See module docstring ...
     Attempts to solve all puzzle_names on the cmd line.
+    If none listed, tries to solve them all.
     puzzles are found in test_data/test_puzzles
     
+    --verbose Print solutions on solved and lots of info
+              on unsolved.
+
+    --list    list all the known puzzles
+
     Returns: 0  All puzzles solved
              1  Something wrong on cmd line
              2  Some puzzle was NOT solved.
@@ -55,7 +59,14 @@ def main ():
         description=textwrap.dedent(__doc__)
     )
     
-    # puzzles names
+    parser.add_argument("-l", "--list",
+                        help="List all the known puzzles and exit",
+                        action="store_true")
+    parser.add_argument("-v", "--verbose",
+                        help="Always print solutions.  Print debug info on unsolved",
+                        action="store_true")
+
+    # puzzles names, every non-option on the command line
     parser.add_argument('puzzle_names', metavar="puzzle_name",  # singular in -h, plural for [] generated
                         help="name(s) of puzzle in dinkum/sudoku/test_data/known_puzzles.py",
                         nargs='*')
@@ -63,21 +74,32 @@ def main ():
     parser.parse_args()
     args = parser.parse_args()
 
-    # Any puzzles to solve ?
-    if not args.puzzle_names :
-        # No just list the puzzle names, descriptions, an whether solved
-        # all_known_puzzles is list of SolvedPuzzles, some of which actually
-        # may be unsolved.  Solved puzzles are in all_known_solved_puzzles
+    # They just want a listing?
+    if args.list :
+
         for sp in all_known_puzzles :
-            print ("%-8s %-12s %s" % ( "UNSOLVED" if sp not in all_known_solved_puzzles else "",
-                                      sp.name,
+            # Example:empty        UNSOLVED No initial values, unsolvable
+            print ("%-20s %-8s %s" % ( sp.name,
+                                       "UNSOLVED" if sp not in all_known_solved_puzzles else "",
                                       sp.desc))
         # Life is good
         return ret_val_good
+        
+
+    # They specify any specific puzzles to solve?
+    if not args.puzzle_names :
+        # No, try them all
+        puzzle_names_to_solve = all_known_puzzle_names
+    else :
+        # Yes, just try to solve the ones they specified
+        puzzle_names_to_solve = args.puzzle_names
 
     # We have one or more puzzles to solve
-    # Iterate thru the command line
-    for puzzle_name in args.puzzle_names :
+    # Iterate thru them
+    we_solved_all_puzzles = True # Forever the optimist
+                                 # Set False on unsolved in loop
+
+    for puzzle_name in puzzle_names_to_solve :
 
         # Grab the SolvedPuzzle from the dictionary
         try:
@@ -93,21 +115,26 @@ def main ():
         # did we?
         if not solved_board :
             # nope, board is unsolved
+            we_solved_all_puzzles = False # oh well
             print ("%-20s: UNSOLVED!" % puzzle_name)
 
-            # sp.input_board was  changed in-place
-            partial_solution = sp.input_board
+            if args.verbose :
+                # sp.input_board was  changed in-place
+                partial_solution = sp.input_board
 
-            # print partial soltion.  
-            print (partial_solution)
-            print_labeled_board( partial_solution )
-            
-                                   
-            return ret_val_some_not_solved
+                # print partial soltion.  
+                print (partial_solution)
+                print_labeled_board( partial_solution )
+        else:
 
-        # Puzzle is solved, show them the solution
-        print ("%-20s: Solved!" % puzzle_name)
-        print (solved_board)
+            # Puzzle is solved, show them the solution
+            print ("%-20s: Solved!" % puzzle_name)
+
+            if args.verbose :
+                print (solved_board)
+
+    # Tell um how it went
+    return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved
 
     # All went OK                   
     print ("%s:All puzzles solved!" % sys.argv[0])
