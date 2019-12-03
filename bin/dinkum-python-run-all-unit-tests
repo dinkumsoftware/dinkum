@@ -9,6 +9,7 @@
 #
 # <todo> Note that top directory is hard coded to ~/projects so it will run
 #        under emacs ^X^E
+# <todo> Provide -h, --help
 
 set -e    # Die on error
 
@@ -20,12 +21,9 @@ set -e    # Die on error
 start_dir="." # Assume no --dir <start_dir>
 if [[ $# -ge 2 &&   ${1} == '--dir' ]] ; then
    shift # Eat the --dir
-   start_dir=$1
-   shift          # Eat the <start_dir.
+   start_dir=$(readlink -f $1)
+   shift          # Eat the <start_dir>
 fi
-
-echo "sd" $start_dir
-echo $@
 
 cd $start_dir    # Make sure directory exists
                  # count on -e above to bail

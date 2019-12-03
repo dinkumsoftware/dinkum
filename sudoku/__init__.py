@@ -8,6 +8,9 @@ Also defines a couple of Exceptions that can be raised
 in various modules.
 '''
 
+# 2019-12-?? tc Initial
+# 2019-12-03 tc Added ExcBadStrToConvert
+
 import math
 
 # Package wide constants
@@ -39,7 +42,14 @@ class ExcBadPuzzleInput(Exception) :
     def __init__(self, message) :
         self.message=message
 
+class ExcBadStrToConvert(Exception) :
+    ''' Board.str_to_list_of_rows(str) encountered wrong
+    number of digits in "str".
+    '''
+    def __init__(self) :
+        self.message=  __doc__
 
+    
 
 
 

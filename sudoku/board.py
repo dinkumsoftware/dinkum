@@ -8,11 +8,43 @@ sudoku board full of Cells with values.
 # 2019-11-26 tc Gave names to boards
 # 2019-11-30 tc Added board description
 # 2019-12-02 tc Added some spaces in __str__() output
+#               Let Board() take a string as well as list of rows
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
 
 import time
+
+def str_to_list_of_rows(s) :
+    ''' translate s to list of row-lists suitable for input to Board()
+    and return it.
+
+    s should contain a boards worth (81) of digits in range 0-9 inclusive.
+    Whitespace is ignored as well as any non-digits.  The values are in
+    raster order.
+
+    Not much error checking is done. Presumably someone else is
+    error checking the returned list of row-lists.
+
+    Raises ExcBadStrToConvert if there aren't exactly a boards worth of
+    digits in s.
+    '''
+
+    # Disappear the white space
+    digits = [ int(c) for c in s if c.isdigit() ]
+
+    # Verify the count
+    if len(digits) != (RCB_SIZE)*(RCB_SIZE) :
+        raise ExcBadStrToConvert  # Oops
+
+    # Put them in their place
+    list_of_rows=[]
+    for row_num in range(RCB_SIZE) :
+        offset = row_num * RCB_SIZE # which digit starts this row
+        list_of_rows.append ( digits[offset:offset+RCB_SIZE] )
+
+    return list_of_rows
+
 
 class Board :
     ''' Holds the representation of of a sudoku board.
@@ -33,11 +65,24 @@ class Board :
 
     Board()[row][col] can be used to get Cell at (row,col)
 
+    A Board can be specified to Board() as a list of row, e.g
+        [ [1,2,3,4,5,6,7,8,9],
+          [0,0,1,0,0,2,5,0,0],
+               ...
+        ]
+    It can also be specified as a string of digits 0-9 separated by as
+    much or little whitespace as you desire. e.g.
+        1 2 3 4 5 6 7 8 9
+        0 0 1 0 0 2 5 0 0
+            ...
+    --or--
+        123456789001002500
+            ...
     '''
 
     def __init__(self, arr=None, name=None, desc="") :
         ''' constructor of a Board
-        arr is list of row-lists
+        arr is list of row-lists --or-- a string of values
         If arr is None, an empty board will be created.
 
         name is used as the name of the board.
@@ -56,6 +101,13 @@ class Board :
         self.name = name if name else self.unique_board_name()
         self.description = desc
         
+        # Need to translate string into list of rows?
+        if isinstance(arr, str) :
+            try:
+                arr = str_to_list_of_rows(arr)
+            except ExcBadStrToConvert :
+                raise ExcBadPuzzleInput( "Not an exact boards worth of digits in arr as string" )
+
         # We are generating new board from a list of row-lists
         # We create empty data structs and have set() adjust them
 
@@ -412,6 +464,34 @@ class Test_board(unittest.TestCase):
             names_so_far.add(board.name)
         
 
+    def test_str_constructor(self) :
+        ''' Make sure string and list of row-list generate same board '''
+        lrl_spec =   [[0, 4, 6, 1, 2, 7, 9, 5, 8], 
+                      [7, 0, 5, 6, 9, 4, 1, 3, 2], 
+                      [2, 1, 9, 3, 8, 5, 4, 6, 7], 
+                      [4, 6, 2, 5, 3, 1, 8, 7, 9], 
+                      [9, 3, 1, 2, 7, 8, 6, 4, 5], 
+                      [8, 5, 7, 9, 4, 6, 2, 1, 3], 
+                      [5, 9, 8, 4, 1, 3, 7, 2, 6],
+                      [6, 2, 4, 7, 5, 9, 3, 8, 1],
+                      [1, 7, 3, 8, 6, 2, 5, 9, 4]]
+
+
+        str_board_spec = '''
+                      0 4 6 1 2 7 9 5 8 
+                      7 0 5 6 9 4 1 3 2 
+                      2 1 9 3 8 5 4 6 7 
+                      4 6 2 5 3 1 8 7 9 
+                      9 3 1 2 7 8 6 4 5 
+                      8 5 7 9 4 6 2 1 3 
+                      5 9 8 4 1 3 7 2 6
+                      6 2 4 7 5 9 3 8 1
+                      1 7 3 8 6 2 5 9 4
+        '''
+        self.assertEqual( Board(lrl_spec), Board(str_board_spec),
+                          "string and list of row-lists generate differnt Boards")
+
+
     def test_subset(self) :
         # What we test with
         some_board_spec = [ \
@@ -453,6 +533,19 @@ class Test_board(unittest.TestCase):
         non_subset_board=Board(non_subset_spec, "non subset board")
         self.assertFalse ( non_subset_board.is_subset_of(some_board) )
 
+    def test_str_to_row_lists_errors(self) :
+
+        # Number of values expected
+        board_size = RCB_SIZE * RCB_SIZE
+        board = Board() # empty board
+
+        too_few_spec = '0' * (board_size-1)
+        self.assertRaises(ExcBadStrToConvert, str_to_list_of_rows,too_few_spec)
+
+        # Test too many digits in str
+        too_many_spec = '0' * (board_size+1)
+        self.assertRaises(ExcBadStrToConvert, str_to_list_of_rows, too_many_spec)
+
     def test_cell_all_neighbors(self) :
         # By rights it should be in the unittest for cell.py
         # but it can't because it would mean cyclical imports
@@ -484,8 +577,6 @@ class Test_board(unittest.TestCase):
 
         
 
-
-
     def test_input_bad_input_wrong_row_cnt(self) :
         # Only 7 rows, values don't matter
         puzzle = [ [0] * 9 for i in range(7) ]
@@ -498,6 +589,10 @@ class Test_board(unittest.TestCase):
             Board(puzzle)
         except ExcBadPuzzleInput as exc :
             self.assertEqual(exc.message, 'Wrong number of rows: 7')
+
+        # Make sure string spec'ed board generates a error
+        # The error message may differ
+        self.assertRaises(ExcBadPuzzleInput, Board, str(puzzle))
 
 
     def test_input_bad_value(self) :
@@ -533,6 +628,11 @@ class Test_board(unittest.TestCase):
         except ExcBadPuzzleInput as exc :
             self.assertEqual(exc.message, 'Row 4: Wrong size: 8')
 
+        # Make sure string spec'ed board generates a error
+        # The error message may differ
+        self.assertRaises(ExcBadPuzzleInput, Board, str(puzzle))
+
+
     def test_input_duplicate_values(self) :
         some_board_spec = [ \
                             [0, 4, 6, 1, 2, 7, 9, 5, 8], # 0 row
@@ -558,6 +658,12 @@ class Test_board(unittest.TestCase):
         except ExcBadPuzzleInput as exc :
             self.assertEqual(exc.message, expected_err_msg)  # with right error message
 
+        # Make sure string spec'ed board generates a error
+        # The error message may differ
+        self.assertRaises(ExcBadPuzzleInput, Board, str(dup_in_row))
+
+
+
         # duplicate value in a col
         dup_in_col = copy.deepcopy(some_board_spec)
         dup_in_col[4][7] = 5
@@ -568,7 +674,14 @@ class Test_board(unittest.TestCase):
             board = Board(dup_in_col)
         except ExcBadPuzzleInput as exc :
             self.assertEqual(exc.message, expected_err_msg)  # with right error message
+
+        # Make sure string spec'ed board generates a error
+        # The error message may differ
+        self.assertRaises(ExcBadPuzzleInput, Board, str(dup_in_col))
             
+
+
+
         # duplicate value in a blk
         dup_in_blk = copy.deepcopy(some_board_spec)
         dup_in_blk[6][7] = 4
@@ -578,6 +691,11 @@ class Test_board(unittest.TestCase):
             board = Board(dup_in_blk)
         except ExcBadPuzzleInput as exc :
             self.assertEqual(exc.message, expected_err_msg)  # with right error message
+
+        # Make sure string spec'ed board generates a error
+        # The error message may differ
+        self.assertRaises(ExcBadPuzzleInput, Board, str(dup_in_blk))
+
 
 
 if __name__ == "__main__" :
