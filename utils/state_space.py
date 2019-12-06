@@ -5,43 +5,43 @@ Functions dealing with "state" space.  This is a subdirectory
 typically under ~/.dinkum  where an application can read/write
 state information that needs to be available from invocation to invocation.
 
-Convention is that dinkum_state_root() is ~/.dinkum/state_space/
+Convention is that state_root() is ~/.dinkum/state_space/
 It can be changed.
 
 Convention is that a function in package.module a.b.c.mod
 reads/writes from/to:
      ~/.dinkum/state_space/a/b/c/mod/<filename>
-     via dinkum_state_space_filename(__name__, <filename>,
+     via state_space_filename(__name__, <filename>,
                                      create_reqd_subdirs)
 
 Convention is that a function in package.module a.b.c.mod
 that has info that is needed package wide reads/writes from/to:
      ~/.dinkum/state_space/a/b/c/<filename>
-     via dinkum_state_space_filename(__name__, <filename>,
-                                     create_reqd_subdirs,
-                                     num_name_components_to_trim=1)
+     via state_space_filename(__name__, <filename>,
+                              create_reqd_subdirs,
+                              num_name_components_to_trim=1)
 
 Function summary,
     assuming name=__name__ 
              called from a function in dinkum.foo.bar.mod
              filename = "foo"
 
-    dinkum_state_filename(name, filename,
-                          create_reqd_subdirs=False,
-                          num_name_components_to_trim=0)
+    state_filename(name, filename,
+                   create_reqd_subdirs=False,
+                   num_name_components_to_trim=0)
 
-    # tacks filename on the end of dinkum_state_subdir() returns it
+    # tacks filename on the end of state_subdir() returns it
     # example return: /home/user/.dinkum/a/b/c/mod/foo
 
 
-    dinkum_state_subdir(name,
-                        create_reqd_subdirs=False,
-                        num_name_components_to_trim=0)
+    state_subdir(name,
+                 create_reqd_subdirs=False,
+                 num_name_components_to_trim=0)
     # Changes dots in name to / and removes num_name_components_to_trim from
-    # right side.  Prepends with dinkum_state_space_root() and returns it.
+    # right side.  Prepends with state_space_root() and returns it.
     # example return: /home/user/.dinkum/state_space/a/b/c/mod
 
-    dinkum_state_root(create_if_nonexistant)
+    state_root(create_if_nonexistant)
     # returns ~/.dinkum/state_space as absolute pathname
 
 
@@ -53,16 +53,19 @@ Function summary,
             exists: returned path-or-filename exists AFTER the call
             dirs_created: some directories in returned path-or-filename were created
 
-    Use set_dinkum_state_root(pathname) to change the "root" directory.  This is
+    Use set_state_root(pathname) to change the "root" directory.  This is
     typically only done for test code and/or by installers.
 '''
+
+# 2019-12-04 tc  Initial
+# 2019-12-06 tc  Changed all func names from dinkum_XX() to XX()
 
 import os.path
 
 
 # Exceptions we can raise:
 class ExcAttemptToChangeStateRootToNonExistantDir(Exception) :
-    ''' Someone [probably set_dinkum_state_root()] attempted
+    ''' Someone [probably set_state_root()] attempted
     to change the state root to a non-existant directory
     '''
     def __init__(self, message) :
@@ -91,20 +94,20 @@ class ExcOSError(Exception) :
 
 
 # The default root directory where state_space stuff is written
-# Can be altered by set_dinkum_state_root() or reset_dinkum_state_root()
-_default_dinkum_state_root = "~/.dinkum/state_space"
-_dinkum_state_root         = _default_dinkum_state_root
+# Can be altered by set_state_root() or reset_state_root()
+_default_state_root = "~/.dinkum/state_space"
+_state_root         = _default_state_root
 
-def reset_dinkum_state_root() :
-    ''' Restore the state root (as returned by dinkum_state_root() to
+def reset_state_root() :
+    ''' Restore the state root (as returned by state_root() to
     the default.  Typically this is ~/.dinkum.
     '''
-    global _default_dinkum_state_root, _dinkum_state_root
+    global _default_state_root, _state_root
 
-    _dinkum_state_root = _default_dinkum_state_root
+    _state_root = _default_state_root
 
 
-def set_dinkum_state_root(pathname, create_if_nonexistant=False) :
+def set_state_root(pathname, create_if_nonexistant=False) :
     ''' Set the root of all state space to "pathname".
     create_if_nonexistant controls whether pathname is created
     if it doesn't exist.
@@ -117,7 +120,7 @@ def set_dinkum_state_root(pathname, create_if_nonexistant=False) :
                    subdirs_were_created)
     
     '''
-    global _dinkum_state_root
+    global _state_root
 
     new_root_pathname = expand_abs_vars_user(pathname)
 
@@ -129,7 +132,7 @@ def set_dinkum_state_root(pathname, create_if_nonexistant=False) :
     
     if not exists :
             raise ExcAttemptToChangeStateRootToNonExistantDir(
-                "set_dinkum_state_root(%s): pathname does not exist" % (new_root_pathname)
+                "set_state_root(%s): pathname does not exist" % (new_root_pathname)
             )
 
     # Check that it is a directory
@@ -137,21 +140,21 @@ def set_dinkum_state_root(pathname, create_if_nonexistant=False) :
         raise ExcAttemptToChangeStateRootToFile(new_root_pathname)
 
     # Change it for all the world
-    _dinkum_state_root = new_root_pathname
-    return (_dinkum_state_root, exists, dirs_created)
+    _state_root = new_root_pathname
+    return (_state_root, exists, dirs_created)
 
-def dinkum_state_root() :
+def state_root() :
     ''' Returns the root of the state system.
     '''
-    return expand_abs_vars_user(_dinkum_state_root)
+    return expand_abs_vars_user(_state_root)
 
-def dinkum_state_subdir(subdir, create_reqd_subdirs=False,
+def state_subdir(subdir, create_reqd_subdirs=False,
                         num_name_components_to_trim=0) :
-    ''' Determines the subdirectories between dinkum_state_root()
+    ''' Determines the subdirectories between state_root()
     and the directory to write state files.
 
     Typically called as:
-        dinkum_state_subdir(subdir=__name__, create_reqd_subdirs=True)
+        state_subdir(subdir=__name__, create_reqd_subdirs=True)
 
     A subdirectory is created in the returned pathname for every .
     separated token in name.
@@ -176,7 +179,7 @@ def dinkum_state_subdir(subdir, create_reqd_subdirs=False,
         pkg_mod_names = pkg_mod_names[:-num_name_components_to_trim]
 
     # Put them back together and prepend the root dir 
-    pathname = os.path.join(dinkum_state_root(),
+    pathname = os.path.join(state_root(),
                             *[ str(subdir) for subdir in pkg_mod_names],
                             '' ) # The empty string at the end means
                                  # pathname will end in a /
@@ -185,7 +188,7 @@ def dinkum_state_subdir(subdir, create_reqd_subdirs=False,
     return create_path_if_needed(pathname,
                                  create_reqd_subdirs)
 
-def dinkum_state_filename( subdir, filename,
+def state_filename( subdir, filename,
                            create_reqd_subdirs=False,
                            num_name_components_to_trim=0) :
 
@@ -195,7 +198,7 @@ def dinkum_state_filename( subdir, filename,
     subdir is typically __name__, but this isn't enforced
 
     Combines, creates as necessary, and returns
-        dinkum_state_subdir(subdir, create_reqd_subdirs,num_name_components_to_trim)
+        state_subdir(subdir, create_reqd_subdirs,num_name_components_to_trim)
         filename
 
     Removes num_name_components_to_trim from "." separated tokens in name.
@@ -211,7 +214,7 @@ def dinkum_state_filename( subdir, filename,
     '''
 
     # let this guy do the heavy lifting
-    (dir_name, exists, dirs_created) = dinkum_state_subdir(subdir,
+    (dir_name, exists, dirs_created) = state_subdir(subdir,
                                                            create_reqd_subdirs,
                                                            num_name_components_to_trim)
 
@@ -294,7 +297,7 @@ class Test_test_state_space(unittest.TestCase) :
         create_path_if_needed( self._playpen_dirname, True)
 
         # Restore the space root to default.
-        reset_dinkum_state_root()
+        reset_state_root()
 
     def tearDown(self) :
         ''' Remove the playpen created by setUp()
@@ -309,26 +312,26 @@ class Test_test_state_space(unittest.TestCase) :
                                 os.path.expanduser(default_root
                                 )))
                                 
-        got_root = dinkum_state_root()
+        got_root = state_root()
 
         self.assertEqual( expected_default_root, got_root, 
                           "Expected:%s Got:%s" % (expected_default_root, got_root))
 
-    def test_set_dinkum_state_root(self) :
+    def test_set_state_root(self) :
         # Try to set it non-existant directory
         nonexistant_dir = "/xyzzy_12345_54321_no_one_would_make_this/right/I/really/hope/this/directory/doesnt/exist"
         self.assertRaises( ExcAttemptToChangeStateRootToNonExistantDir,
-                           set_dinkum_state_root, nonexistant_dir )        # Defaults to not creating subdirs
+                           set_state_root, nonexistant_dir )        # Defaults to not creating subdirs
         self.assertRaises( ExcAttemptToChangeStateRootToNonExistantDir,
-                           set_dinkum_state_root, nonexistant_dir, False ) # False ==> don't create subdirs
+                           set_state_root, nonexistant_dir, False ) # False ==> don't create subdirs
 
         # Try to have it create a file it can't
-        self.assertRaises( ExcOSError, set_dinkum_state_root, nonexistant_dir, True)
+        self.assertRaises( ExcOSError, set_state_root, nonexistant_dir, True)
 
         # Switch the state root directory to playpen, so we can
         # make files and such with destroying anything else
         new_root_name = os.path.join(self._playpen_dirname, __name__)
-        (root_name, exists, subdirs_created) = set_dinkum_state_root( new_root_name, True )
+        (root_name, exists, subdirs_created) = set_state_root( new_root_name, True )
         self.assertTrue (exists          )
         self.assertTrue (subdirs_created  )
 
@@ -339,31 +342,31 @@ class Test_test_state_space(unittest.TestCase) :
 
         # try to change state root dir to it
         self.assertRaises( ExcAttemptToChangeStateRootToFile, 
-                           set_dinkum_state_root, filename )
+                           set_state_root, filename )
         
 
-    def test_dinkum_state_subdir(self) :
+    def test_state_subdir(self) :
         # Make a place to play
         new_root_name = os.path.join(self._playpen_dirname, __name__)
-        root_dir,exists,subdirs_created = set_dinkum_state_root( new_root_name, True)
+        root_dir,exists,subdirs_created = set_state_root( new_root_name, True)
 
         subdirs = "1.2.3.4"
-        expected_path = os.path.join( dinkum_state_root(), "1", "2", "3", "4")
+        expected_path = os.path.join( state_root(), "1", "2", "3", "4")
 
         # Just return the full path, ie don't make the dirs
-        path, exists, made = dinkum_state_subdir(subdirs) 
+        path, exists, made = state_subdir(subdirs) 
         self.assertEqual ( path, expected_path )
         self.assertFalse (exists)
         self.assertFalse (made)
         
         # Now make it
-        path, exists, made = dinkum_state_subdir(subdirs, True) 
+        path, exists, made = state_subdir(subdirs, True) 
         self.assertEqual ( path, expected_path )
         self.assertTrue (exists)
         self.assertTrue (made)
 
         # Now tell it to make it again, but it won't because already exists
-        path, exists, made = dinkum_state_subdir(subdirs, True) 
+        path, exists, made = state_subdir(subdirs, True) 
         self.assertEqual ( path, expected_path )
         self.assertTrue (exists)
         self.assertFalse (made)
@@ -372,31 +375,31 @@ class Test_test_state_space(unittest.TestCase) :
 
         # Confirm we don't remake an existing subdir
         subdirs_less_one = "1.2.3"
-        subdirs_less_one_expected_path = os.path.join( dinkum_state_root(), "1", "2", "3")
+        subdirs_less_one_expected_path = os.path.join( state_root(), "1", "2", "3")
 
-        path, exists, made = dinkum_state_subdir(subdirs_less_one, False) 
+        path, exists, made = state_subdir(subdirs_less_one, False) 
         self.assertEqual ( path, subdirs_less_one_expected_path )
 
-        path, exists, made = dinkum_state_subdir(subdirs, False, 1) 
+        path, exists, made = state_subdir(subdirs, False, 1) 
         self.assertEqual ( path, subdirs_less_one_expected_path )        
         
-    def test_dinkum_state_filename(self) :
+    def test_state_filename(self) :
         # Make a place to play
         new_root_name = os.path.join(self._playpen_dirname, __name__)
-        root_dir = set_dinkum_state_root( new_root_name, True)
+        root_dir = set_state_root( new_root_name, True)
 
         subdirs="one.two.three.four"
         filename="just-a-testfile"
-        expected_pathname=os.path.join( dinkum_state_root(), *subdirs.split("."), filename )
+        expected_pathname=os.path.join( state_root(), *subdirs.split("."), filename )
 
         # Query, don't make subdirs
-        (pathname, exists, made ) = dinkum_state_filename(subdirs, filename)
+        (pathname, exists, made ) = state_filename(subdirs, filename)
         self.assertEqual (pathname, expected_pathname)
         self.assertFalse (exists)
         self.assertFalse (made)
         
         # Query, do make subdirs
-        (pathname, exists, made ) = dinkum_state_filename(subdirs, filename, True)
+        (pathname, exists, made ) = state_filename(subdirs, filename, True)
         self.assertEqual (pathname, expected_pathname)
         self.assertFalse (exists)
         self.assertTrue  (made)
@@ -406,7 +409,7 @@ class Test_test_state_space(unittest.TestCase) :
             pass # Create an empty file
 
         # Try again and file should exist with no dirs made
-        (pathname, exists, made ) = dinkum_state_filename(subdirs, filename, True)
+        (pathname, exists, made ) = state_filename(subdirs, filename, True)
         self.assertEqual (pathname, expected_pathname)
         self.assertTrue  (exists)
         self.assertFalse (made)
