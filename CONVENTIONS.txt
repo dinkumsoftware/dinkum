@@ -6,6 +6,7 @@ This is list of conventions followed in the dinkum repo (see above)
 
 2019-04-30 tc Initial
 2019-11-26 tc Added some python requirements
+2019-12-07 tc Added some python unittest requirements
 
 All executables start with dinkum- or dinkum_
 
@@ -29,6 +30,8 @@ All the python library source will be in:
 
 Python unit testing:
     All non-bin *.py files will have unittest code
+    at the END of the source file.
+
     class Test_<module_name>(unittest.TestCase):
     individual tests start with: test_
     Any required data lives in ./test_data

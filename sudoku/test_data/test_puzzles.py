@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # dinkum/sudoku/test_puzzles.py
 ''' Provides a test suite of sudoku puzzles.
+
 The class SolvedPuzzle will contain:
     name of the input board
     input string for the input board
@@ -22,6 +23,11 @@ The class SolvedPuzzle will contain:
 
     Performs a couple of sanity checks which trigger a
     failed assertion on any errors.
+
+read/write_prior_solved_times() return (or write) a {} to/from a file
+which is keyed by puzzle_name and the value is last written solve_time_secs
+of that puzzle, regardless of whether the puzzle is solved or not
+
 '''
 
 # 2019-11-26 tc Initial
@@ -29,8 +35,11 @@ The class SolvedPuzzle will contain:
 #               added all_known_[un]solved_puzzles
 # 2019-12-02 tc Added empty_board
 # 2019-12-03 tc Added a couple of globe puzzles
+# 2019-12-04 tc Added read/write_prior_solve_times_secs()
 
 from copy                import deepcopy
+import pickle
+import os
 
 from dinkum.sudoku       import *
 from dinkum.sudoku.board import Board
@@ -268,6 +277,49 @@ for sp in all_known_solved_puzzles :
         our_solution = sp.input_board.solve()
         assert not our_solution, "%s: we can solv and unsolvable puzzle"
 
+
+
+def solve_times_secs_filename() :
+    ''' returns the filename where solved_times are
+    stored on disk.
+    '''
+    # We write the file in the same directory we live in
+    # at the time of this writing it was
+    # ..../dinkum/sudoku/test_data
+    dir = os.path.dirname(__file__) # .../dinkum/sudoku/test_data
+    file = os.path.join(dir, "solved_times.pickled")
+
+    return file
+
+
+    print (__file__)
+
+def read_prior_solve_times_secs() :
+    ''' Read and return {} of board.solve_time_secs from file
+    and return it.  Keyed by puzzle_name, value is
+    solve_time_secs.
+
+    These are the times last written by write_prior_solve_time_secs()
+    '''
+    solved_times = {} # in case of file not found
+    try:
+        with open(solve_times_secs_filename(), "rb") as pickle_file :
+            solved_times = pickle.load(pickle_file)
+    except FileNotFoundError:
+        pass # We'll just return the initial empty dictionary
+
+    return solved_times
+    
+
+def write_prior_solve_times_secs(solved_times) :
+    ''' Writes solved_times to a disk file.
+    It can be read via read_prior_solve_times_secs()
+    Current implementation pickles it.
+    '''
+    
+    pickle.dump(solved_times, open(solve_times_secs_filename(), "wb"))
+
+
 # Test code
 import unittest
 
@@ -294,6 +346,13 @@ class Test_test_puzzles(unittest.TestCase) :
         for sp in all_known_puzzles :
             self.assertIn (sp.name, all_known_puzzle_names)
             self.assertIs (sp, all_known_puzzle_names[sp.name])
+
+
+# Some standalone functions
+
+# Where we pickle/unpickle the {}
+
+
 
 
 if __name__ == "__main__" :

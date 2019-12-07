@@ -10,6 +10,8 @@ unsolved cells are shown in lower left of the cell.
 It's a rather busy printout, probably only of interest to developers.
 
 Example empty board:
+(with want_cell_nums==True and want_num_possibles==True)
+
      0     1     2      3     4     5      6     7     8     
  /---------------------------------------------------------\ 
  |0------------------1------------------2------------------| 
@@ -63,6 +65,7 @@ Example empty board:
 #               Moved block label location
 # 2019-11-26 tc Fixed import problem
 # 2019-12-01 tc minor todo knockoff.  get row# from rgb rather than cell
+# 2019-12-03 tc Made cell# and num_possible printouts optional
 
 #--------------------------------------------------------------
 from dinkum.sudoku.board    import *
@@ -91,18 +94,22 @@ output_width = left_offset_to_first_cell + cell_width * RCB_SIZE +     \
 top_offset_to_first_cell = 2 # column label + '-'
 bot_pad_after_last_cell  = 2 # bottom cell '-' + '-' + column_label
 
-def print_labeled_board(board=None) :
+def print_labeled_board(board=None, want_cell_nums=True, want_num_possibles=False) :
     ''' prints the output of labeled_board() resulting
     in a human-readable board showing cell values with
     everything (cell#,row#, col#,blk#) labeled.
 
     If board isn't supplied, produces output for an empty board.
+    want_cell_nums controls whether cell number labels are output
+    want_num_possibles controls whether num_possibles for each cell
+    are output.
+
     '''
-    for l in labeled_board(board) :
+    for l in labeled_board(board, want_cell_nums, want_num_possibles) :
         print (l) 
 
 
-def labeled_board(board=None) :
+def labeled_board(board=None, want_cell_nums=True, want_num_possibles=False) :
     ''' outputs board with all column, row, block, and
     cell's labeled along with the cell values in human
     readable format.
@@ -124,7 +131,7 @@ def labeled_board(board=None) :
     # Stuff in the middle, e.g.
     # 1|  9 10 11 | 12 13 14 | 15 16 17 |1
     for row in board.rows :
-        ws += row_line(row)
+        ws += row_line(row, want_cell_nums, want_num_possibles)
 
     # \ --------------------------------/ #
     #    0  1  2 ...
@@ -157,9 +164,12 @@ def top_or_bottom_lines(is_top) :
 
     assert False, "Impossible Place"
 
-def row_line(row) :
+def row_line(row, want_cell_nums, want_num_possibles) :
     ''' returns [] of lines that make up a row of cells
     lines are NOT \n terminated.
+
+    want_cell_nums controls whether the cell number is labeled.
+    want_num_possibles controls whether num_possibles is output
 
     The top line, left, and right cell outlines are include
     in returned lines.  A horizontal block separator may
@@ -251,21 +261,22 @@ def row_line(row) :
                     cell_content = replace_substr_at(cell_content, str(cell.value) * value_label_horz_num,
                                                      value_label_horz_offset_in_cell)
             else :
-                # cell is unsolved, put number of possible values
+                # cell is unsolved, maybe a number of possible values
                 #    in lower left corner on last line
                 num_possibles_label_horz_offset_in_cell = 0
-                if line_num_in_row == (cell_height-1) :
-                    cell_content=replace_substr_at(cell_content, str(len(cell.possible_values)),
-                                                   num_possibles_label_horz_offset_in_cell)
+                if want_num_possibles :
+                    if line_num_in_row == (cell_height-1) :
+                        cell_content=replace_substr_at(cell_content, str(len(cell.possible_values)),
+                                                       num_possibles_label_horz_offset_in_cell)
 
             line += cell_content # Tack it on
 
             # We have entirely written the output associated with this cell
 
-            # on top line only, label the cell number
+            # on top line only, maybe label the cell number
             # We overwrite the left vertical separater and the
             # first char in cell_content
-            if line_num_in_row == first_line_of_cell_content:
+            if want_cell_nums and line_num_in_row == first_line_of_cell_content:
                 cell_label = "%d" % cell.cell_num
                 line = replace_substr_at(line, cell_label, -cell_width)
 
@@ -432,8 +443,9 @@ import unittest
 
 class Test_labeled_printer(unittest.TestCase):
 
-    # How an empty board is printed.  Used in multiple tests
-    expected_empty_output=\
+    # How an empty board is printed with various combinations
+    # of Used in multiple tests
+    expected_empty_output_cell_and_num_possible =\
         [\
          "     0     1     2      3     4     5      6     7     8     ",
          " /---------------------------------------------------------\ ",
@@ -479,16 +491,120 @@ class Test_labeled_printer(unittest.TestCase):
          "     0     1     2      3     4     5      6     7     8     ",
         ]
 
+    expected_empty_output =\
+        [\
+         "     0     1     2      3     4     5      6     7     8     ",
+         " /---------------------------------------------------------\ ",
+         " |0------------------1------------------2------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "0||     |     |     ||     |     |     ||     |     |     ||0",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "1||     |     |     ||     |     |     ||     |     |     ||1",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "2||     |     |     ||     |     |     ||     |     |     ||2",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |3------------------4------------------5------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "3||     |     |     ||     |     |     ||     |     |     ||3",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "4||     |     |     ||     |     |     ||     |     |     ||4",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "5||     |     |     ||     |     |     ||     |     |     ||5",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |6------------------7------------------8------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "6||     |     |     ||     |     |     ||     |     |     ||6",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "7||     |     |     ||     |     |     ||     |     |     ||7",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         "8||     |     |     ||     |     |     ||     |     |     ||8",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " \---------------------------------------------------------/ ",
+         "     0     1     2      3     4     5      6     7     8     ",
+        ]
+
+    expected_empty_output_cell_nums=\
+        [\
+         "     0     1     2      3     4     5      6     7     8     ",
+         " /---------------------------------------------------------\ ",
+         " |0------------------1------------------2------------------| ",
+         " |0     1     2     |3     4     5     |6     7     8     || ",
+         "0||     |     |     ||     |     |     ||     |     |     ||0",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |9     10    11    |12    13    14    |15    16    17    || ",
+         "1||     |     |     ||     |     |     ||     |     |     ||1",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |18    19    20    |21    22    23    |24    25    26    || ",
+         "2||     |     |     ||     |     |     ||     |     |     ||2",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |3------------------4------------------5------------------| ",
+         " |27    28    29    |30    31    32    |33    34    35    || ",
+         "3||     |     |     ||     |     |     ||     |     |     ||3",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |36    37    38    |39    40    41    |42    43    44    || ",
+         "4||     |     |     ||     |     |     ||     |     |     ||4",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |45    46    47    |48    49    50    |51    52    53    || ",
+         "5||     |     |     ||     |     |     ||     |     |     ||5",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |6------------------7------------------8------------------| ",
+         " |54    55    56    |57    58    59    |60    61    62    || ",
+         "6||     |     |     ||     |     |     ||     |     |     ||6",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |63    64    65    |66    67    68    |69    70    71    || ",
+         "7||     |     |     ||     |     |     ||     |     |     ||7",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " |---------------------------------------------------------| ",
+         " |72    73    74    |75    76    77    |78    79    80    || ",
+         "8||     |     |     ||     |     |     ||     |     |     ||8",
+         " ||     |     |     ||     |     |     ||     |     |     || ",
+         " \---------------------------------------------------------/ ",
+         "     0     1     2      3     4     5      6     7     8     ",
+        ]
+
+
+
 
     def test_empty_board(self) :
         # Make empty board with all the labels
-        got = labeled_board()
+        got = labeled_board(None, want_cell_nums=True, want_num_possibles=True)
+        self.assertEqual(got, Test_labeled_printer.expected_empty_output_cell_and_num_possible)
+
+        # Make empty board with no extra labels
+        got = labeled_board(None, want_cell_nums=False, want_num_possibles=False)
         self.assertEqual(got, Test_labeled_printer.expected_empty_output)
 
-        
+        # Make default empty board.
+        # Should be: want_cell_nums=True, want_num_possibles=False)
+        got = labeled_board()
+        self.assertEqual(got, Test_labeled_printer.expected_empty_output_cell_nums)
+        got = labeled_board(None, want_cell_nums=True, want_num_possibles=False)
+        self.assertEqual(got, Test_labeled_printer.expected_empty_output_cell_nums)
+
     def test_caller_supplied_empty(self) :
-        got = labeled_board( Board() )
-        self.assertEqual(got, Test_labeled_printer.expected_empty_output)
+        got = labeled_board( Board(), want_cell_nums=True, want_num_possibles=True )
+        self.assertEqual(got, Test_labeled_printer.expected_empty_output_cell_and_num_possible)
 
     test_board = [\
           [0, 0, 6, 1, 0, 0, 0, 0, 8], 
@@ -501,7 +617,7 @@ class Test_labeled_printer(unittest.TestCase):
           [0, 2, 0, 0, 5, 0, 0, 8, 0], 
           [1, 0, 0, 0, 0, 2, 5, 0, 0]
     ]
-    test_board_output = [\
+    test_board_output_cell_and_num_possibles = [\
           "     0     1     2      3     4     5      6     7     8     ",
           " /---------------------------------------------------------\ ",
           " |0------------------1------------------2------------------| ",
@@ -548,8 +664,8 @@ class Test_labeled_printer(unittest.TestCase):
 
     def test_populated_board(self) :
         board = Board(Test_labeled_printer.test_board, None, "created by test_populated_board()", )
-        got = labeled_board( board )
-        self.assertEqual(got, Test_labeled_printer.test_board_output)
+        got = labeled_board( board, want_cell_nums=True, want_num_possibles=True )
+        self.assertEqual(got, Test_labeled_printer.test_board_output_cell_and_num_possibles)
 
 if __name__ == "__main__" :
     # Run the unittests

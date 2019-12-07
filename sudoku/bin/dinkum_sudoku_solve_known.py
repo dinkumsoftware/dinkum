@@ -8,6 +8,13 @@ in module dinkum.sudoku.test_data.test_puzzles whose puzzle names
 are taken from the command line.  If no puzzles are listed on
 the command line, all known puzzles are attempted.
 
+It prints the solution(or insolution time) for the puzzles with
+comparisons to prior solution times stored in:
+
+    ~/.dinkum/sudoku/test_data/solved_times.pickled
+
+Use --update to write the current solve times to that file
+
 EXIT STATUS
     0  All puzzles solved
     1  Some kind of error on command line
@@ -16,17 +23,19 @@ EXIT STATUS
 
 """
 
+# 2019-12-?? tc Initial
+# 2019-12-04 tc Added timing printout
+
 import sys, os, traceback, argparse
 import textwrap    # dedent
 
-from dinkum.sudoku.test_data.test_puzzles import all_known_puzzles 
-from dinkum.sudoku.test_data.test_puzzles import all_known_puzzle_names
-from dinkum.sudoku.test_data.test_puzzles import all_known_solved_puzzles
+from dinkum.sudoku.test_data.test_puzzles import *
 from dinkum.sudoku.labeled_printer        import print_labeled_board
 
 # history:
 # 2019-12-01 tc Initial
 # 2019-12-03 tc changed cmd line usage, added -v and -l
+# 2019-12-07 tc Added --update and print delta times.
 
 # What main() can return
 ret_val_good             = 0
@@ -47,6 +56,8 @@ def main ():
 
     --list    list all the known puzzles
 
+    --update  Write the solution times to disk
+
     Returns: 0  All puzzles solved
              1  Something wrong on cmd line
              2  Some puzzle was NOT solved.
@@ -64,6 +75,10 @@ def main ():
                         action="store_true")
     parser.add_argument("-v", "--verbose",
                         help="Always print solutions.  Print debug info on unsolved",
+                        action="store_true")
+
+    parser.add_argument("-u", "--update",
+                        help="Write solution times to disk file",
                         action="store_true")
 
     # puzzles names, every non-option on the command line
@@ -99,6 +114,11 @@ def main ():
     we_solved_all_puzzles = True # Forever the optimist
                                  # Set False on unsolved in loop
 
+    # For comparing solve times to prior runs
+    # A {} key:   puzzle_name
+    #      value: last solve time
+    prior_solve_times_secs = read_prior_solve_times_secs()
+
     for puzzle_name in puzzle_names_to_solve :
 
         # Grab the SolvedPuzzle from the dictionary
@@ -112,26 +132,68 @@ def main ():
 
         # Try to solve it
         solved_board = sp.input_board.solve()
+
         # did we?
         if not solved_board :
             # nope, board is unsolved
             we_solved_all_puzzles = False # oh well
-            print ("%-20s: UNSOLVED!" % puzzle_name)
+            solve_time_usec = sp.input_board.solve_time_secs * 1000.0 * 1000.0
+            print ("%-20s: UNSOLVED! after %6.3f usecs" % (puzzle_name, solve_time_usec) )
 
             if args.verbose :
                 # sp.input_board was  changed in-place
                 partial_solution = sp.input_board
 
-                # print partial soltion.  
+                # print partial soltion in a variety of formats
+                # These fit on a page
                 print (partial_solution)
-                print_labeled_board( partial_solution )
+                print_labeled_board( partial_solution, want_cell_nums=False, want_num_possibles=False )
+
+                # This needs it's own
+                print('\f')
+                print_labeled_board( partial_solution, want_cell_nums=True, want_num_possibles=True )
+
         else:
+            # Puzzle is solved
+            # Some of the puzzles solve so fast there is tremendous jitter in the solution time
+            # So we will solve it a bunch of times and compute the average
+            num_solutions_to_average = 10000 # turns 1us into 10ms
+            solution_total_time = 0.0
+            for try_num in range(num_solutions_to_average) :
+                sp.input_board.solve()
+                solution_total_time += sp.input_board.solve_time_secs 
+            solve_time_secs = solution_total_time / num_solutions_to_average
 
-            # Puzzle is solved, show them the solution
-            print ("%-20s: Solved!" % puzzle_name)
 
+            # Compute speed improvement (hopefully)
+            if puzzle_name in prior_solve_times_secs :
+                # We have a recorded prior time
+                prior_solve_time_secs = prior_solve_times_secs[puzzle_name]
+                percent_better = (  (prior_solve_time_secs - solve_time_secs ) / prior_solve_time_secs ) * 100.0
+
+                improvement = "Improvement: %0.1f%%" % percent_better
+            else :
+                # Nothing to compare it to.
+                improvement = "Unknown improvement.  Consider --update"
+            
+
+            # Show them the solution info
+            solve_time_usec = solve_time_secs * 1000.0 * 1000.0
+            print ("%-20s:   Solved! after %6.3f usecs. %s" % (puzzle_name,
+                                                               solve_time_usec,
+                                                               improvement))
             if args.verbose :
                 print (solved_board)
+
+            if args.update :
+                # We are writing solution times.  Update ours
+                # Whole dict written before return
+                prior_solve_times_secs[puzzle_name] = solve_time_secs ;
+                
+
+    # Write solution times if reqd
+    if args.update :
+        write_prior_solve_times_secs(prior_solve_times_secs)
 
     # Tell um how it went
     return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved

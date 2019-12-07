@@ -9,6 +9,7 @@ sudoku board full of Cells with values.
 # 2019-11-30 tc Added board description
 # 2019-12-02 tc Added some spaces in __str__() output
 #               Let Board() take a string as well as list of rows
+# 2019-12-04 tc Added solve_time_secs
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -63,6 +64,8 @@ class Board :
       rows,cols,blks  [] of Cells in that entity.  Indexed by {row/col/blk}_num
                       Can be retrieved by rcb()
 
+      solve_time_secs How long solve() for solution or unsolved puzzle
+
     Board()[row][col] can be used to get Cell at (row,col)
 
     A Board can be specified to Board() as a list of row, e.g
@@ -78,6 +81,7 @@ class Board :
     --or--
         123456789001002500
             ...
+
     '''
 
     def __init__(self, arr=None, name=None, desc="") :
@@ -97,9 +101,10 @@ class Board :
         various assertion failures if things aren't right.
         '''
 
-        # Deal with the name/description
-        self.name = name if name else self.unique_board_name()
-        self.description = desc
+        # Deal with the name/description and timing
+        self.name             = name if name else self.unique_board_name()
+        self.description      = desc
+        self.solve_time_secs  = None
         
         # Need to translate string into list of rows?
         if isinstance(arr, str) :
@@ -199,10 +204,19 @@ class Board :
 
 
     def solve(self) :
-        ''' Returns a Board that solve us.
-            Return None if unsolvable
-           raise Exception on multiple solutions 
-            We change our values in the process '''
+        '''
+        Returns a Board that solve us.
+        Return None if unsolvable
+        raise Exception on multiple solutions 
+        We change our values in the process
+        Sets solve_time_secs as how long it ran
+        '''
+
+        # fractional seconds
+        self.start_time_secs = time.perf_counter()
+
+        # What we return, assume the best
+        ret_value = self # overwritten if can't solve
 
         # We try all the solution techniques we know about
         # Each is required to return True if they set a cell
@@ -214,10 +228,17 @@ class Board :
             
             # How did we do?
             if not a_cell_was_set :
-                return None  # Not well, sigh
+                # Not well, sigh
+                ret_value = None
+                break
 
-        # If we fall out of the loop... we solved the puzzle!
-        return self
+
+        # All done, Remember how long we ran
+        self.solve_time_secs = time.perf_counter() - self.start_time_secs
+
+        # Arrive here with ret_value set to either
+        # self or None depending on whether we successfully solved the puzzle
+        return ret_value
 
     
     def solve_cells_with_single_possible_value(self) :
@@ -545,6 +566,38 @@ class Test_board(unittest.TestCase):
         # Test too many digits in str
         too_many_spec = '0' * (board_size+1)
         self.assertRaises(ExcBadStrToConvert, str_to_list_of_rows, too_many_spec)
+
+    def test_solve_time(self) :
+
+        # Can't really validate the solve time
+        # Just make sure it exists
+
+        # unsolvable (empty board)
+        board = Board() 
+        self.assertIsNone   ( board.solve_time_secs )
+        board.solve()
+        self.assertIsNotNone( board.solve_time_secs )        
+
+        # solvable
+        board_spec = '''
+         3 4 6  1 2 7  9 5 8
+         7 8 5  6 9 4  1 3 2
+         2 1 9  3 8 5  4 6 7
+
+         4 6 2  5 3 1  8 7 9
+         9 3 1  2 7 8  6 4 5
+         8 5 7  9 4 6  2 1 3
+
+         5 9 8  4 1 3  7 2 6
+         6 2 4  7 5 9  3 8 1
+         1 7 3  8 6 2  5 9 4
+        '''
+        board = Board(board_spec) 
+        self.assertIsNone   ( board.solve_time_secs )
+        board.solve()
+        self.assertIsNotNone( board.solve_time_secs )        
+
+        
 
     def test_cell_all_neighbors(self) :
         # By rights it should be in the unittest for cell.py

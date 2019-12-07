@@ -2,6 +2,10 @@ dinkum/projects/python/src/python-cheatsheet.txt
 
 2019-11-28 tc Initial
 
+To reload (re-import) in Python 3.4+ only.
+Prior to 3.4 reload was built in
+    from importlib import reload
+
 unit tests: recursively running all 
     # For help:
     python3 -m unittest --help
