@@ -149,9 +149,11 @@ def main ():
                 print (partial_solution)
                 print_labeled_board( partial_solution, want_cell_nums=False, want_num_possibles=False )
 
-                # This needs it's own
+                # This needs it's own page
                 print('\f')
                 print_labeled_board( partial_solution, want_cell_nums=True, want_num_possibles=True )
+                print( partial_solution.str_unsolved_rcbs() )
+
 
         else:
             # Puzzle is solved

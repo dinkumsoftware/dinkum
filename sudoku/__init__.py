@@ -24,8 +24,8 @@ RCB_TYPE_ROW = 0
 RCB_TYPE_COL = 1
 RCB_TYPE_BLK = 2
 
-ALL_RCB_TYPES = [RCB_TYPE_ROW, RCB_TYPE_COL, RCB_TYPE_BLK]
-RCB_NAME  =     ["row",        "col",       "blk"        ] # indexed by rcb_type_X
+ALL_RCB_TYPES = (RCB_TYPE_ROW, RCB_TYPE_COL, RCB_TYPE_BLK)
+RCB_NAME  =     ("row",        "col",       "blk"        ) # indexed by rcb_type_X
 
 # Exceptions we can toss
 # The general approach is to raise an exception if the error is a result of user input.

@@ -10,7 +10,7 @@ it belongs to.
 
 # 2019-11-25 tc Moved fom sudoku.py
 # 2019-12-01 tc changes row/col/blk from () to class variable
-# 2019-12-07 tc changed rcb from [] to ()
+# 2019-12-08 tc Added rcb_num_and_idx()
 
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
@@ -120,6 +120,28 @@ class Cell :
             rcb.cell_was_set(self)
 
 
+    def rcb_num_and_idx(self, rcb_type) :
+        ''' Returns tuple of ( row/col/blk_num, row/col/blk_indx)
+        as specified by rcb_type.
+
+        e.g. with rcb_type of RCB_TYPE_ROW, returns:
+            (self.row_num of the cell's row and
+             self.row_idx of our position in that row
+            )
+        '''
+
+        if rcb_type   == RCB_TYPE_ROW :
+            return ( self.row_num, self.row_idx)
+        elif rcb_type == RCB_TYPE_COL :
+            return ( self.col_num, self.col_idx)
+        elif rcb_type == RCB_TYPE_BLK :            
+            return ( self.blk_num, self.blk_idx)
+        else :
+            assert False, "Bad arg: rcb_type: %d" % rcb_type
+
+        assert False, "Impossible Place"
+
+
     def all_neighbors(self) :
         ''' Returns set of cells which are in same row, col, and blk
         as us.  self is NOT in the list.  No cell is duplicated, hence
@@ -203,6 +225,13 @@ class Cell :
         # All done                                            
         return ret_str
 
+    def str_value(self, desired_length=1, unsolved_char = ' ') :
+        ''' Returns cell.value as string of desired_length
+        with the numeric value right justified.
+        unsolved cells return unsolved_char.
+        '''
+        return "%*s" %(desired_length,
+                       self.value if self.value != Cell.unsolved_cell_value else unsolved_char )
 
 
 
@@ -294,6 +323,71 @@ class Test_cell(unittest.TestCase):
 
         # All should be possible
         self.assertSetEqual ( cell.possible_values, Cell.all_cell_values)
+
+    def test_rcb_num_and_idx(self) :
+        # Test back RCB_TYPE as an argument
+        cell = Cell(None, 18)
+        bad_rcb_type = 42
+        self.assertRaises(AssertionError, cell.rcb_num_and_idx, bad_rcb_type)
+
+        # Try a random cell
+        cell = Cell(None, 66)
+
+        (rcb_num, rcb_idx) = cell.rcb_num_and_idx(RCB_TYPE_ROW)
+        self.assertEqual (rcb_num, 7)
+        self.assertEqual (rcb_idx, 3)
+
+        (rcb_num, rcb_idx) = cell.rcb_num_and_idx(RCB_TYPE_COL)
+        self.assertEqual (rcb_num, 3)
+        self.assertEqual (rcb_idx, 7)
+
+        (rcb_num, rcb_idx) = cell.rcb_num_and_idx(RCB_TYPE_BLK)
+        self.assertEqual (rcb_num, 7)
+        self.assertEqual (rcb_idx, 3)
+
+        # And another                          
+        cell = Cell(None, 23)
+
+        (rcb_num, rcb_idx) = cell.rcb_num_and_idx(RCB_TYPE_ROW)
+        self.assertEqual (rcb_num, 2)
+        self.assertEqual (rcb_idx, 5)
+
+        (rcb_num, rcb_idx) = cell.rcb_num_and_idx(RCB_TYPE_COL)
+        self.assertEqual (rcb_num, 5)
+        self.assertEqual (rcb_idx, 2)
+
+        (rcb_num, rcb_idx) = cell.rcb_num_and_idx(RCB_TYPE_BLK)
+        self.assertEqual (rcb_num, 1)
+        self.assertEqual (rcb_idx, 8)
+
+
+    def test_str_value(self) :
+        cell = Cell(None, 33)
+
+        # default replacement char is a space
+        # Cell is unsolved, should get back all spaces
+        self.assertEqual ( cell.str_value(1 ), ' '   ) 
+        self.assertEqual ( cell.str_value(  ), ' '   ) # default desired_length is one
+        self.assertEqual ( cell.str_value(20), ' '*20) 
+
+        # Solve it
+        cell.value = 8
+        self.assertEqual ( cell.str_value( ),          '8' )
+        self.assertEqual ( cell.str_value(6 ), ' '*5 + '8' )
+
+        # Do it again with X as replacement char
+        cell = Cell(None, 18)
+
+        # Cell is unsolved, should get back all spaces + replacement char
+        self.assertEqual ( cell.str_value(1,  'X'              ), 'X'         ) 
+        self.assertEqual ( cell.str_value(    unsolved_char='X'), 'X'         ) # default desired_length is one
+        self.assertEqual ( cell.str_value(14, 'X'              ), ' '*13 + 'X') 
+
+        # Solve it
+        cell.value = 6
+        self.assertEqual ( cell.str_value(unsolved_char='Z' ),  '6' )
+        self.assertEqual ( cell.str_value(6, 'Y' ),             ' '*5 + '6' )
+
 
 if __name__ == "__main__" :
     # Run the unittests

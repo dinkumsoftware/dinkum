@@ -10,6 +10,7 @@ sudoku board full of Cells with values.
 # 2019-12-02 tc Added some spaces in __str__() output
 #               Let Board() take a string as well as list of rows
 # 2019-12-04 tc Added solve_time_secs
+# 2019-12-08 tc Added str_unsolved_rcbs()
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -63,6 +64,8 @@ class Board :
 
       rows,cols,blks  [] of Cells in that entity.  Indexed by {row/col/blk}_num
                       Can be retrieved by rcb()
+
+      rcbs            [] of all rows,cols,blks
 
       solve_time_secs How long solve() for solution or unsolved puzzle
 
@@ -121,6 +124,9 @@ class Board :
         self.cols = [ RCB(RCB_TYPE_COL, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
         self.blks = [ RCB(RCB_TYPE_BLK, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
 
+        # Gather them all in one place
+        self.rcbs = self.rows + self.cols + self.blks
+
         # List of all Cells indexed by cell#
         # Is inited to unsolved and all values possible
         # We pass our self in so Cell knows what board it belongs to
@@ -137,16 +143,19 @@ class Board :
         # Populate all rows/cols/blocks
         for cell in self.cells :
             # Populate all the rows/cols/blks that this cell belongs to
-            self.rows[cell.row_num].initial_cell_placement(cell, cell.row_idx)
-            self.cols[cell.col_num].initial_cell_placement(cell, cell.col_idx)
-            self.blks[cell.blk_num].initial_cell_placement(cell, cell.blk_idx)
+            self.rows[cell.row_num].initial_cell_placement(cell)
+            self.cols[cell.col_num].initial_cell_placement(cell)
+            self.blks[cell.blk_num].initial_cell_placement(cell)
+
+        # We have a valid empty board at this point
+        # Sanity check all the RCBs
+        for rcb in self.rcbs :
+            rcb.sanity_check() 
 
         # Is there any input to set cells with?
         if not arr :
             return # nope, all done
 
-
-        # We have a valid empty board at this point
         # We need to populate it with values as spec'ed by the caller
 
         # Go thru and set each cell value from our input,
@@ -196,6 +205,7 @@ class Board :
                 cell_num += 1
                 col_num += 1
             row_num += 1
+
 
         # Sanity check(s) A whole bunch of asserts
         # Could move this into unittest code....
@@ -343,6 +353,19 @@ class Board :
 
             ret_str += '\n'
 
+        return ret_str
+
+    def str_unsolved_rcbs(self) :
+        ''' returns printable information about
+        all RCBs that aren't completely solved.
+        '''
+        ret_str = "" # What we return
+
+        # Iterate over all unsolved rcbs
+        for rcb in self.rcbs :
+            if len(rcb.unsolved_cells) :
+                # It's unsolved
+                ret_str += str(rcb)
         return ret_str
 
     def unique_board_name(self) :
