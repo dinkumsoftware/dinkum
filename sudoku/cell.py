@@ -116,8 +116,11 @@ class Cell :
 
         # Adjust our neighbors
         # Fix up the row/col/blk's we are in
+        # We have to state these calls
         for rcb in self.rcbs :
-            rcb.cell_was_set(self)
+            rcb.cell_was_set_initial_call(self)
+        for rcb in self.rcbs :
+            rcb.cell_was_set_all_rcbs_notified(self)
 
 
     def rcb_num_and_idx(self, rcb_type) :

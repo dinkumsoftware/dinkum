@@ -137,13 +137,17 @@ class RCB(list) :
                 possible_cells = self.unsolved_value_possibles[value]
                 assert cell in possible_cells, "%s[%d]: not in unsolved_value_possibles[%d]" % (id_str, idx, value)
 
-    def cell_was_set(self, set_cell) :
+    def cell_was_set_initial_call(self, set_cell) :
         ''' Should be called when a cell in this rcb has been set.
         set_cell is the cell that was set.
 
         It adjusts all the data structs:
          set_cell is removed from unsolved_cells
          set_cell.value is removed from unset cells in the rcb
+
+        We expect that after we have been called for all of a
+        a set cell's RCB's... then cell_was_set_all_rcbs_notified()
+        will be called
         '''
 
         # Sanity check
@@ -161,6 +165,31 @@ class RCB(list) :
             cell.possible_values.discard(set_cell.value)
 
 
+    def cell_was_set_all_rcbs_notified(self, set_cell) :
+        ''' Should be called when a cell in this rcb has
+        been set AND cell_was_set_initial_call() has been
+        made to all of the cell's RCB's (including us)
+
+        We rebuild unsolved_value_possibles from all our
+        unsolved_cells.  This can't be done in
+        cell_was_set_initial_call() because other
+        rcb's may not have adjusted their possible_values yet.
+        '''
+
+        # Wipe out the old
+        for value in self.unsolved_value_possibles :
+            self.unsolved_value_possibles[value] = set()
+
+        # Put any unsolved cell whose possible value
+        # could be value in unsolved_value_possible[value]
+        for cell in self.unsolved_cells :
+            for value in cell.possible_values :
+                self.unsolved_value_possibles[value].add(cell)
+
+
+    def is_solved(self) :
+        ''' Returns True if all cells have solved, i.e. have values '''
+        return not self.unsolved_cells
 
     def __str__(self) :
         ''' String representation.  Example:

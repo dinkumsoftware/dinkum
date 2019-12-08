@@ -231,11 +231,17 @@ class Board :
         # We try all the solution techniques we know about
         # Each is required to return True if they set a cell
         # We give up when no cell is set in a pass
-        a_cell_was_set = False
         while (not self.is_solved()) :
+            a_cell_was_set = False
+
             # Set cells with only 1 possible value
             a_cell_was_set |= self.solve_cells_with_single_possible_value()
             
+
+            # Set row/col/blks where an unsolved value can only be
+            # satisfied by a single cell
+            a_cell_was_set |= self.solve_rcbs_with_single_possible_value_solution()
+
             # How did we do?
             if not a_cell_was_set :
                 # Not well, sigh
@@ -279,6 +285,37 @@ class Board :
         return we_set_a_cell
 
     
+    def solve_rcbs_with_single_possible_value_solution(self) :
+        ''' sets all cells in all unsolved RCBs that 
+        where an unsolved value can only be satisfied by a single cell (that cell)
+
+        Returns True if sets a cell
+        '''
+        we_set_a_cell = False
+
+        # Iterate over unsolved rcbs
+        for rcb in [rcb for rcb in self.rcbs if not rcb.is_solved()] :
+
+            # Extract a set() of cells that could provide "value"
+            for (value, possible_cells) in rcb.unsolved_value_possibles.items() :
+                # If there is only one such cell ....
+                if len(possible_cells) == 1 :
+                    # We have a winner
+                    # This is the only cell in the RCB what can provide "value"
+                    # Extract the only element in the set, which is the providing cell
+                    # See https://stackoverflow.com/questions/20625579/access-the-sole-element-of-a-set
+                    [cell] = possible_cells
+
+                    # Set it
+                    cell.set(value)
+
+                    # and remember that did so
+                    we_set_a_cell = True
+
+        # Tell um how we did
+        return we_set_a_cell
+
+
     def __getitem__(self, row) :
         ''' Returns our RCB at row
             Allows Board()[row][col] to return a cell
