@@ -10,6 +10,8 @@ it belongs to.
 
 # 2019-11-25 tc Moved fom sudoku.py
 # 2019-12-01 tc changes row/col/blk from () to class variable
+# 2019-12-07 tc changed rcb from [] to ()
+
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
 
@@ -86,7 +88,7 @@ class Cell :
             self.col = self.board.cols[self.col_num]
             self.blk = self.board.blks[self.blk_num]
 
-            self.rcbs = [self.row, self.col, self.blk]
+            self.rcbs = (self.row, self.col, self.blk)
             
 
     def set(self, value) :
@@ -114,9 +116,8 @@ class Cell :
 
         # Adjust our neighbors
         # Fix up the row/col/blk's we are in
-        # Remove value from their possible_values
-        for cell in self.all_neighbors() :
-            cell.possible_values.discard(value) # does not complain if value not a member
+        for rcb in self.rcbs :
+            rcb.cell_was_set(self)
 
 
     def all_neighbors(self) :

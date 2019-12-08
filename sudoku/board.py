@@ -118,8 +118,8 @@ class Board :
 
         # Create all rows/cols/blocks.  Make them empty
         self.rows = [ RCB(RCB_TYPE_ROW, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
-        self.cols = [ RCB(RCB_TYPE_ROW, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
-        self.blks = [ RCB(RCB_TYPE_ROW, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.cols = [ RCB(RCB_TYPE_COL, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
+        self.blks = [ RCB(RCB_TYPE_BLK, self, rcb_num) for rcb_num in range(RCB_SIZE) ] 
 
         # List of all Cells indexed by cell#
         # Is inited to unsolved and all values possible
@@ -137,9 +137,9 @@ class Board :
         # Populate all rows/cols/blocks
         for cell in self.cells :
             # Populate all the rows/cols/blks that this cell belongs to
-            self.rows[cell.row_num][cell.row_idx] = cell
-            self.cols[cell.col_num][cell.col_idx] = cell
-            self.blks[cell.blk_num][cell.blk_idx] = cell
+            self.rows[cell.row_num].initial_cell_placement(cell, cell.row_idx)
+            self.cols[cell.col_num].initial_cell_placement(cell, cell.col_idx)
+            self.blks[cell.blk_num].initial_cell_placement(cell, cell.blk_idx)
 
         # Is there any input to set cells with?
         if not arr :
@@ -706,7 +706,7 @@ class Test_board(unittest.TestCase):
         dup_in_row[3][7] = 1
         expected_err_msg = "cell#34 at (3,7) value:1 is duplicated in cell's row"
         self.assertRaises(ExcBadPuzzleInput, Board, dup_in_row) # Make sure it raise the exception
-        try:                        
+        try:
             board = Board(dup_in_row)
         except ExcBadPuzzleInput as exc :
             self.assertEqual(exc.message, expected_err_msg)  # with right error message
