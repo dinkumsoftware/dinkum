@@ -7,6 +7,7 @@ strings
 #               changed default num_substr_chars to len(substr)
 #               changed out of range behavior
 #               fixed bugs
+# 2019-12-09 tc Added fixed_width_columns()
 
 def replace_substr_at(s, substr, offset_into_s, num_substr_chars=None) :
     ''' Replaces num_substr_chars at s[offset_into_s] with
@@ -77,6 +78,70 @@ def replace_substr_at(s, substr, offset_into_s, num_substr_chars=None) :
     assert len(s) == original_s_length
     return s 
 
+def fixed_width_columns(lines, column_padding=' ',
+                        right_justified=False ) :
+    '''
+    Typically used to print fixed width columns of
+    text.
+
+    It is a generator which returns a string for
+    each lines[x] with fixed width columns.  Each
+    column is separated by column_padding.
+
+    right_justified controls whether the output
+    is left or right justified in the column.
+
+    Each lines[x] should be a list of strings,
+    with one entry for each column desired.
+
+    By examining all the lines[] it determines the
+    smallest column width that will accomodate all
+    the data.
+
+    An example might be clearer:
+        lines[0] = [ 'a'   , 'xxxx', 'what ever' ]
+        lines[1] = [ 'abbb', 'y',    'what'      ]
+
+        fixed_width_columns(lines, "    ") will return
+        (on successive iterations)
+           a       xxxx    what ever
+           abbb    y       what
+
+    Note: It leaves column_padding to the right of the
+          last column.  You can remove it if you want.
+
+    '''
+    # Make an initial pass thru all the lines
+    # computing the longest token in each column
+
+    # In order to size column_widths, we need
+    # to know the maximum number of tokens in
+    # in all lines
+    max_num_columns = 0
+    for line in lines :
+        max_num_columns = max(max_num_columns,
+                              len(line))
+    column_widths = [0] * max_num_columns
+    
+    for line in lines :
+        for (indx,token) in enumerate(line) :
+            column_widths[indx] = max(column_widths[indx],
+                                      len(token))
+
+    # Now go thru and build up each line and yield it to them
+
+    # Which way to shove the text in the column
+    sign_of_format_width = 1 if right_justified else -1
+
+    for line in lines :
+        returned_line = ""
+        for (indx,token) in enumerate(line) :
+            returned_line += "%*s" %                                               \
+                             ( sign_of_format_width * column_widths[indx], token) 
+            returned_line += column_padding
+
+        # Give them the line
+        yield returned_line
 
 # test code
 import unittest
@@ -131,6 +196,69 @@ class TestStrUtils(unittest.TestCase):
         self.assertEqual( replace_substr_at( '1234567', 'abc', -8, 2 ),
                           'b234567')
         
+    def test_fixed_width_columns(self) :
+        # Do the example in it's _doc first
+        lines=[None] * 2
+        lines[0] = [ 'a'   , 'xxxx', 'what ever' ]
+        lines[1] = [ 'abbb', 'y',    'what'      ]
+
+        expect=[None] * 2
+        expect[0] = "a       xxxx    what ever    "
+        expect[1] = "abbb    y       what         "
+
+        for (i,l) in enumerate(fixed_width_columns(lines, "    ")) :
+            self.assertEqual(l, expect[i] )
+
+
+        # no padding
+        lines=[None] * 2
+        lines[0] = [ 'a', 'b', 'c' ]
+        lines[1] = [ '1', '2', '3' ]
+
+        expect=[None] * 2
+        expect[0] = "abc"
+        expect[1] = "123"
+        
+        for (i,l) in enumerate(fixed_width_columns(lines, column_padding='')) :
+            self.assertEqual(l, expect[i] )
+
+
+        # Right justify
+        lines=[None] * 2
+        lines[0] = [ 'a'   , 'xxxx', 'what ever' ]
+        lines[1] = [ 'abbb', 'y',    'what'      ]
+
+        expect=[None] * 2
+        #                12345678    12345678         12345678
+        expect[0] = "   a        xxxx        what ever        "
+        expect[1] = "abbb           y             what        "
+
+        for (i,l) in enumerate(fixed_width_columns(lines, " "*8, True)) :
+            self.assertEqual(l, expect[i] )
+
+        # line[] has a non-list element
+        lines=[None] * 3  
+        lines[0] = [ 'a', 'b', 'c' ]
+        lines[1] = [ '1', '2', '3' ]
+        lines[2] = None
+
+        with self.assertRaises(TypeError) :
+            for (i,l) in enumerate(fixed_width_columns(lines)) :
+                pass
+
+    # Mismatched number of columns
+        lines=[None] * 3  
+        lines[0] = [ 'a', 'b', 'c' ]
+        lines[1] = [ '1', '2', '3' ]
+        lines[2] = [ 'x', 'y'      ]
+
+        expect=[None] * 3
+        expect[0] = "a b c "
+        expect[1] = "1 2 3 "
+        expect[2] = "x y "
+
+        for (i,l) in enumerate(fixed_width_columns(lines)) :
+            self.assertEqual(l, expect[i] )
 
 
 if __name__ == "__main__" :
