@@ -36,6 +36,7 @@ import time
 from dinkum.sudoku.test_data.test_puzzles import *
 from dinkum.sudoku.labeled_printer        import print_labeled_board
 from dinkum.sudoku.stats                  import *
+from dinkum.utils.str_utils               import fixed_width_columns
 
 
 # What main() can return
@@ -116,6 +117,11 @@ def main ():
     we_solved_all_puzzles = True # Forever the optimist
                                  # Set False on unsolved in loop
 
+    # This is where text to print to user is stored.
+    # One entry per puzzle.
+    tokens_to_print = []          # value: list of strings to be printed in fixed width column
+    verbose_lines_to_print = []   # value: string to print (maybe multi-line)
+
     # For comparing solve times to prior runs
     # A {} key:   puzzle_name
     #      value: sudoku.Stats
@@ -173,69 +179,89 @@ def main ():
         # now update the solution to the average we computed above
         solve_results_board.solve_stats.solve_time_secs = solve_time_secs
 
-        # did we solve it?
-        if not is_solved :
-            # nope, board is unsolved
-            we_solved_all_puzzles = False # oh well
+        # is_solved indicates whether board was solved or not
+        # The solution results (solved or not) are in solve_results_board
 
-            solve_time_usec = solve_results_board.solve_stats.solve_time_secs * 1000.0 * 1000.0
-            print ("%-20s: UNSOLVED! after %6.3f usecs" % (puzzle_name, solve_time_usec) )
+        # Keep track of whether any board wasn't solved
+        we_solved_all_puzzles &= is_solved
 
-            if args.verbose :
-                # input_board was  changed in-place
-                partial_solution = input_board
+        # Build up a line(s) to print for the user
+        # We build:
+        # tokens        [] of what is always printed to user about this puzzle
+        #               Each entry should be what is to be printed in a fixed
+        #               width column
+        # verbose_lines what is only printed to user with --verbose on cmd line
+        # When all done, we will append tokens/verbose_lines to tokens_to_print[]
+        # and verbose_lines_to_print[]
+        # Those will be printed when we are all done trying to solve puzzles
+        # A \n will be appended to each line before it is print'ed
 
-                # print partial soltion in a variety of formats
-                # These fit on a page
-                print (partial_solution)
-                print_labeled_board( partial_solution, want_cell_nums=False, want_num_possibles=False )
+        # Make the code read a little easier
+        stats = solve_results_board.solve_stats
 
-                # This needs it's own page
-                print('\f')
-                print_labeled_board( partial_solution, want_cell_nums=True, want_num_possibles=True )
-                print( partial_solution.str_unsolved_rcbs() )
+        # If prior stats exists, compute the change from prior execution
+        delta_stats = None
+        if prior_solve_stats :
+            delta_stats = stats - prior_solve_stats
+
+        tokens = []
+        tokens.append ( puzzle_name )
+        tokens.append ("solved" if is_solved else "UNSOLVED!" )
+
+        # Execution time.  Print the delta if prior stats exist
+        # e.g.  0.730 usecs(4%)
+        solve_time_usecs = stats.solve_time_secs * 1000.0 * 1000.0
+
+        # If we can, Compute a percentage change from priors
+        delta_str = "?"  # Assume no prior stats
+        if delta_stats :
+            delta_solve_time_usecs = delta_stats.solve_time_secs       * 1000.0 * 1000.0
+            prior_solve_time_usecs = prior_solve_stats.solve_time_secs * 1000.0 * 1000.0
+            delta_percent = (delta_solve_time_usecs/prior_solve_time_usecs) * 100.0
+            delta_str = "%2.1f%%" % delta_percent
+        tokens.append ( "%6.3f usecs(%s)" % (solve_time_usecs, str(delta_str)) )
 
 
-        else:
-            # Puzzle is solved
-            if prior_solve_stats :
-            
-                # Compute how much the stats changed
-                stats_delta = solve_results_board.solve_stats - prior_solve_stats
+        # Handle the verbose output
+        verbose_lines = "<todo>"
 
-                # Compute speed improvement (hopefully)
-                solve_time_secs       = solve_results_board.solve_stats.solve_time_secs
-                prior_solve_time_secs = prior_solve_stats.solve_time_secs
-                percent_better  =  (stats_delta.solve_time_secs / prior_solve_time_secs) * 100.0
+        # Record lines for later printing
+        tokens_to_print.append(tokens)
+        verbose_lines_to_print.append(verbose_lines)
 
-                improvement = "Improvement: %0.1f%%" % percent_better
-            else :
-                # no prior statistics, Nothing to compare it to.
-                improvement = "Unknown improvement"
+        if args.update :
+            # We are writing solution statistics.  Update ours
+            # Whole dict written before return
+            prior_solve_stats_dict[puzzle_name] = solve_results_board.solve_stats
 
-            # Show them the solution info
-            solve_time_usec = solve_time_secs * 1000.0 * 1000.0
-            print ("%-20s:   Solved! after %6.3f usecs. %s" % (puzzle_name,
-                                                               solve_time_usec,
-                                                               improvement))
-            if args.verbose :
-                print (solve_results_board)
+    # End of per puzzle solution loop
 
-            if args.update :
-                # We are writing solution statistics.  Update ours
-                # Whole dict written before return
-                prior_solve_stats_dict[puzzle_name] = solve_results_board.solve_stats
-                
 
-    # We had no statistics to compare
+    # Print all the info previously recorded
+    # We print in fixed width columns.
+    # fixed_width_columns(tokens_to_print) is a generator which puts the tokens
+    # together and returns them as one line
+    for (always, only_verbose) in zip(fixed_width_columns(tokens_to_print),
+                                      verbose_lines_to_print) :
+        print (always)
+
+        if args.verbose :
+            print (only_verbose)
+
+    # If we had no statistics to compare
     # Tell them how to create statistics file
     if len(prior_solve_stats_dict) == 0 :
-        print ("No prior statistics available from file: %s" % prior_stats_filename() )
-        print ("Consider --update to write current statistics to that file"     )
+        print ()
+        print ("No prior statistics available from file:")
+        print ("   %s" % prior_stats_filename() )
+        print ("Consider --update to write current statistics to that file."     )
 
-    # Write solution times if reqd
+    # Write solution stats if reqd
     if args.update :
         write_prior_stats(prior_solve_stats_dict)
+        print ()
+        print ("Solve statistics written to:"   )
+        print ("   %s" % prior_stats_filename() )        
 
     # Tell um how it went
     return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved
