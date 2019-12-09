@@ -24,8 +24,8 @@ The class SolvedPuzzle will contain:
     Performs a couple of sanity checks which trigger a
     failed assertion on any errors.
 
-read/write_prior_solved_times() return (or write) a {} to/from a file
-which is keyed by puzzle_name and the value is last written solve_time_secs
+read/write_prior_stats() return (or write) a {} to/from a file
+which is keyed by puzzle_name and the value is last written sudoku.Stats
 of that puzzle, regardless of whether the puzzle is solved or not
 
 '''
@@ -36,13 +36,15 @@ of that puzzle, regardless of whether the puzzle is solved or not
 # 2019-12-02 tc Added empty_board
 # 2019-12-03 tc Added a couple of globe puzzles
 # 2019-12-04 tc Added read/write_prior_solve_times_secs()
-
+# 2019-12-09 tc read/write_prior_solve_times_secs() ==>
+#               read/write_prior_solve_stats()
 from copy                import deepcopy
 import pickle
 import os
 
 from dinkum.sudoku       import *
 from dinkum.sudoku.board import Board
+from dinkum.sudoku.stats import *
 
 
 class SolvedPuzzle :
@@ -279,45 +281,42 @@ for sp in all_known_solved_puzzles :
 
 
 
-def solve_times_secs_filename() :
-    ''' returns the filename where solved_times are
+def prior_stats_filename() :
+    ''' returns the filename where statistics are
     stored on disk.
     '''
     # We write the file in the same directory we live in
     # at the time of this writing it was
     # ..../dinkum/sudoku/test_data
     dir = os.path.dirname(__file__) # .../dinkum/sudoku/test_data
-    file = os.path.join(dir, "solved_times.pickled")
+    file = os.path.join(dir, "prior_solve_stats.pickled")
 
     return file
 
-
-    print (__file__)
-
-def read_prior_solve_times_secs() :
-    ''' Read and return {} of board.solve_time_secs from file
+def read_prior_stats() :
+    ''' Read and return {} of board.solved_stats from file
     and return it.  Keyed by puzzle_name, value is
-    solve_time_secs.
+    sudoku.Stats.
 
-    These are the times last written by write_prior_solve_time_secs()
+    These are the stats last written by write_prior_solve_stats()
     '''
-    solved_times = {} # in case of file not found
+    stats = {} # in case of file not found
     try:
-        with open(solve_times_secs_filename(), "rb") as pickle_file :
-            solved_times = pickle.load(pickle_file)
+        with open(prior_stats_filename(), "rb") as pickle_file :
+            stats = pickle.load(pickle_file)
     except FileNotFoundError:
         pass # We'll just return the initial empty dictionary
 
-    return solved_times
+    return stats
     
 
-def write_prior_solve_times_secs(solved_times) :
-    ''' Writes solved_times to a disk file.
-    It can be read via read_prior_solve_times_secs()
+def write_prior_stats(stats) :
+    ''' Writes stats to a disk file.
+    It can be read via read_prior_stats()
     Current implementation pickles it.
     '''
     
-    pickle.dump(solved_times, open(solve_times_secs_filename(), "wb"))
+    pickle.dump(stats, open(prior_stats_filename(), "wb"))
 
 
 # Test code

@@ -24,18 +24,18 @@ EXIT STATUS
 """
 
 # 2019-12-?? tc Initial
+# 2019-12-03 tc changed cmd line usage, added -v and -l
 # 2019-12-04 tc Added timing printout
+# 2019-12-07 tc Added --update and print delta times.
+# 2019-12-09 tc support for sudoku.Stats
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
 
 from dinkum.sudoku.test_data.test_puzzles import *
 from dinkum.sudoku.labeled_printer        import print_labeled_board
+from dinkum.sudoku.stats                  import *
 
-# history:
-# 2019-12-01 tc Initial
-# 2019-12-03 tc changed cmd line usage, added -v and -l
-# 2019-12-07 tc Added --update and print delta times.
 
 # What main() can return
 ret_val_good             = 0
@@ -116,8 +116,8 @@ def main ():
 
     # For comparing solve times to prior runs
     # A {} key:   puzzle_name
-    #      value: last solve time
-    prior_solve_times_secs = read_prior_solve_times_secs()
+    #      value: sudoku.Stats
+    prior_stats = read_prior_stats()
 
     for puzzle_name in puzzle_names_to_solve :
 
@@ -137,7 +137,7 @@ def main ():
         if not solved_board :
             # nope, board is unsolved
             we_solved_all_puzzles = False # oh well
-            solve_time_usec = sp.input_board.solve_time_secs * 1000.0 * 1000.0
+            solve_time_usec = sp.input_board.solve_stats.solve_time_secs * 1000.0 * 1000.0
             print ("%-20s: UNSOLVED! after %6.3f usecs" % (puzzle_name, solve_time_usec) )
 
             if args.verbose :
@@ -163,14 +163,15 @@ def main ():
             solution_total_time = 0.0
             for try_num in range(num_solutions_to_average) :
                 sp.input_board.solve()
-                solution_total_time += sp.input_board.solve_time_secs 
+                solution_total_time += sp.input_board.solve_stats.solve_time_secs 
             solve_time_secs = solution_total_time / num_solutions_to_average
 
 
             # Compute speed improvement (hopefully)
-            if puzzle_name in prior_solve_times_secs :
+            if puzzle_name in prior_stats :
                 # We have a recorded prior time
-                prior_solve_time_secs = prior_solve_times_secs[puzzle_name]
+                prior_solve_time_secs = prior_stats[puzzle_name].solve_time_secs
+                solve_time_secs       = solved_board.solve_stats.solve_time_secs
                 percent_better = (  (prior_solve_time_secs - solve_time_secs ) / prior_solve_time_secs ) * 100.0
 
                 improvement = "Improvement: %0.1f%%" % percent_better
@@ -190,12 +191,12 @@ def main ():
             if args.update :
                 # We are writing solution times.  Update ours
                 # Whole dict written before return
-                prior_solve_times_secs[puzzle_name] = solve_time_secs ;
+                prior_stats[puzzle_name] = solved_board.solve_stats
                 
 
     # Write solution times if reqd
     if args.update :
-        write_prior_solve_times_secs(prior_solve_times_secs)
+        write_prior_stats(prior_stats)
 
     # Tell um how it went
     return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved

@@ -11,9 +11,11 @@ sudoku board full of Cells with values.
 #               Let Board() take a string as well as list of rows
 # 2019-12-04 tc Added solve_time_secs
 # 2019-12-08 tc Added str_unsolved_rcbs()
+# 2019-12-09 tc use class sudoku.Stats
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
+from dinkum.sudoku.stats import *
 
 import time
 
@@ -67,7 +69,9 @@ class Board :
 
       rcbs            [] of all rows,cols,blks
 
-      solve_time_secs How long solve() for solution or unsolved puzzle
+      solve_stats     class Stats that holds various
+                      statistics about solve(), e.g.
+                      how long to solve, etc
 
     Board()[row][col] can be used to get Cell at (row,col)
 
@@ -105,9 +109,9 @@ class Board :
         '''
 
         # Deal with the name/description and timing
-        self.name             = name if name else self.unique_board_name()
-        self.description      = desc
-        self.solve_time_secs  = None
+        self.name         = name if name else self.unique_board_name()
+        self.description  = desc
+        self.solve_stats  = Stats()
         
         # Need to translate string into list of rows?
         if isinstance(arr, str) :
@@ -223,7 +227,7 @@ class Board :
         '''
 
         # fractional seconds
-        self.start_time_secs = time.perf_counter()
+        self.solve_stats.solve_start_time_secs = time.perf_counter()
 
         # What we return, assume the best
         ret_value = self # overwritten if can't solve
@@ -250,7 +254,8 @@ class Board :
 
 
         # All done, Remember how long we ran
-        self.solve_time_secs = time.perf_counter() - self.start_time_secs
+        self.solve_stats.solve_time_secs = (time.perf_counter() -
+                                            self.solve_stats.solve_start_time_secs)
 
         # Arrive here with ret_value set to either
         # self or None depending on whether we successfully solved the puzzle
@@ -627,16 +632,16 @@ class Test_board(unittest.TestCase):
         too_many_spec = '0' * (board_size+1)
         self.assertRaises(ExcBadStrToConvert, str_to_list_of_rows, too_many_spec)
 
-    def test_solve_time(self) :
+    def test_solve_stats(self) :
 
-        # Can't really validate the solve time
+        # Can't really validate the solve stats
         # Just make sure it exists
 
         # unsolvable (empty board)
         board = Board() 
-        self.assertIsNone   ( board.solve_time_secs )
+        self.assertIsNone   ( board.solve_stats.solve_time_secs )
         board.solve()
-        self.assertIsNotNone( board.solve_time_secs )        
+        self.assertIsNotNone( board.solve_stats.solve_time_secs )        
 
         # solvable
         board_spec = '''
@@ -653,9 +658,9 @@ class Test_board(unittest.TestCase):
          1 7 3  8 6 2  5 9 4
         '''
         board = Board(board_spec) 
-        self.assertIsNone   ( board.solve_time_secs )
+        self.assertIsNone   ( board.solve_stats.solve_time_secs )
         board.solve()
-        self.assertIsNotNone( board.solve_time_secs )        
+        self.assertIsNotNone( board.solve_stats.solve_time_secs )        
 
         
 
