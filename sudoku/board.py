@@ -12,6 +12,7 @@ sudoku board full of Cells with values.
 # 2019-12-04 tc Added solve_time_secs
 # 2019-12-08 tc Added str_unsolved_rcbs()
 # 2019-12-09 tc use class sudoku.Stats
+#               Added copy constructor
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -89,11 +90,14 @@ class Board :
         123456789001002500
             ...
 
+    It can also be passed another Board, i.e. copy constructor
     '''
 
     def __init__(self, arr=None, name=None, desc="") :
         ''' constructor of a Board
-        arr is list of row-lists --or-- a string of values
+        arr is list of row-lists --or--
+        a string of values       --or--
+        a Board
         If arr is None, an empty board will be created.
 
         name is used as the name of the board.
@@ -119,6 +123,10 @@ class Board :
                 arr = str_to_list_of_rows(arr)
             except ExcBadStrToConvert :
                 raise ExcBadPuzzleInput( "Not an exact boards worth of digits in arr as string" )
+
+        # Need to translate Board into list of rows?
+        elif isinstance(arr, Board) :
+            arr = arr.output()
 
         # We are generating new board from a list of row-lists
         # We create empty data structs and have set() adjust them
@@ -577,6 +585,30 @@ class Test_board(unittest.TestCase):
         self.assertEqual( Board(lrl_spec), Board(str_board_spec),
                           "string and list of row-lists generate differnt Boards")
 
+    def test_copy_constructor(self) :
+
+        # Make a couple of copies and insure they copy properly
+        # and empty board
+        in_board = Board() # empty
+        out_board = Board(in_board)
+        self.assertEqual(in_board, out_board)
+
+        # random filled in board
+        str_board_spec = '''
+                      0 4 6 1 2 7 9 5 8 
+                      7 0 5 6 9 4 1 3 2 
+                      2 1 9 3 8 5 4 6 7 
+                      4 6 2 5 3 1 8 7 9 
+                      9 3 1 2 7 8 6 4 5 
+                      8 5 7 9 4 6 2 1 3 
+                      5 9 8 4 1 3 7 2 6
+                      6 2 4 7 5 9 3 8 1
+                      1 7 3 8 6 2 5 9 4
+        '''
+        in_board = Board(str_board_spec)
+        out_board = Board(in_board)
+        self.assertEqual(in_board, out_board)
+        
 
     def test_subset(self) :
         # What we test with

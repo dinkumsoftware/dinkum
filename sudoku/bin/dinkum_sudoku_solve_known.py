@@ -31,6 +31,7 @@ EXIT STATUS
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
+import time
 
 from dinkum.sudoku.test_data.test_puzzles import *
 from dinkum.sudoku.labeled_printer        import print_labeled_board
@@ -56,7 +57,7 @@ def main ():
 
     --list    list all the known puzzles
 
-    --update  Write the solution times to disk
+    --update  Write the solution statistics to disk
 
     Returns: 0  All puzzles solved
              1  Something wrong on cmd line
@@ -101,6 +102,7 @@ def main ():
         return ret_val_good
         
 
+    # Set puzzle_names_to_solve
     # They specify any specific puzzles to solve?
     if not args.puzzle_names :
         # No, try them all
@@ -117,8 +119,9 @@ def main ():
     # For comparing solve times to prior runs
     # A {} key:   puzzle_name
     #      value: sudoku.Stats
-    prior_stats = read_prior_stats()
+    prior_solve_stats_dict = read_prior_stats()
 
+    # Attempt to solve
     for puzzle_name in puzzle_names_to_solve :
 
         # Grab the SolvedPuzzle from the dictionary
@@ -130,19 +133,57 @@ def main ():
                    file=sys.stderr)
             return ret_val_cmd_line_err
 
-        # Try to solve it
-        solved_board = sp.input_board.solve()
+        # To make the code read a little easier
+        input_board = sp.input_board
 
-        # did we?
-        if not solved_board :
+        # Retrieve any previously recorded statistics
+        # None if they don't exist
+        prior_solve_stats = prior_solve_stats_dict.get(puzzle_name)
+
+        # Try to solve it
+        # Some of the puzzles solve so fast there is tremendous jitter in the solution time
+        # So we will solve it a bunch of times and compute the average
+        # <todo> Used to run this 10K times, but when put a Board constructor
+        #        in the loop, had to drop the counts.  Means Board() constructor
+        #        is slow.  Speed it up by copy'ing the Board in board constructor,
+        #        rather than re-making the board from scratch
+        #        or make = operator.  Currently running about 2ms
+        num_solutions_to_average = 100
+        solution_total_time = 0.0
+        for try_num in range(num_solutions_to_average) :
+            board_to_solve      = Board( input_board ) # Make a copy
+
+            solve_results_board = board_to_solve.solve()
+            solution_total_time += board_to_solve.solve_stats.solve_time_secs 
+
+        # average 
+        solve_time_secs = solution_total_time / num_solutions_to_average
+
+        # insert it in appropriate stats
+        # if it was solved, solve_results_board will be solved puzzle
+        # if unsolved, solve_results_board will be None, and board_to_solve
+        # will be partial results.
+        # we set is_solved and solve_results_board appropriately
+        if solve_results_board :
+            is_solved = True  # solved!
+        else :
+            is_solved = False # sigh... not solved
+            solve_results_board = board_to_solve # partial results
+
+        # now update the solution to the average we computed above
+        solve_results_board.solve_stats.solve_time_secs = solve_time_secs
+
+        # did we solve it?
+        if not is_solved :
             # nope, board is unsolved
             we_solved_all_puzzles = False # oh well
-            solve_time_usec = sp.input_board.solve_stats.solve_time_secs * 1000.0 * 1000.0
+
+            solve_time_usec = solve_results_board.solve_stats.solve_time_secs * 1000.0 * 1000.0
             print ("%-20s: UNSOLVED! after %6.3f usecs" % (puzzle_name, solve_time_usec) )
 
             if args.verbose :
-                # sp.input_board was  changed in-place
-                partial_solution = sp.input_board
+                # input_board was  changed in-place
+                partial_solution = input_board
 
                 # print partial soltion in a variety of formats
                 # These fit on a page
@@ -157,28 +198,20 @@ def main ():
 
         else:
             # Puzzle is solved
-            # Some of the puzzles solve so fast there is tremendous jitter in the solution time
-            # So we will solve it a bunch of times and compute the average
-            num_solutions_to_average = 10000 # turns 1us into 10ms
-            solution_total_time = 0.0
-            for try_num in range(num_solutions_to_average) :
-                sp.input_board.solve()
-                solution_total_time += sp.input_board.solve_stats.solve_time_secs 
-            solve_time_secs = solution_total_time / num_solutions_to_average
+            if prior_solve_stats :
+            
+                # Compute how much the stats changed
+                stats_delta = solve_results_board.solve_stats - prior_solve_stats
 
-
-            # Compute speed improvement (hopefully)
-            if puzzle_name in prior_stats :
-                # We have a recorded prior time
-                prior_solve_time_secs = prior_stats[puzzle_name].solve_time_secs
-                solve_time_secs       = solved_board.solve_stats.solve_time_secs
-                percent_better = (  (prior_solve_time_secs - solve_time_secs ) / prior_solve_time_secs ) * 100.0
+                # Compute speed improvement (hopefully)
+                solve_time_secs       = solve_results_board.solve_stats.solve_time_secs
+                prior_solve_time_secs = prior_solve_stats.solve_time_secs
+                percent_better  =  (stats_delta.solve_time_secs / prior_solve_time_secs) * 100.0
 
                 improvement = "Improvement: %0.1f%%" % percent_better
             else :
-                # Nothing to compare it to.
-                improvement = "Unknown improvement.  Consider --update"
-            
+                # no prior statistics, Nothing to compare it to.
+                improvement = "Unknown improvement"
 
             # Show them the solution info
             solve_time_usec = solve_time_secs * 1000.0 * 1000.0
@@ -186,24 +219,27 @@ def main ():
                                                                solve_time_usec,
                                                                improvement))
             if args.verbose :
-                print (solved_board)
+                print (solve_results_board)
 
             if args.update :
-                # We are writing solution times.  Update ours
+                # We are writing solution statistics.  Update ours
                 # Whole dict written before return
-                prior_stats[puzzle_name] = solved_board.solve_stats
+                prior_solve_stats_dict[puzzle_name] = solve_results_board.solve_stats
                 
+
+    # We had no statistics to compare
+    # Tell them how to create statistics file
+    if len(prior_solve_stats_dict) == 0 :
+        print ("No prior statistics available from file: %s" % prior_stats_filename() )
+        print ("Consider --update to write current statistics to that file"     )
 
     # Write solution times if reqd
     if args.update :
-        write_prior_stats(prior_stats)
+        write_prior_stats(prior_solve_stats_dict)
 
     # Tell um how it went
     return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved
 
-    # All went OK                   
-    print ("%s:All puzzles solved!" % sys.argv[0])
-    return ret_val_good
 
 
 if __name__ == '__main__':
