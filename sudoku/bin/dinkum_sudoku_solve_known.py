@@ -310,7 +310,7 @@ def build_printed_output( board, prior_stats=None) :
 
         verbose_lines += '\n' # Space it nicely
 
-        # print partial soltion in a variety of formats
+        # print partial solution in a variety of formats
         # These fit on a page
         for l in labeled_board( board, want_cell_nums=False, want_num_possibles=False ) :
             verbose_lines += l + '\n'
@@ -344,14 +344,17 @@ def str_stat_value(board, stat_name, stat_multiplier=None, stat_units=None,
     stat_value = getattr(board.solve_stats, stat_name)
 
     delta_value = None # assume no prior stats
-    if prior_stats :
+    if prior_stats is not None:
         prior_value = getattr(prior_stats, stat_name)
         delta_value = stat_value - prior_value
 
-    # scale both
+    # scale all
     if stat_multiplier :
         stat_value *= stat_multiplier
-        if delta_value :
+        
+        if prior_value is not None:
+            prior_value *= stat_multiplier
+        if delta_value is not None:
             delta_value *= stat_multiplier
 
     # Produce the stat_value output
@@ -359,33 +362,31 @@ def str_stat_value(board, stat_name, stat_multiplier=None, stat_units=None,
 
     # produce delta_value output along with a label
     # convert to % if req'd
-    if not delta_value :
+    if delta_value is None:
         delta_value_str = '?'
         delta_label     = ""
-    # delta_value exists
-    elif want_percent_delta :
-        # delta_value exists and they want it as a percent
-        delta_value  = delta_value / prior_value
-        delta_value /= 100.0
-
-        delta_value_str = "%2.1f" % delta_value
-        delta_label = '%'
     else :
-        # want raw change
-        delta_value_str = value_format % delta_value if value_format else str(delta_value)
-        delta_label = ""
+        # delta_value exists
+        if want_percent_delta :
+            # delta_value exists and they want it as a percent
+            delta_value  = delta_value / prior_value
+            delta_value *= 100.0
+
+            delta_value_str = "%5.1f" % delta_value
+            delta_label = '%'
+        else :
+            # want raw change
+            delta_value_str = value_format % delta_value if value_format else str(delta_value)
+            delta_label = ""
 
 
     # <stat_value> <stat_units>(<delta_value><delta_label>)
-    return \
-        stat_value_str                      + \
-        ' '                                 + \
-        stat_units  if stat_units  else ''  + \
-        '('                                 + \
-        delta_value_str                     + \
-        delta_label                         + \
-        ')'
+    ret_str = ""
+    ret_str += stat_value_str + ' '                                 
+    ret_str += stat_units  if stat_units  else ''  
+    ret_str += '(' + delta_value_str + delta_label + ')'
 
+    return ret_str
 
 if __name__ == '__main__':
     try:
