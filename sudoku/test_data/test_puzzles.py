@@ -38,6 +38,7 @@ of that puzzle, regardless of whether the puzzle is solved or not
 # 2019-12-04 tc Added read/write_prior_solve_times_secs()
 # 2019-12-09 tc read/write_prior_solve_times_secs() ==>
 #               read/write_prior_solve_stats()
+# 2019-12-10 tc move import testing of solvability to unittests
 from copy                import deepcopy
 import pickle
 import os
@@ -255,32 +256,10 @@ all_known_puzzle_names = {}
 for sp in all_known_puzzles :
     all_known_puzzle_names[sp.name] = sp
 
-# Sanity checks here
-for sp in all_known_solved_puzzles :
-    # All solved puzzles must have solution
-    assert sp.solution_board, "Board %s in all_known_solved_puzzles, but has no solution"
 
-    # Make sure input cells which are set have
-    # the same value in the solution
-    assert sp.input_board.is_subset_of( sp.solution_board)
+# Some standalone functions
 
-    # Verify we can solve all the solvable puzzles
-    for sp in all_known_solved_puzzles :
-        # Verify an answer is supplied
-        assert sp.solution_spec,  "%s:No solution_spec" % sp.solution_spec
-        assert sp.solution_board, "%s:No solution_board" % sp.solution_board
-
-        our_solution = sp.input_board.solve() 
-        assert our_solution, "%s: Cannot solve a solvable puzzle" % sp.name
-        assert our_solution == sp.solution_board, "%s: solutions differ" % sp.name
-
-    # Verify we can't solvable the unsolvable
-    for sp in all_known_unsolved_puzzles :
-        our_solution = sp.input_board.solve()
-        assert not our_solution, "%s: we can solv and unsolvable puzzle"
-
-
-
+# Where we pickle/unpickle the {}
 def prior_stats_filename() :
     ''' returns the filename where statistics are
     stored on disk.
@@ -346,12 +325,30 @@ class Test_test_puzzles(unittest.TestCase) :
             self.assertIn (sp.name, all_known_puzzle_names)
             self.assertIs (sp, all_known_puzzle_names[sp.name])
 
+    def test_solvability(self) :
+        # Sanity checks
+        for sp in all_known_solved_puzzles :
+            # All solved puzzles must have solution
+            self.assertTrue (sp.solution_board, "Board %s in all_known_solved_puzzles, but has no solution")
 
-# Some standalone functions
+            # Make sure input cells which are set have
+            # the same value in the solution
+            self.assertTrue( sp.input_board.is_subset_of( sp.solution_board))
 
-# Where we pickle/unpickle the {}
+            # Verify we can solve all the solvable puzzles
+            for sp in all_known_solved_puzzles :
+                # Verify an answer is supplied
+                self.assertTrue (sp.solution_spec,  "%s:No solution_spec" % sp.solution_spec)
+                self.assertTrue (sp.solution_board, "%s:No solution_board" % sp.solution_board)
 
+                our_solution = sp.input_board.solve() 
+                self.assertTrue (our_solution, "%s: Cannot solve a solvable puzzle" % sp.name)
+                self.assertTrue (our_solution == sp.solution_board, "%s: solutions differ" % sp.name)
 
+            # Verify we can't solvable the unsolvable
+            for sp in all_known_unsolved_puzzles :
+                our_solution = sp.input_board.solve()
+                self.assertIsNone (our_solution, "%s: we can solve an unsolvable puzzle")
 
 
 if __name__ == "__main__" :

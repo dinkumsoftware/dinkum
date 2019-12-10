@@ -154,7 +154,7 @@ def main ():
         #        is slow.  Speed it up by copy'ing the Board in board constructor,
         #        rather than re-making the board from scratch
         #        or make = operator.  Currently running about 2ms
-        num_solutions_to_average = 100
+        num_solutions_to_average = 1 #########################100
         solution_total_time = 0.0
         for try_num in range(num_solutions_to_average) :
             board_to_solve      = Board( input_board ) # Make a copy
@@ -221,6 +221,11 @@ def main ():
             delta_str = "%2.1f%%" % delta_percent
         tokens.append ( "%6.3f usecs(%s)" % (solve_time_usecs, str(delta_str)) )
 
+        # Number of solve passes
+        delta_str = "?"  # Assume no prior stats
+        if delta_stats :
+            delta_str = str(delta_stats.num_solve_passes)
+        tokens.append ("%3d passes(%s)" % (stats.num_solve_passes, delta_str))
 
         # Handle the verbose output
         verbose_lines = "<todo>"

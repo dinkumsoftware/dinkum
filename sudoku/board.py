@@ -231,7 +231,7 @@ class Board :
         Return None if unsolvable
         raise Exception on multiple solutions 
         We change our values in the process
-        Sets solve_time_secs as how long it ran
+        Sets various statistics in solve_stats
         '''
 
         # fractional seconds
@@ -243,12 +243,15 @@ class Board :
         # We try all the solution techniques we know about
         # Each is required to return True if they set a cell
         # We give up when no cell is set in a pass
+        self.solve_stats.num_solve_passes = 0
         while (not self.is_solved()) :
+            # count the # of times thru the loop
+            self.solve_stats.num_solve_passes += 1
+
             a_cell_was_set = False
 
             # Set cells with only 1 possible value
             a_cell_was_set |= self.solve_cells_with_single_possible_value()
-            
 
             # Set row/col/blks where an unsolved value can only be
             # satisfied by a single cell
@@ -267,6 +270,7 @@ class Board :
 
         # Arrive here with ret_value set to either
         # self or None depending on whether we successfully solved the puzzle
+        print ("####", self.name, "solve()", self.solve_stats.num_solve_passes)
         return ret_value
 
     

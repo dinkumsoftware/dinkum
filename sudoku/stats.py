@@ -21,6 +21,8 @@ class Stats :
         '''
         self.solve_start_time_secs = None # when solve() called
         self.solve_time_secs       = None # How long it ran
+        self.num_solve_passes      = None # How many time the
+                                          # solve() loop ran
 
 
     def __sub__(self, other) :
@@ -90,12 +92,16 @@ class Test_board(unittest.TestCase):
         stat = Stats()
         stat.solve_start_time_secs = 5732222.83215
         stat.solve_time_secs       = 18.234
+        stat.num_solve_passes      = 50
        
         results = stat - stat
 
         # Check all the members
         for value in vars(results).values() :
-            self.assertAlmostEqual( value, 0.0, 4)
+            if isinstance(value, float) :
+                self.assertAlmostEqual( value, 0.0, 4)
+            else :
+                self.assertEqual( value, 0 )
 
         # Check a couple of members
         left  = Stats()
