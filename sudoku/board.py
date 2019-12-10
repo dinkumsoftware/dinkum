@@ -13,6 +13,7 @@ sudoku board full of Cells with values.
 # 2019-12-08 tc Added str_unsolved_rcbs()
 # 2019-12-09 tc use class sudoku.Stats
 #               Added copy constructor
+# 2019-12-10 tc copy_construtor.  Use name of copied board
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -93,15 +94,22 @@ class Board :
     It can also be passed another Board, i.e. copy constructor
     '''
 
-    def __init__(self, arr=None, name=None, desc="") :
+    # Class variables
+    board_copy_cnts = {} # How many times a board was copied in
+                         # in copy constructor.
+                         # key: base board name value: # times copied
+                         # see _pick_name_and_desc()
+
+
+    def __init__(self, board_spec=None, name=None, desc="") :
         ''' constructor of a Board
-        arr is list of row-lists --or--
-        a string of values       --or--
+        board_spec is list of row-lists --or--
+        a string of values              --or--
         a Board
-        If arr is None, an empty board will be created.
+        If board_spec is None, an empty board will be created.
 
         name is used as the name of the board.
-        If None, a unique name will be chosen, something on
+        If name is None, a unique name will be chosen, something on
         the order of:
             board-<lots of numbers which represent the curr time> 
 
@@ -112,21 +120,23 @@ class Board :
         various assertion failures if things aren't right.
         '''
 
-        # Deal with the name/description and timing
-        self.name         = name if name else self.unique_board_name()
-        self.description  = desc
+        # Deal with the name/description and statistics
+        (self.name, self.description) = self._pick_name_and_desc(name, desc, board_spec)
         self.solve_stats  = Stats()
         
+        # Convert board_spec into list of rows
         # Need to translate string into list of rows?
-        if isinstance(arr, str) :
+        if isinstance(board_spec, str) :
             try:
-                arr = str_to_list_of_rows(arr)
+                list_of_rows = str_to_list_of_rows(board_spec)
             except ExcBadStrToConvert :
                 raise ExcBadPuzzleInput( "Not an exact boards worth of digits in arr as string" )
 
         # Need to translate Board into list of rows?
-        elif isinstance(arr, Board) :
-            arr = arr.output()
+        elif isinstance(board_spec, Board) :
+            list_of_rows = board_spec.output()
+        else :
+            list_of_rows = board_spec
 
         # We are generating new board from a list of row-lists
         # We create empty data structs and have set() adjust them
@@ -165,19 +175,19 @@ class Board :
             rcb.sanity_check() 
 
         # Is there any input to set cells with?
-        if not arr :
+        if not list_of_rows :
             return # nope, all done
 
         # We need to populate it with values as spec'ed by the caller
 
         # Go thru and set each cell value from our input,
         # set() adjusts all the data structures
-        if len(arr) != RCB_SIZE :    # Sanity check input
-            raise ExcBadPuzzleInput( "Wrong number of rows: %d" % len(arr) )
+        if len(list_of_rows) != RCB_SIZE :    # Sanity check input
+            raise ExcBadPuzzleInput( "Wrong number of rows: %d" % len(list_of_rows) )
 
         cell_num=0
         row_num =0
-        for row in arr :
+        for row in list_of_rows :
             # Sanity check
             if len(row) != RCB_SIZE :
                 raise ExcBadPuzzleInput( "Row %d: Wrong size: %d" % (row_num, len(row)))
@@ -223,6 +233,58 @@ class Board :
         # Could move this into unittest code....
         # but we aren't time sensitive at construction time
         self.sanity_check()
+
+    def _pick_name_and_desc(self, name, desc, board_spec) :
+        ''' returns tuple: (board_name, board_description)
+        name, desc, board_spec should be the arguments passed
+        into the constructor.
+
+           board_name        name                   if name not None
+                             board_spec.name-cp.<N> if board_spec is Board
+                             board-<N>              otherwise.
+
+           board_description desc                   if not None
+                             board_spec.description if board_spec is Board
+                             ""                     otherwise
+        '''
+
+        # What we return
+        board_name = None
+        board_desc = None
+
+        # Pick the name
+        if name :
+            board_name = name
+        elif isinstance(board_spec, Board) :
+            # We keep track of the number of times a board
+            # is copied in class variable: board_copy_cnts
+            # a {} key:base board name value:# of times it is copied
+            bn   = board_spec.name        # Just make the code read easier
+            cp_dict = Board.board_copy_cnts
+            if bn in  cp_dict :
+                cp_dict[bn] += 1
+            else:
+                cp_dict[bn] = 1    # First copy
+
+            # How many times this board has been copied
+            copy_cnt = cp_dict[bn]
+
+            # Pick the name
+            board_name = board_spec.name + "-cp." + str(copy_cnt)
+
+        else :
+            board_name = self._unique_board_name()
+
+        # Pick the description
+        if desc :
+            board_desc = desc
+        elif isinstance(board_spec, Board) :        
+            board_desc = board_spec.description
+        else :
+            board_desc = ""
+
+        # All done
+        return (board_name, board_desc)
 
 
     def solve(self) :
@@ -270,7 +332,6 @@ class Board :
 
         # Arrive here with ret_value set to either
         # self or None depending on whether we successfully solved the puzzle
-        print ("####", self.name, "solve()", self.solve_stats.num_solve_passes)
         return ret_value
 
     
@@ -368,9 +429,9 @@ class Board :
         Same format as __init__ argument '''
 
         # Build [] of rows where every row is [] of cells in it
-        arr = [[ cell.value for cell in self.rows[row_indx]] for row_indx in range(RCB_SIZE) ]
+        list_of_rows = [[ cell.value for cell in self.rows[row_indx]] for row_indx in range(RCB_SIZE) ]
 
-        return arr
+        return list_of_rows
 
     def __str__(self) :
         ''' returns human readable terse picture of a sudoku.
@@ -422,7 +483,7 @@ class Board :
                 ret_str += str(rcb)
         return ret_str
 
-    def unique_board_name(self) :
+    def _unique_board_name(self) :
         ''' Picks a unique name for the board comprised of:
         board-<current_time as bunch of numbers>
         '''
@@ -611,8 +672,29 @@ class Test_board(unittest.TestCase):
         '''
         in_board = Board(str_board_spec)
         out_board = Board(in_board)
-        self.assertEqual(in_board, out_board)
+
+        self.assertEqual(in_board, out_board) # produces same board
+        self.assertEqual(out_board.name, in_board.name + "-cp.1")
+        self.assertEqual(in_board.description, out_board.description)
+
+        # copy # is correct
+        # We have already made 1 copy
+        for copy_cnt in range(2, 10) :
+            out_board = Board(in_board)
+            self.assertEqual (out_board.name, in_board.name + "-cp." + str(copy_cnt))
+
+        # Make sure a specified name overrides picking from copied board
+        speced_name = "We picked it"
+        out_board = Board(in_board, speced_name)
+        self.assertEqual( out_board.name, speced_name )
+        self.assertEqual( out_board.description,
+                          in_board.description)
         
+        # Make sure a specified description overrides picking from copied board
+        speced_desc = "Just for unittesting!"
+        out_board = Board(in_board, None, speced_desc)
+        self.assertEqual( out_board.description, speced_desc )
+
 
     def test_subset(self) :
         # What we test with
@@ -832,8 +914,6 @@ class Test_board(unittest.TestCase):
         # Make sure string spec'ed board generates a error
         # The error message may differ
         self.assertRaises(ExcBadPuzzleInput, Board, str(dup_in_col))
-            
-
 
 
         # duplicate value in a blk

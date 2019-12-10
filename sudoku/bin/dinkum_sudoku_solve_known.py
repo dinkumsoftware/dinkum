@@ -154,7 +154,7 @@ def main ():
         #        is slow.  Speed it up by copy'ing the Board in board constructor,
         #        rather than re-making the board from scratch
         #        or make = operator.  Currently running about 2ms
-        num_solutions_to_average = 1 #########################100
+        num_solutions_to_average = 100
         solution_total_time = 0.0
         for try_num in range(num_solutions_to_average) :
             board_to_solve      = Board( input_board ) # Make a copy
