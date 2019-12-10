@@ -159,11 +159,8 @@ class RCB(list) :
         # as remove() complains if set_cell not a member
         self.unsolved_cells.remove(set_cell)
 
-        # Remove cell.value from all unset cells
-        for cell in self.unsolved_cells :
-            # does not complain if value not a member
-            cell.possible_values.discard(set_cell.value)
-
+        # Remove cell.value as a possible from all unset cells
+        self.remove_value_from_possibles(set_cell.value)
 
     def cell_was_set_all_rcbs_notified(self, set_cell) :
         ''' Should be called when a cell in this rcb has
@@ -186,6 +183,59 @@ class RCB(list) :
             for value in cell.possible_values :
                 self.unsolved_value_possibles[value].add(cell)
 
+
+    def remove_value_from_possibles(self, value) :
+        ''' value is removed for all unsolved
+        cell.possible_values.
+
+        return True if any possibilities were removed.
+
+        unsolved_value_possibles is NOT adjusted.
+        Someone should rebuild it.
+        '''
+
+        # what we return
+        cell_was_removed = False
+
+        # Remove cell.value from all unset cells
+        for cell in self.unsolved_cells :
+            # Try to remove it
+            try:
+                cell.possible_values.remove(value)
+                cell_was_removed = True # we did so
+            except KeyError:
+                pass   # value not in unsolved_cells
+
+        return cell_was_removed
+
+    def unsolved_cells_with_common_unique_values(self, match_size) :
+        ''''
+        Searches every rcb for pairs(match_size=2) and triples
+        (match_size=3) of unsolved cells that all have the same
+        possible value unique to those pairs/triples in this
+        rcb i.e. no other cell in the rcb has that value as a possible.
+
+        It works for match sizes other than 2 or 3, but probably
+        not a lot of usefulness in the real world.
+
+        returns [] of tuples:
+            (common_unique_value, [] of cells)
+        '''
+        ret_list = []
+
+        # unsolved_value_possibles is a {} keyed by "cell value"
+        # containing a set() of cells that have "cell value" in
+        # their cell.possible_values
+
+        # We iterate thru that looking for values where only
+        # "match_size" cells have that value as a possible
+        for (value, cells) in self.unsolved_value_possibles.items() :
+
+            if len(cells) == match_size :
+                # We've got a winner
+                ret_list.append( (value, cells) )
+
+        return ret_list
 
     def is_solved(self) :
         ''' Returns True if all cells have solved, i.e. have values '''

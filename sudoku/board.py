@@ -14,6 +14,7 @@ sudoku board full of Cells with values.
 # 2019-12-09 tc use class sudoku.Stats
 #               Added copy constructor
 # 2019-12-10 tc copy_construtor.  Use name of copied board
+#               Added reduce_possibles_from_matching_cells()
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -310,17 +311,22 @@ class Board :
             # count the # of times thru the loop
             self.solve_stats.num_solve_passes += 1
 
-            a_cell_was_set = False
+            board_was_modified = False
 
             # Set cells with only 1 possible value
-            a_cell_was_set |= self.solve_cells_with_single_possible_value()
+            board_was_modified |= self.solve_cells_with_single_possible_value()
 
             # Set row/col/blks where an unsolved value can only be
             # satisfied by a single cell
-            a_cell_was_set |= self.solve_rcbs_with_single_possible_value_solution()
+            board_was_modified |= self.solve_rcbs_with_single_possible_value_solution()
+
+            # Remove some possibles by looking for matching cells with same possibles
+            # and projecting that into other rcb's.  This doesn't actually set any
+            # cells, but may modifify the board
+            board_was_modified |= self.reduce_possibles_from_matching_cells()
 
             # How did we do?
-            if not a_cell_was_set :
+            if not board_was_modified :
                 # Not well, sigh
                 ret_value = None
                 break
@@ -393,6 +399,44 @@ class Board :
         # Tell um how we did
         return we_set_a_cell
 
+
+    def reduce_possibles_from_matching_cells(self) :
+        '''
+        Searches every rcb for pairs and triples
+        of unsolved cells that all have the same possible value
+        that is unique to that rcb, i.e. no other cell in the rcb
+        has that value as a possible.
+
+        It then removes their values from any common rcb in
+        the pair.
+
+        returns True if any possibles were eliminated.
+        '''
+
+        # What we return
+        removed_some_possibles = False # assume the worst
+
+        for rcb in self.rcbs :
+            # this looks for pairs and triples
+            # Note: quads could happen, but they can't
+            #       be in the same rcb, except us
+            #       and there are no other unsolved
+            #       cells with their value
+            for match_size in [2,3] :
+                # returns [] of (common_unique_value, set() of cells)
+                value_and_cells = rcb.unsolved_cells_with_common_unique_values(match_size)
+
+                # Go thru those and remove value as a possibility
+                # in all common rcbs
+                for (value, cells) in value_and_cells :
+                    assert len(cells) == match_size
+
+                    # Iterate thru a list of rcbs that the matching cells have in common
+                    first_cell = cells.pop() # pull a cell out of cells
+                    for common_rcb in first_cell.common_rcbs( cells ) :
+                        removed_some_possibles |= common_rcb.remove_value_from_possibles(value)
+
+        return removed_some_possibles
 
     def __getitem__(self, row) :
         ''' Returns our RCB at row
@@ -855,6 +899,44 @@ class Test_board(unittest.TestCase):
         self.assertFalse ( board.is_solved() )
         self.assertEqual ( board.num_unsolved(), 8 )
 
+
+    def test_common_cell_rcbs(self) :
+
+        # we are testing Cell.common_rcbs() which can't
+        # be testing in cell.py because it doesn't know
+        # about Boards to avoid a circular import loop
+
+        board=Board()
+
+        base_cell         = board[4][5]
+        cell_same_row     = board[4][6]
+        cell_same_col     = board[2][5]
+        cell_same_blk     = board[3][3]
+        cell_with_none    = board[8][8]
+        cell_same_row_blk = board[4][4]
+        cell_same_col_blk = board[3][5]
+
+        all_test_cells = [cell_same_row,
+                          cell_same_col,
+                          cell_same_blk,
+                          cell_with_none
+                          ]
+
+        row_rcb = base_cell.row
+        col_rcb = base_cell.col
+        blk_rcb = base_cell.blk
+
+        self.assertEqual( base_cell.common_rcbs( []               ), [] )
+        self.assertEqual( base_cell.common_rcbs( [cell_with_none] ), [] )
+
+        self.assertEqual( base_cell.common_rcbs( [cell_same_row]     ), [row_rcb] )
+        self.assertEqual( base_cell.common_rcbs( [cell_same_col]     ), [col_rcb] )
+        self.assertEqual( base_cell.common_rcbs( [cell_same_blk]     ), [blk_rcb] )
+
+        self.assertEqual( base_cell.common_rcbs( [cell_same_row_blk] ), [row_rcb, blk_rcb] )
+        self.assertEqual( base_cell.common_rcbs( [cell_same_col_blk] ), [col_rcb, blk_rcb] )
+
+        self.assertEqual( base_cell.common_rcbs( all_test_cells ), [] )
 
     def test_input_bad_input_wrong_row_cnt(self) :
         # Only 7 rows, values don't matter

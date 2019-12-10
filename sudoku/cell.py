@@ -11,6 +11,7 @@ it belongs to.
 # 2019-11-25 tc Moved fom sudoku.py
 # 2019-12-01 tc changes row/col/blk from () to class variable
 # 2019-12-08 tc Added rcb_num_and_idx()
+# 2019-12-10 tc Added common_rcbs()
 
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
@@ -122,6 +123,40 @@ class Cell :
         for rcb in self.rcbs :
             rcb.cell_was_set_all_rcbs_notified(self)
 
+
+    def common_rcbs( self, other_cells ) :
+        ''' Returns a [] of rcb's the we have in
+        common with ALL the cells in the "other_cells" iterable.
+        '''
+        # Sanity check
+        if not other_cells :
+            return []
+
+        returned_rcbs = []
+
+        # For each row/col/blk, we produce a
+        # set() of their all their rows/cols/blks
+        # if there is only one rcb in the
+        # resulting union, they were all the same
+
+        matched_rows = set([self.row_num])
+        matched_cols = set([self.col_num])
+        matched_blks = set([self.blk_num])
+        
+        for cell in other_cells :
+            matched_rows.add(cell.row_num)
+            matched_cols.add(cell.col_num)
+            matched_blks.add(cell.blk_num)
+
+        if len(matched_rows) == 1 :
+            returned_rcbs.append(self.row)
+        if len(matched_cols) == 1 :
+            returned_rcbs.append(self.col)
+        if len(matched_blks) == 1 :
+            returned_rcbs.append(self.blk)
+
+        # Give um the answer
+        return returned_rcbs
 
     def rcb_num_and_idx(self, rcb_type) :
         ''' Returns tuple of ( row/col/blk_num, row/col/blk_indx)
