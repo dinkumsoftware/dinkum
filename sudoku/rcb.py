@@ -242,6 +242,22 @@ class RCB(list) :
         return not self.unsolved_cells
 
     def __str__(self) :
+        ''' Returns terse human-readable description. e.g.
+        row#3 [cell#42:3 ... ]
+        '''
+        # Describe outselves
+        ret_str = "%s#%d [" % ( RCB_NAME[self.rcb_type], self.rcb_num)
+
+        # And each of our cells
+        for cell in self :
+            ret_str += str(cell) + ' '
+
+        # Close the list
+        ret_str += ']'
+        
+        return ret_str
+        
+    def detailed_str(self) :
         ''' String representation.  Example:
             row[3]:
                Values: 6 _ _ 8 _ 4 _ _ 5

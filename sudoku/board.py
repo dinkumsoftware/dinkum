@@ -323,7 +323,7 @@ class Board :
             # Remove some possibles by looking for matching cells with same possibles
             # and projecting that into other rcb's.  This doesn't actually set any
             # cells, but may modifify the board
-            board_was_modified |= self.reduce_possibles_from_matching_cells()
+###########################            board_was_modified |= self.reduce_possibles_from_matching_cells()
 
             # How did we do?
             if not board_was_modified :

@@ -11,7 +11,8 @@ it belongs to.
 # 2019-11-25 tc Moved fom sudoku.py
 # 2019-12-01 tc changes row/col/blk from () to class variable
 # 2019-12-08 tc Added rcb_num_and_idx()
-# 2019-12-10 tc Added common_rcbs()
+# 2019-12-10 tc Added common_rcbs(), made __str__() terser
+#               Moved former __str__() to detailed_str()
 
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
@@ -241,6 +242,13 @@ class Cell :
 
 
     def __str__(self) :
+        '''returns human readable description, e.g.
+            cell#3:4         if set
+            cell#3:?         if not
+        '''
+        return "Cell#%d:%s" % ( self.cell_num, self.str_value(unsolved_char='?') )
+
+    def detailed_str_(self) :
         ''' Return human readable multi-line string that
         describes all our data
         '''
@@ -426,6 +434,15 @@ class Test_cell(unittest.TestCase):
         self.assertEqual ( cell.str_value(unsolved_char='Z' ),  '6' )
         self.assertEqual ( cell.str_value(6, 'Y' ),             ' '*5 + '6' )
 
+
+    def test_str(self) :
+        cell = Cell(None, 5)
+        self.assertEqual (cell.__str__(), "Cell#5:?")
+
+        cell = Cell(None, 18)
+        cell.value = 6
+        self.assertEqual (cell.__str__(), "Cell#18:6")
+        
 
 if __name__ == "__main__" :
     # Run the unittests
