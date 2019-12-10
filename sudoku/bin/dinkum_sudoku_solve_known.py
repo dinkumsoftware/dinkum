@@ -34,7 +34,7 @@ import textwrap    # dedent
 import time
 
 from dinkum.sudoku.test_data.test_puzzles import *
-from dinkum.sudoku.labeled_printer        import print_labeled_board
+from dinkum.sudoku.labeled_printer        import labeled_board
 from dinkum.sudoku.stats                  import *
 from dinkum.utils.str_utils               import fixed_width_columns
 
@@ -139,96 +139,26 @@ def main ():
                    file=sys.stderr)
             return ret_val_cmd_line_err
 
-        # To make the code read a little easier
-        input_board = sp.input_board
-
-        # Retrieve any previously recorded statistics
-        # None if they don't exist
-        prior_solve_stats = prior_solve_stats_dict.get(puzzle_name)
-
         # Try to solve it
-        # Some of the puzzles solve so fast there is tremendous jitter in the solution time
-        # So we will solve it a bunch of times and compute the average
-        # <todo> Used to run this 10K times, but when put a Board constructor
-        #        in the loop, had to drop the counts.  Means Board() constructor
-        #        is slow.  Speed it up by copy'ing the Board in board constructor,
-        #        rather than re-making the board from scratch
-        #        or make = operator.  Currently running about 2ms
-        num_solutions_to_average = 100
-        solution_total_time = 0.0
-        for try_num in range(num_solutions_to_average) :
-            board_to_solve      = Board( input_board ) # Make a copy
-
-            solve_results_board = board_to_solve.solve()
-            solution_total_time += board_to_solve.solve_stats.solve_time_secs 
-
-        # average 
-        solve_time_secs = solution_total_time / num_solutions_to_average
-
-        # insert it in appropriate stats
-        # if it was solved, solve_results_board will be solved puzzle
-        # if unsolved, solve_results_board will be None, and board_to_solve
-        # will be partial results.
-        # we set is_solved and solve_results_board appropriately
-        if solve_results_board :
-            is_solved = True  # solved!
-        else :
-            is_solved = False # sigh... not solved
-            solve_results_board = board_to_solve # partial results
-
-        # now update the solution to the average we computed above
-        solve_results_board.solve_stats.solve_time_secs = solve_time_secs
-
-        # is_solved indicates whether board was solved or not
-        # The solution results (solved or not) are in solve_results_board
+        # Note: solve() may be attempted multiple times in order
+        #       to average some timing results
+        (is_solved, solve_results_board) = solve(sp.input_board)
 
         # Keep track of whether any board wasn't solved
         we_solved_all_puzzles &= is_solved
 
-        # Build up a line(s) to print for the user
-        # We build:
-        # tokens        [] of what is always printed to user about this puzzle
-        #               Each entry should be what is to be printed in a fixed
-        #               width column
-        # verbose_lines what is only printed to user with --verbose on cmd line
-        # When all done, we will append tokens/verbose_lines to tokens_to_print[]
-        # and verbose_lines_to_print[]
-        # Those will be printed when we are all done trying to solve puzzles
-        # A \n will be appended to each line before it is print'ed
+        # Build up line(s) to print for the user
+        
 
-        # Make the code read a little easier
-        stats = solve_results_board.solve_stats
 
-        # If prior stats exists, compute the change from prior execution
-        delta_stats = None
-        if prior_solve_stats :
-            delta_stats = stats - prior_solve_stats
-
-        tokens = []
-        tokens.append ( puzzle_name )
-        tokens.append ("solved" if is_solved else "UNSOLVED!" )
-
-        # Execution time.  Print the delta if prior stats exist
-        # e.g.  0.730 usecs(4%)
-        solve_time_usecs = stats.solve_time_secs * 1000.0 * 1000.0
-
-        # If we can, Compute a percentage change from priors
-        delta_str = "?"  # Assume no prior stats
-        if delta_stats :
-            delta_solve_time_usecs = delta_stats.solve_time_secs       * 1000.0 * 1000.0
-            prior_solve_time_usecs = prior_solve_stats.solve_time_secs * 1000.0 * 1000.0
-            delta_percent = (delta_solve_time_usecs/prior_solve_time_usecs) * 100.0
-            delta_str = "%2.1f%%" % delta_percent
-        tokens.append ( "%6.3f usecs(%s)" % (solve_time_usecs, str(delta_str)) )
-
-        # Number of solve passes
-        delta_str = "?"  # Assume no prior stats
-        if delta_stats :
-            delta_str = str(delta_stats.num_solve_passes)
-        tokens.append ("%3d passes(%s)" % (stats.num_solve_passes, delta_str))
-
-        # Handle the verbose output
-        verbose_lines = "<todo>"
+        # We build the lines to be printed for the user
+        #    tokens        [] of what is always printed to user about this puzzle
+        #                  suitable for input to fixed_width_columns()
+        #    verbose_lines string only printed to user with --verbose on cmd line
+        # We pass in any prior statistics to allow change in any statistics to
+        # be computed
+        (tokens, verbose_lines) = build_printed_output( solve_results_board,
+                                                        prior_solve_stats_dict.get(puzzle_name))
 
         # Record lines for later printing
         tokens_to_print.append(tokens)
@@ -240,7 +170,6 @@ def main ():
             prior_solve_stats_dict[puzzle_name] = solve_results_board.solve_stats
 
     # End of per puzzle solution loop
-
 
     # Print all the info previously recorded
     # We print in fixed width columns.
@@ -271,6 +200,191 @@ def main ():
     # Tell um how it went
     return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved
 
+
+
+def solve(input_board) :
+    ''' Attempts to solve input_board.
+    Returns (is_solved, solve_results_board)
+
+    solve_results_board will be either the solution if is_solved,
+    otherwise it is the partial results
+
+     Some of the puzzles solve so fast there is tremendous jitter in the solution time
+     in solve_results_board.solve_stats.  So we will solve it a bunch of times, compute the average,
+     and adjust the appropriate statistics(s) in solve_results_board.solve_stats
+
+    '''
+
+    num_solutions_to_average = 100
+    solution_total_time = 0.0
+    for try_num in range(num_solutions_to_average) :
+        # Make a copy with same name
+        # This is prevent returned board name of whatever.cp-100 instead of
+        # just whatever
+        board_to_solve      =  Board( input_board, name=input_board.name )
+
+        solve_results_board =  board_to_solve.solve()
+        solution_total_time += board_to_solve.solve_stats.solve_time_secs 
+
+    # average 
+    solve_time_secs = solution_total_time / num_solutions_to_average
+
+    # insert it in appropriate stats
+    # if it was solved, solve_results_board will be solved puzzle
+    # if unsolved, solve_results_board will be None, and board_to_solve
+    # will be partial results.
+    # we set is_solved and solve_results_board appropriately
+    if solve_results_board :
+        is_solved = True  # solved!
+    else :
+        is_solved = False # sigh... not solved
+        solve_results_board = board_to_solve # partial results
+
+    # now update the solution to the average we computed above
+    solve_results_board.solve_stats.solve_time_secs = solve_time_secs
+
+    # is_solved indicates whether board was solved or not
+    # The solution results (solved or not) are in solve_results_board
+    return (is_solved, solve_results_board)
+
+
+def build_printed_output( board, prior_stats=None) :
+    '''We build the lines to be printed for the user, returning:
+    (tokens, verbose_lines)
+            tokens        [] of what is always printed to user about this puzzle
+                          Each entry should be column of text to print,
+                          suitable for input to fixed_width_columns()
+            verbose_lines string (possible multi-line) which is only printed
+                          with --verbose on cmd line
+
+    verbose_lines content will change depending on whether the puzzle is solved
+    or not.
+
+    prior_stats is used to allow change in any statistic to be computed.
+    '''
+    # what we return
+    tokens = []
+    verbose_lines = ""
+
+    # Make the code read a little easier
+    stats     = board.solve_stats
+    is_solved = board.is_solved()
+
+    # If we can, compute the change in statistics from prior runs
+    delta_stats = None
+    if prior_stats :
+        delta_stats = stats - prior_stats
+
+    # tokens is a single line that is always printed, whether unsolved or not
+
+    # Name and solution state
+    tokens.append ( board.name )
+    tokens.append ("solved" if is_solved else "UNSOLVED!" )
+
+    # Solution Time
+    secs_to_usec_multiplier = 1000.0 * 1000.0
+    tokens.append ( str_stat_value(board, "solve_time_secs", secs_to_usec_multiplier, "usecs",
+                                   prior_stats, want_percent_delta=True, value_format="%6.1f"))
+
+    # Number of passes
+    tokens.append ( str_stat_value(board, "num_solve_passes", None, "passes",
+                                   prior_stats))
+
+    # verbose_lines may or may not be printed
+    # content varies depending on whether puzzle is solved or not
+
+    # Always print a solution
+    solution_label = "solution" if is_solved else "partial solution"
+    verbose_lines += "%s:\n" % solution_label + str(board)
+    verbose_lines += '\n' # Space it nicely
+    
+    if not board.is_solved() :
+        verbose_lines += "Num unsolved: %d\n" % board.num_unsolved() 
+
+        # Print all the stats
+        stats = board.solve_stats
+        for stat_name in vars(stats) :
+            stat_value = getattr(stats, stat_name)
+            stat_line = "%s: %s\n" % (stat_name, str(stat_value))
+            verbose_lines += stat_line
+
+        verbose_lines += '\n' # Space it nicely
+
+        # print partial soltion in a variety of formats
+        # These fit on a page
+        for l in labeled_board( board, want_cell_nums=False, want_num_possibles=False ) :
+            verbose_lines += l + '\n'
+
+        # This needs it's own page
+        verbose_lines += '\f'
+        for l in labeled_board( board, want_cell_nums=True, want_num_possibles=True ) :
+            verbose_lines += l + '\n'
+
+    return (tokens, verbose_lines)
+
+               
+def str_stat_value(board, stat_name, stat_multiplier=None, stat_units=None,
+                   prior_stats=None, want_percent_delta=False,
+                   value_format=None) :
+    ''' Returns str representing a board.solve_stats.<stat_name> value
+    and how much it changed since prior_stats. e.g.
+        <stat_value> <stat_units>(<stat_delta>)                
+
+    no prior_stats:
+        <stat_value> <stat_units>(?)                           
+
+    want_percent_delta
+        <stat_value> <stat_units>(<delta_value>/<prior_value>%) 
+
+    stat_value and delta_value are multiplied by stat_multiplier
+    format_str is used to format stat_value and delta_value (if not percentage)
+    '''
+    assert isinstance(board, Board)
+
+    stat_value = getattr(board.solve_stats, stat_name)
+
+    delta_value = None # assume no prior stats
+    if prior_stats :
+        prior_value = getattr(prior_stats, stat_name)
+        delta_value = stat_value - prior_value
+
+    # scale both
+    if stat_multiplier :
+        stat_value *= stat_multiplier
+        if delta_value :
+            delta_value *= stat_multiplier
+
+    # Produce the stat_value output
+    stat_value_str = value_format % stat_value if value_format else str(stat_value)
+
+    # produce delta_value output along with a label
+    # convert to % if req'd
+    if not delta_value :
+        delta_value_str = '?'
+        delta_label     = ""
+    # delta_value exists
+    elif want_percent_delta :
+        # delta_value exists and they want it as a percent
+        delta_value  = delta_value / prior_value
+        delta_value /= 100.0
+
+        delta_value_str = "%2.1f" % delta_value
+        delta_label = '%'
+    else :
+        # want raw change
+        delta_value_str = value_format % delta_value if value_format else str(delta_value)
+        delta_label = ""
+
+
+    # <stat_value> <stat_units>(<delta_value><delta_label>)
+    return \
+        stat_value_str                      + \
+        ' '                                 + \
+        stat_units  if stat_units  else ''  + \
+        '('                                 + \
+        delta_value_str                     + \
+        delta_label                         + \
+        ')'
 
 
 if __name__ == '__main__':

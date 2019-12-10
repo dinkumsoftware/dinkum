@@ -39,6 +39,7 @@ of that puzzle, regardless of whether the puzzle is solved or not
 # 2019-12-09 tc read/write_prior_solve_times_secs() ==>
 #               read/write_prior_solve_stats()
 # 2019-12-10 tc move import testing of solvability to unittests
+#               fixed bug in pre_solved and real_easy
 from copy                import deepcopy
 import pickle
 import os
@@ -106,7 +107,7 @@ all_known_unsolved_puzzles.append(empty)
 
 # *** pre_solved
 desc= "All cells filled in initially"
-input_spec =   [[0, 4, 6, 1, 2, 7, 9, 5, 8], 
+input_spec =   [[3, 4, 6, 1, 2, 7, 9, 5, 8], 
                 [7, 0, 5, 6, 9, 4, 1, 3, 2], 
                 [2, 1, 9, 3, 8, 5, 4, 6, 7], 
                 [4, 6, 2, 5, 3, 1, 8, 7, 9], 
@@ -133,7 +134,7 @@ all_known_solved_puzzles.append(pre_solved)
 
 # *** real_easy
 desc="only one cell to solve"
-real_easy  =      [[3, 4, 6, 1, 2, 7, 9, 5, 8], 
+real_easy  =      [[0, 4, 6, 1, 2, 7, 9, 5, 8], 
                    [7, 8, 5, 6, 9, 4, 1, 3, 2], 
                    [2, 1, 9, 3, 0, 5, 4, 6, 7], 
                    [4, 6, 2, 0, 3, 1, 8, 7, 9], 

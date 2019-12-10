@@ -421,7 +421,12 @@ class Board :
 
     def is_solved(self) :
         ''' returns true if board is solved '''
-        return len(self.unsolved_cells) == 0
+        return self.num_unsolved() == 0
+
+    def num_unsolved(self) :
+        ''' returns the number of unsolved cells.
+        '''
+        return len(self.unsolved_cells)
 
 
     def output(self) :
@@ -506,7 +511,6 @@ class Board :
         # If we fall out of the loop.. it's a subset
         return True
                 
-
 
     # Operators
     def __eq__(self, their) :
@@ -812,6 +816,45 @@ class Test_board(unittest.TestCase):
         self.assertEqual( cell_neighbors_are, cell_neighbors_should_be)
 
         
+    def test_is_solved_and_cnt(self) :
+        # empty board
+        board = Board()
+        self.assertFalse ( board.is_solved() )
+        self.assertEqual ( board.num_unsolved(), RCB_SIZE * RCB_SIZE )
+
+        # Full populated board
+        input_spec ='''
+         3 4 6 1 2 7 9 5 8 
+         7 8 5 6 9 4 1 3 2 
+         2 1 9 3 8 5 4 6 7 
+         4 6 2 5 3 1 8 7 9 
+         9 3 1 2 7 8 6 4 5 
+         8 5 7 9 4 6 2 1 3 
+         5 9 8 4 1 3 7 2 6
+         6 2 4 7 5 9 3 8 1
+         1 7 3 8 6 2 5 9 4
+        '''
+        board = Board(input_spec)
+        self.assertTrue ( board.is_solved() )
+        self.assertEqual ( board.num_unsolved(), 0 )
+        
+
+        # Partially populated board
+        input_spec ='''
+         3 0 6 1 2 7 9 5 8 
+         7 0 0 6 9 4 1 3 2 
+         2 1 9 3 8 5 4 6 7 
+         4 6 2 5 3 1 8 7 9 
+         9 3 1 2 7 8 6 4 5 
+         0 0 0 9 0 6 2 1 3 
+         5 9 8 4 1 3 7 2 6
+         6 2 4 7 5 9 3 8 1
+         1 7 3 8 6 2 5 9 0
+        '''
+        board = Board(input_spec)
+        self.assertFalse ( board.is_solved() )
+        self.assertEqual ( board.num_unsolved(), 8 )
+
 
     def test_input_bad_input_wrong_row_cnt(self) :
         # Only 7 rows, values don't matter
