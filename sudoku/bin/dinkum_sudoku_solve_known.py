@@ -28,6 +28,7 @@ EXIT STATUS
 # 2019-12-04 tc Added timing printout
 # 2019-12-07 tc Added --update and print delta times.
 # 2019-12-09 tc support for sudoku.Stats
+# 2019-12-10 tc added -n, --num_to_average
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -60,6 +61,10 @@ def main ():
 
     --update  Write the solution statistics to disk
 
+    --num_to_average How many times to try solve each puzzle
+                     Currently Defaults to 100 to reduce
+                     jitter in timing measurements
+
     Returns: 0  All puzzles solved
              1  Something wrong on cmd line
              2  Some puzzle was NOT solved.
@@ -82,6 +87,10 @@ def main ():
     parser.add_argument("-u", "--update",
                         help="Write solution times to disk file",
                         action="store_true")
+
+    parser.add_argument("-n", "--num_to_average", type=int,
+                        help="Number of times solve each puzzle for stat averages",
+                        default=100 )
 
     # puzzles names, every non-option on the command line
     parser.add_argument('puzzle_names', metavar="puzzle_name",  # singular in -h, plural for [] generated
@@ -142,37 +151,37 @@ def main ():
         # Try to solve it
         # Note: solve() may be attempted multiple times in order
         #       to average some timing results
-        (is_solved, solve_results_board) = solve(sp.input_board)
+        (is_solved, solve_results_board) = solve(sp.input_board, args.num_to_average)
 
-        # Keep track of whether any board wasn't solved
+        # keep track of whether any board wasn't solved
         we_solved_all_puzzles &= is_solved
 
-        # Build up line(s) to print for the user
+        # build up line(s) to print for the user
         
 
 
-        # We build the lines to be printed for the user
+        # we build the lines to be printed for the user
         #    tokens        [] of what is always printed to user about this puzzle
         #                  suitable for input to fixed_width_columns()
         #    verbose_lines string only printed to user with --verbose on cmd line
-        # We pass in any prior statistics to allow change in any statistics to
+        # we pass in any prior statistics to allow change in any statistics to
         # be computed
         (tokens, verbose_lines) = build_printed_output( solve_results_board,
                                                         prior_solve_stats_dict.get(puzzle_name))
 
-        # Record lines for later printing
+        # record lines for later printing
         tokens_to_print.append(tokens)
         verbose_lines_to_print.append(verbose_lines)
 
         if args.update :
-            # We are writing solution statistics.  Update ours
-            # Whole dict written before return
+            # we are writing solution statistics.  update ours
+            # whole dict written before return
             prior_solve_stats_dict[puzzle_name] = solve_results_board.solve_stats
 
-    # End of per puzzle solution loop
+    # end of per puzzle solution loop
 
-    # Print all the info previously recorded
-    # We print in fixed width columns.
+    # print all the info previously recorded
+    # we print in fixed width columns.
     # fixed_width_columns(tokens_to_print) is a generator which puts the tokens
     # together and returns them as one line
     for (always, only_verbose) in zip(fixed_width_columns(tokens_to_print),
@@ -182,44 +191,43 @@ def main ():
         if args.verbose :
             print (only_verbose)
 
-    # If we had no statistics to compare
-    # Tell them how to create statistics file
+    # if we had no statistics to compare
+    # tell them how to create statistics file
     if len(prior_solve_stats_dict) == 0 :
         print ()
-        print ("No prior statistics available from file:")
+        print ("no prior statistics available from file:")
         print ("   %s" % prior_stats_filename() )
-        print ("Consider --update to write current statistics to that file."     )
+        print ("consider --update to write current statistics to that file."     )
 
-    # Write solution stats if reqd
+    # write solution stats if reqd
     if args.update :
         write_prior_stats(prior_solve_stats_dict)
         print ()
-        print ("Solve statistics written to:"   )
+        print ("solve statistics written to:"   )
         print ("   %s" % prior_stats_filename() )        
 
-    # Tell um how it went
+    # tell um how it went
     return ret_val_good if we_solved_all_puzzles else ret_val_some_not_solved
 
 
 
-def solve(input_board) :
-    ''' Attempts to solve input_board.
-    Returns (is_solved, solve_results_board)
+def solve(input_board, num_to_average) :
+    ''' attempts to solve input_board.
+    returns (is_solved, solve_results_board)
 
     solve_results_board will be either the solution if is_solved,
     otherwise it is the partial results
 
-     Some of the puzzles solve so fast there is tremendous jitter in the solution time
-     in solve_results_board.solve_stats.  So we will solve it a bunch of times, compute the average,
+     some of the puzzles solve so fast there is tremendous jitter in the solution time
+     in solve_results_board.solve_stats.  so we will solve it "num_to_average" times, compute the average,
      and adjust the appropriate statistics(s) in solve_results_board.solve_stats
 
     '''
 
-    num_solutions_to_average = 100
     solution_total_time = 0.0
-    for try_num in range(num_solutions_to_average) :
-        # Make a copy with same name
-        # This is prevent returned board name of whatever.cp-100 instead of
+    for try_num in range(num_to_average) :
+        # make a copy with same name
+        # this is prevent returned board name of whatever.cp-100 instead of
         # just whatever
         board_to_solve      =  Board( input_board, name=input_board.name )
 
@@ -227,7 +235,7 @@ def solve(input_board) :
         solution_total_time += board_to_solve.solve_stats.solve_time_secs 
 
     # average 
-    solve_time_secs = solution_total_time / num_solutions_to_average
+    solve_time_secs = solution_total_time / num_to_average
 
     # insert it in appropriate stats
     # if it was solved, solve_results_board will be solved puzzle
