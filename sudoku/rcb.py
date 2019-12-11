@@ -45,7 +45,7 @@ class RCB(list) :
         unsolved_cells           set of cells in self that are not solved
         unsolved_value_possibles {} of sets of our cells 
                                  key: cell value
-                                 value: set of our cells wit key(cell value)
+                                 value: set of our cells with key(cell value)
                                         as a possibility
         '''
         self.rcb_type = rcb_type
@@ -106,8 +106,6 @@ class RCB(list) :
 
     def sanity_check(self) :
         ''' an RCB sanity check.
-        Should be called after all the initial_cell_placement()
-        but before any cell is set().
 
         Checks multiple conditions and asserts if they aren't met.
         '''
@@ -117,8 +115,6 @@ class RCB(list) :
         
         assert len(self) == RCB_SIZE,                                           \
             "%s: Wrong number of cells." % id_str
-        assert len(self.unsolved_cells) == RCB_SIZE,                            \
-            "%s: Wrong number of unsolved cells" % id_str
         assert len(self.unsolved_value_possibles) == len(Cell.all_cell_values), \
             "%s: Wrong number of unsolved_value_possibles" % id_str
 
@@ -126,16 +122,21 @@ class RCB(list) :
         for idx in range(RCB_SIZE) :
             cell = self[idx] 
 
-            # Make sure it exists and is unsolved
-            assert cell,                                  \
-                "%s[%d]: Not populated." %(id_str, idx)
-            assert cell.value == Cell.unsolved_cell_value,\
-                "%s[%d]: should not be solved." %(id_str, idx)
+            # Make sure it exists
+            assert isinstance( cell, Cell), "%s[%d]: Not populated." %(id_str, idx)
         
-            # Make sure it's in unsolved_value_possibles at all value positions
-            for value in Cell.all_cell_values :
-                possible_cells = self.unsolved_value_possibles[value]
-                assert cell in possible_cells, "%s[%d]: not in unsolved_value_possibles[%d]" % (id_str, idx, value)
+
+        # Verify the number of unsolved cells
+        our_unsolved_cells = set()
+        for cell in self :
+            if not cell.is_solved() :
+                our_unsolved_cells.add(cell)
+        assert our_unsolved_cells == self.unsolved_cells
+
+        # Verify unsolved_value_possibles
+        our_unsolved_value_possibles = self.build_unsolved_value_possibles()
+        assert our_unsolved_value_possibles == self.unsolved_value_possibles
+        
 
     def cell_was_set_initial_call(self, set_cell) :
         ''' Should be called when a cell in this rcb has been set.
@@ -172,17 +173,29 @@ class RCB(list) :
         cell_was_set_initial_call() because other
         rcb's may not have adjusted their possible_values yet.
         '''
+        self.unsolved_value_possibles = self.build_unsolved_value_possibles()
 
-        # Wipe out the old
-        for value in self.unsolved_value_possibles :
-            self.unsolved_value_possibles[value] = set()
+    def build_unsolved_value_possibles(self) :
+        ''' Builds and returns a {} keyed
+        by cell_value and whose value is
+        a set() of cells in the rcb that
+        can provide that cell_value.
+        '''
+        
+        # what we return
+        unsolved_value_possibles = {}
+
+        # empty choices for every value
+        for value in Cell.all_cell_values :
+            unsolved_value_possibles[value] = set()
 
         # Put any unsolved cell whose possible value
         # could be value in unsolved_value_possible[value]
         for cell in self.unsolved_cells :
             for value in cell.possible_values :
-                self.unsolved_value_possibles[value].add(cell)
+                unsolved_value_possibles[value].add(cell)
 
+        return unsolved_value_possibles
 
     def remove_value_from_possibles(self, value) :
         ''' value is removed for all unsolved
@@ -190,19 +203,48 @@ class RCB(list) :
 
         return True if any possibilities were removed.
 
-        unsolved_value_possibles is NOT adjusted.
-        Someone should rebuild it.
+        unsolved_value_possibles is maintained.
+
+        UNLESS this would result in the cell having
+        no possible_values. i.e. the cell started
+        with a single possible value of "value"....
+            In that case, we leave possible_values
+            alone, but still return True, which causes
+            higher level loops to keep running and
+            presumably find this cell with only one
+            possible value.
         '''
 
         # what we return
         cell_was_removed = False
 
-        # Remove cell.value from all unset cells
+        # remove value from all unset cells
         for cell in self.unsolved_cells :
+            # does this cell have a single possible
+            # which matches value? see UNLESS clause
+            # in doc string
+            if len(cell.possible_values) == 1 :
+                # retrieve it's only possible value
+                [single_value] = list(cell.possible_values)
+
+                # match what we are trying to remove?
+                if single_value == value :
+                    cell_was_removed |= True # not really removed,
+                                             # but need to fool the caller
+                    continue # don't actually remove value
+
             # Try to remove it
             try:
                 cell.possible_values.remove(value)
-                cell_was_removed = True # we did so
+                cell_was_removed |= True # we did so
+
+                # Remove that cell from unsolved_value_possibles
+                # as it no longer has can provide value to this rcb
+                # note: this is like assert cell in unsolved_value_possibles[value]
+                #       as remove() raises exception if cell not in the set()
+                self.unsolved_value_possibles[value].remove(cell)
+
+
             except KeyError:
                 pass   # value not in unsolved_cells
 
@@ -241,6 +283,13 @@ class RCB(list) :
         ''' Returns True if all cells have solved, i.e. have values '''
         return not self.unsolved_cells
 
+    def name(self) :
+        ''' Returns something like:
+                row[4]
+        where the row is rcb_num
+        '''
+        return "%s[%d]" % (RCB_NAME[self.rcb_type], self.rcb_num)
+
     def __str__(self) :
         ''' Returns terse human-readable description. e.g.
         row#3 [cell#42:3 ... ]
@@ -260,7 +309,9 @@ class RCB(list) :
     def detailed_str(self) :
         ''' String representation.  Example:
             row[3]:
-               Values: 6 _ _ 8 _ 4 _ _ 5
+               Cell#s: 27 28 29 30 31 32 33 34 35 
+               Indexs:  0  1  2  3  4  5  6  7  8
+               Values:  6  _  _  8  _  4  _  _  5
                Cell index possibles for unsolved values:
                   1:  1  2  4  6  7 
                   2:  1  2  4  6  7 
@@ -277,17 +328,29 @@ class RCB(list) :
 
         # Our type and such
         # e.g.             row[3]:
-        ret_str += "%s[%d]:\n" % ( RCB_NAME[self.rcb_type], self.rcb_num)
+        ret_str += "%s:\n" %  self.name()
 
         # How much to indent the following lines
         indent_str = " " * 3
         secondary_indent_str = indent_str * 2
 
-        # Cell values on one line
-        # e.g.               Values: 6 _ _ 8 _ 4 _ _ 5
+        # Cell numbers on one line
+        # e.g.   Cell#s: 27 28 29 30 31 32 33 34 35 
+        ret_str += indent_str + "Cell#s:"
+        for cell in self :
+            ret_str += "%3d" % cell.cell_num
+        ret_str += '\n'
 
+
+        # Cell indexes one line
+        ret_str += indent_str                           + \
+                   "Indexs:  0  1  2  3  4  5  6  7  8" + \
+                   '\n'
+
+        # Cell values on one line
+        # e.g. Values:  6  _  _  8  _  4  _  _  5
         ret_str += indent_str + "Values:" # space over and label
-        col_width = 2 # how many spaces per cell
+        col_width = 3 # how many spaces per cell
         for cell in self :
             # position been populated ?
             if cell :
@@ -296,7 +359,9 @@ class RCB(list) :
             else :
                 # Nope
                 token = "%*s" % (col_width, "X")
-            ret_str += token # this cell's representation
+
+
+            ret_str += token  # this cell's representation
         ret_str += '\n' # terminate the line
 
 
@@ -426,6 +491,16 @@ class Test_rcb(unittest.TestCase):
         rcb.unsolved_value_possibles[9].discard( rcb[4] )
         self.assertRaises(AssertionError, rcb.sanity_check )
 
+
+    def test_name(self) :
+        rcb = RCB(RCB_TYPE_ROW, None, 2)
+        self.assertEqual ( rcb.name(), "row[2]")
+
+        rcb = RCB(RCB_TYPE_COL, None, 4)
+        self.assertEqual ( rcb.name(), "col[4]")
+
+        rcb = RCB(RCB_TYPE_BLK, None, 8)
+        self.assertEqual ( rcb.name(), "blk[8]")
 
 if __name__ == "__main__" :
     # Run the unittests

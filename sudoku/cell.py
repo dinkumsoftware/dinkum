@@ -95,8 +95,10 @@ class Cell :
 
     def set(self, value) :
         '''Sets value into cell
+           Alters
              value, possible_values
              Board.unsolved_cells
+             rcbs
 
         We adjust our neighbors, (all cells in our
         row,col, and blk) by removing value from their possible_values
@@ -118,7 +120,7 @@ class Cell :
 
         # Adjust our neighbors
         # Fix up the row/col/blk's we are in
-        # We have to state these calls
+        # We have to stage these calls
         for rcb in self.rcbs :
             rcb.cell_was_set_initial_call(self)
         for rcb in self.rcbs :
@@ -201,6 +203,12 @@ class Cell :
         return ans
 
 
+    def is_solved(self) :
+        ''' Returns True is cell has a value
+        '''
+        return self.value != Cell.unsolved_cell_value
+        
+
     def map_row_col_to_indexes(self, rcb_type, row_num, col_num) :
         ''' Given row_num, col_num of a cell in the board,
         returns touple of array_index of the RCB, e.g. into self.rows/cols/blks[]
@@ -241,14 +249,20 @@ class Cell :
         assert False, "Impossible place"
 
 
+    def name(self) :
+        ''' Returns something like:
+            Cell# 4
+        '''
+        return "Cell#%2s" % str(self.cell_num)
+
     def __str__(self) :
         '''returns human readable description, e.g.
-            cell#3:4         if set
-            cell#3:?         if not
+            cell# 3:4         if set
+            cell# 3:?         if not
         '''
-        return "Cell#%d:%s" % ( self.cell_num, self.str_value(unsolved_char='?') )
+        return "%s:%s" % ( self.name(), self.str_value(unsolved_char='?') )
 
-    def detailed_str_(self) :
+    def detailed_str(self) :
         ''' Return human readable multi-line string that
         describes all our data
         '''
@@ -407,6 +421,14 @@ class Test_cell(unittest.TestCase):
         self.assertEqual (rcb_idx, 8)
 
 
+    def test_name(self) :
+
+        cell = Cell(None, 23)
+        self.assertEqual( cell.name(), "Cell#23")
+
+        cell = Cell(None, 4)
+        self.assertEqual( cell.name(), "Cell# 4")
+
     def test_str_value(self) :
         cell = Cell(None, 33)
 
@@ -437,7 +459,7 @@ class Test_cell(unittest.TestCase):
 
     def test_str(self) :
         cell = Cell(None, 5)
-        self.assertEqual (cell.__str__(), "Cell#5:?")
+        self.assertEqual (cell.__str__(), "Cell# 5:?")
 
         cell = Cell(None, 18)
         cell.value = 6

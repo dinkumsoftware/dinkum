@@ -433,6 +433,7 @@ class Board :
 
                     # Iterate thru a list of rcbs that the matching cells have in common
                     first_cell = cells.pop() # pull a cell out of cells
+
                     for common_rcb in first_cell.common_rcbs( cells ) :
                         removed_some_possibles |= common_rcb.remove_value_from_possibles(value)
 
