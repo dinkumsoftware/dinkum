@@ -6,6 +6,10 @@ also a member of an RCB (row/col/blk).
 A Cell knows what board it belongs to.  It's value and
 possible_values if unsolved.  It knows which row/col/blk
 it belongs to.
+
+Also defines a CellToSet class which holds a Cell and
+a value to set it to.
+
 '''
 
 # 2019-11-25 tc Moved fom sudoku.py
@@ -13,7 +17,7 @@ it belongs to.
 # 2019-12-08 tc Added rcb_num_and_idx()
 # 2019-12-10 tc Added common_rcbs(), made __str__() terser
 #               Moved former __str__() to detailed_str()
-
+# 2019-12-11 tc Support for CellToSet
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
 
@@ -95,37 +99,76 @@ class Cell :
 
     def set(self, value) :
         '''Sets value into cell
-           Alters
-             value, possible_values
-             Board.unsolved_cells
-             rcbs
-
-        We adjust our neighbors, (all cells in our
-        row,col, and blk) by removing value from their possible_values
+        Alters:
+           value, possible_values
         
+        We remove ourself as a possibility from our RCBs
+        and our neighbor cells in those RCBs.
+        This is done via Board.a_cell_was_set()
+
+        We return a set() of CellToSet's that could/should
+        bet set as a result of our being set.
         '''
         # Error check value
         assert value in Cell.all_cell_values
 
         # Make sure data structs are consistent
         assert value in self.possible_values
-        assert self in self.board.unsolved_cells
+        if self.board :
+            assert self in self.board.unsolved_cells
 
         # Our data structs
         self.value = value
         self.possible_values = set() # empty possible_values
 
-        # Our Board's data structs
-        self.board.unsolved_cells.remove(self)
+        # Are we attached to a board?
+        if self.board :
+            # Yes, tell it we were set
+            # This will notify all our neighbors
+            # Tell our caller what other cells to set
+            return self.board.a_cell_was_set(self)
+        else :
+            # No board attached, no other cells to set
+            return set()
+        
+        assert False, "Impossible Place"
 
-        # Adjust our neighbors
-        # Fix up the row/col/blk's we are in
-        # We have to stage these calls
-        for rcb in self.rcbs :
-            rcb.cell_was_set_initial_call(self)
-        for rcb in self.rcbs :
-            rcb.cell_was_set_all_rcbs_notified(self)
 
+    def remove_from_possibles(self, value) :
+        ''' Removes value as a possible solution for us.
+
+        value is removed possible_values[]
+
+        If after removal of value, there remains only
+        a single possible value that this cell can be,
+        It is returned in a set() of CellToSet(self,value).
+
+        Otherwise returns an empty set.
+
+        if value isn't one of our possible_values, we
+        silently return an empty set.
+        '''
+        assert value in Cell.all_cell_values
+
+        # Anything to remove?
+        if value not in self.possible_values :
+            return set() # nope
+
+        # remove value
+        self.possible_values.remove(value)
+
+        # Only one left?
+        if len( self.possible_values ) == 1 :
+            # Yep, extract the value and return it
+            # The funny [x] = list() extraction syntax is
+            # a way to get the value out of a set
+            # with only one value
+            [remaining_value] = list(self.possible_values)
+            return set( [ CellToSet(self, remaining_value) ] )
+
+        # We aren't settable based on this
+        return set()
+        
 
     def common_rcbs( self, other_cells ) :
         ''' Returns a [] of rcb's the we have in
@@ -293,6 +336,19 @@ class Cell :
         return "%*s" %(desired_length,
                        self.value if self.value != Cell.unsolved_cell_value else unsolved_char )
 
+
+
+class CellToSet() :
+    ''' Holds a:
+    cell   Cell
+    value  The value it should be set to
+    '''
+    def __init__(self, cell, value) :
+        assert value in Cell.all_cell_values
+
+        self.cell=cell
+        self.value=value
+    
 
 
 # Test code
@@ -465,6 +521,89 @@ class Test_cell(unittest.TestCase):
         cell.value = 6
         self.assertEqual (cell.__str__(), "Cell#18:6")
         
+
+    def test_CellToSet(self) :
+
+        cell = Cell(None, 18)
+
+        # Verify it constructs
+        cts  = CellToSet(cell, 5)
+        self.assertEqual(cts.cell, cell)
+        self.assertEqual(cts.value, 5)
+
+        # Verify illegal values
+        self.assertRaises(AssertionError, CellToSet, cell, 18)
+
+
+    def test_set(self) :
+        # Make a random cell with no Board
+        cell = Cell(None, 29)
+
+        # Set it's value to 2
+        # should return no cells to set
+        self.assertSetEqual( cell.set(2), set() )
+        self.assertEqual(cell.value, 2)
+        self.assertSetEqual(cell.possible_values, set()) # No other possibles
+
+        # Verify illegal values
+        self.assertRaises(AssertionError, cell.set, 18)
+        self.assertRaises(AssertionError, cell.set,  0)
+
+        # Make a dummy board class that has a member function
+        # That cell.set() should call and data that cell.__init__()
+        # needs
+        class DummyBoard() :
+            def __init__(self) :
+                self.rows = [None] * RCB_SIZE
+                self.cols = [None] * RCB_SIZE
+                self.blks = [None] * RCB_SIZE
+
+            def a_cell_was_set(self, cell) :
+                self.set_cell = cell
+                return returned_cells_to_set
+
+        # what DummyBoard.a_cell_to_set() returns
+        returned_cells_to_set = set ( [CellToSet( Cell(None,  2), 3),
+                                       CellToSet( Cell(None, 80), 9)])
+
+        dummy_board = DummyBoard()
+        cell = Cell(dummy_board, 22)
+        dummy_board.unsolved_cells = set([cell])
+        
+        cells_to_set = cell.set(2)
+        self.assertEqual( len(cells_to_set), 2)
+        self.assertSetEqual( cells_to_set,
+                             returned_cells_to_set)
+
+        # Make sure you can't set a cell twice
+        cell = Cell(None, 33)
+        cell.set(4)
+        self.assertRaises( AssertionError, cell.set, 4)
+
+
+    def test_remove_from_possibles(self) :
+        # A random cell with all possible_values.
+        cell = Cell(None, 76)
+
+        # Check bad value
+        self.assertRaises( AssertionError, cell.remove_from_possibles, 800)
+       
+        self.assertEqual (len(cell.possible_values), 9)
+
+        # Remove values 1-7 (leaving 8&9)
+        for value in range(1,8) :
+            ret_set = cell.remove_from_possibles(value)
+            self.assertSetEqual(ret_set, set() )  # self can't be set yet
+            self.assertEqual (len(cell.possible_values), 9-value)  #8,7,...
+        
+        # When we remove 8, cell.set() should tell us to set itself
+        ret_set = cell.remove_from_possibles(8)
+        self.assertEqual(len(ret_set), 1)
+
+        [cell_to_set] = list(ret_set)
+        self.assertEqual(cell_to_set.cell,  cell)
+        self.assertEqual(cell_to_set.value,    9)        
+
 
 if __name__ == "__main__" :
     # Run the unittests
