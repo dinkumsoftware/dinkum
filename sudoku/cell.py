@@ -294,14 +294,16 @@ class Cell :
 
     def name(self) :
         ''' Returns something like:
-            Cell# 4
+                "Cell#4 "  --or--
+                 Cell#12"
+            note it is fixed width
         '''
-        return "Cell#%2s" % str(self.cell_num)
+        return "Cell#%-2s" % str(self.cell_num)
 
     def __str__(self) :
         '''returns human readable description, e.g.
-            cell# 3:4         if set
-            cell# 3:?         if not
+            cell#3 :4         if set
+            cell#3 :?         if not
         '''
         return "%s:%s" % ( self.name(), self.str_value(unsolved_char='?') )
 
@@ -338,17 +340,46 @@ class Cell :
 
 
 
-class CellToSet() :
-    ''' Holds a:
-    cell   Cell
-    value  The value it should be set to
+class CellToSet(tuple) :
+    ''' We are immutable which holds a:
+        cell   Cell
+        value  The value it should be set to
+
+    We are actually a tuple:
+        self[0] self.cell
+        self[1] self.value
+    
+    This is done so that all the comparision
+    operators (e.g. __eq__) work properly on
+    CellToSet members
     '''
-    def __init__(self, cell, value) :
+
+    def __new__(cls, cell, value) :
+        assert isinstance(cell, Cell)
         assert value in Cell.all_cell_values
 
-        self.cell=cell
-        self.value=value
+        # See https://stackoverflow.com/questions/12652683/how-to-initialize-an-instance-of-a-subclass-of-tuple-in-python
+        return tuple.__new__(cls, (cell, value) )
+        # since we are returning an instance of CellToSet,
+        # the follwing __init__ will be called for the instance we
+        # just returned
+
     
+    def __init__(self,cell,value) :
+        self.cell  = cell
+        self.value = value
+
+        
+
+
+
+
+    def __str__(self) :
+        ''' Human readable description:
+            e.g.   Cell#4  <- 3
+        '''
+        return self.cell.name() + " <- " + str(self.value)
+
 
 
 # Test code
@@ -483,7 +514,7 @@ class Test_cell(unittest.TestCase):
         self.assertEqual( cell.name(), "Cell#23")
 
         cell = Cell(None, 4)
-        self.assertEqual( cell.name(), "Cell# 4")
+        self.assertEqual( cell.name(), "Cell#4 ")
 
     def test_str_value(self) :
         cell = Cell(None, 33)
@@ -515,7 +546,7 @@ class Test_cell(unittest.TestCase):
 
     def test_str(self) :
         cell = Cell(None, 5)
-        self.assertEqual (cell.__str__(), "Cell# 5:?")
+        self.assertEqual (cell.__str__(), "Cell#5 :?")
 
         cell = Cell(None, 18)
         cell.value = 6
@@ -528,6 +559,7 @@ class Test_cell(unittest.TestCase):
 
         # Verify it constructs
         cts  = CellToSet(cell, 5)
+
         self.assertEqual(cts.cell, cell)
         self.assertEqual(cts.value, 5)
 
@@ -604,6 +636,28 @@ class Test_cell(unittest.TestCase):
         self.assertEqual(cell_to_set.cell,  cell)
         self.assertEqual(cell_to_set.value,    9)        
 
+
+    def test_CellToSet(self) :
+        # A test cell
+        cell = Cell(None, 8)
+
+        # Error conditions
+        # Bad value
+        self.assertRaises(AssertionError, CellToSet,cell, 50)
+
+        # Bad cell
+        self.assertRaises(AssertionError, CellToSet,list(), 50 )
+
+        # See if it works
+        value = 3
+        cts = CellToSet(cell, value)
+        self.assertEqual( cts.cell,  cell)
+        self.assertEqual( cts.value, value)
+
+        # __eq__
+        cell_a = CellToSet(cell, 4)
+        cell_b = CellToSet(cell, 4)
+        self.assertEqual( cell_a, cell_b)
 
 if __name__ == "__main__" :
     # Run the unittests
