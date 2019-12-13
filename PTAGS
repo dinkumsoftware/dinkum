@@ -84,29 +84,37 @@ class Test_board(637,24079
     def test_input_bad_input_wrong_row_size(977,36415
     def test_input_duplicate_values(998,37079
 
-sudoku/rcb.py,793
+sudoku/rcb.py,1086
 class RCB(15,421
-    def __init__(37,1282
-    def initial_cell_placement(73,2677
-    def a_cell_was_set(109,4108
-    def sanity_check(170,6384
-    def build_unsolved_value_possibles(204,7600
-    def unsolved_cells_with_common_unique_values(224,8332
-    def is_solved(253,9417
-    def name(257,9555
-    def __str__(264,9747
-    def detailed_str(280,10128
-    def str_unsolved_value_possibles(346,12152
-class Test_rcb(411,14404
-    def all_unsolved_rcb_for_test(414,14483
-    def all_solved_rcb_for_test(449,15654
-    def partially_solved_rcb_for_test(473,16401
-    def test_construction(515,17833
-    def test_bad_rcb_type(523,18059
-        def test_iteration(531,18305
-    def test_sanity_check(546,18664
-    def test_name(581,19998
-    def test_a_cell_was_set(592,20302
+    def __init__(38,1351
+    def initial_cell_placement(74,2647
+    def a_cell_was_set(115,4322
+    def remove_from_possibles(177,6793
+    def unsolved_values(233,8795
+    def solved_values(239,8949
+    def solved_cells(244,9109
+    def sanity_check(250,9263
+    def build_unsolved_value_possibles(282,10329
+    def unsolved_cells_with_common_unique_values(303,11203
+    def is_solved(332,12288
+    def name(336,12426
+    def __str__(342,12583
+    def detailed_str(363,13145
+    def str_unsolved_value_possibles(430,15217
+class Test_rcb(496,17574
+    def all_unsolved_rcb_for_test(499,17653
+    def all_solved_rcb_for_test(534,18824
+    def partially_solved_rcb_for_test(558,19571
+    def test_construction(600,21003
+    def test_bad_rcb_type(608,21229
+        def test_iteration(616,21475
+    def test_unsolved_values(629,21832
+    def test_sanity_check(641,22269
+    def test_name(676,23603
+    def test_str(687,23904
+    def test_detailed_str(700,24302
+    def test_a_cell_was_set(728,25245
+    def test_remove_from_possibles(817,28301
 
 sudoku/test_data/test_puzzles.py,310
 class SolvedPuzzle 52,1713
@@ -138,7 +146,7 @@ class Test_labeled_printer(444,17300
     def test_caller_supplied_empty(605,27799
     def test_populated_board(665,31615
 
-sudoku/cell.py,1033
+sudoku/cell.py,1094
 class Cell 25,726
     def __init__(54,1776
     def set(100,3603
@@ -153,24 +161,26 @@ class Cell 25,726
     def detailed_str(310,10088
     def str_value(333,11076
 class CellToSet(343,11444
-    def __init__(348,11546
-    def __str__(353,11678
-class Test_cell(364,11877
-    def test_cell_constructor(366,11914
-            def err_msg(383,12724
-    def test_bad_cell_num(408,14061
-    def test_sample_nums_and_idxs(413,14212
-    def test_values(438,15199
-    def test_rcb_num_and_idx(450,15554
-    def test_name(487,16755
-    def test_str_value(495,16943
-    def test_str(523,18092
-    def test_CellToSet(532,18320
-    def test_set(545,18626
-        class DummyBoard(562,19255
-            def __init__(563,19284
-            def a_cell_was_set(568,19456
-    def test_remove_from_possibles(591,20240
+    def __new__(357,11783
+    def __init__(368,12231
+    def __str__(377,12334
+class Test_cell(388,12533
+    def test_cell_constructor(390,12570
+            def err_msg(407,13380
+    def test_bad_cell_num(432,14717
+    def test_sample_nums_and_idxs(437,14868
+    def test_values(462,15855
+    def test_rcb_num_and_idx(474,16210
+    def test_name(511,17411
+    def test_str_value(519,17599
+    def test_str(547,18748
+    def test_CellToSet(556,18976
+    def test_set(570,19283
+        class DummyBoard(587,19912
+            def __init__(588,19941
+            def a_cell_was_set(593,20113
+    def test_remove_from_possibles(616,20897
+    def test_CellToSet(640,21786
 
 utils/state_space.py,678
 class ExcAttemptToChangeStateRootToNonExistantDir(67,2464
@@ -233,8 +243,6 @@ project/TEMPLATES/python.py,0
 project/__init__.py,0
 
 utils/__init__.py,0
-
-sudoku/stashed-code.py,0
 
 sudoku/test_data/__init__.py,0
 
