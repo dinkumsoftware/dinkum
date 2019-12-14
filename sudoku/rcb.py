@@ -174,8 +174,13 @@ class RCB(list) :
         return returned_set
 
 
-    def remove_from_possibles(self, value) :
+    def remove_from_possibles(self, value, except_cells) :
         ''' Removes value as a possible solution for us.
+
+        except_cells is an iterable of Cells in this
+        RCB that are excluded.  At least one must be
+        provided. (Otherwise the RCB isn't solvable
+        as no cell could provide value.)
 
         returns a (possibly empty) set of CellToSet's that
         consists of any other Cell that becomes solvable
@@ -186,7 +191,7 @@ class RCB(list) :
 
         The details:
 
-        iterates thru unsolved_cells
+        iterates thru unsolved_cells( sans except_cells )
              Cell.remove_from_possibles(value)
              accumulates set(CellsToSet)
 
@@ -199,19 +204,18 @@ class RCB(list) :
         return set of CellsToSet's
         '''
         assert value in Cell.all_cell_values
+        assert len(except_cells) > 0
+        assert [ cell in self for cell in except_cells ]
 
         # What we return
         cells_to_set = set()
 
-        # Anything to remove?
-        if value not in self.unsolved_value_possibles :
-            return cells_to_set # nope, set is empty
-
-        # iterates thru unsolved_cells
+        # iterates thru unsolved_cells sans except_cells
         #    Cell.remove_from_possibles(value)
         #    accumulates set(CellsToSet)
         for cell in self.unsolved_cells :
-            cells_to_set |= cell.remove_from_possibles(value)
+            if cell not in except_cells :
+                cells_to_set |= cell.remove_from_possibles(value)
 
         # rebuild unsolved_value_possibles from scratch
         # This scan all unsolved_cells and return
@@ -225,7 +229,7 @@ class RCB(list) :
             if len(cells) == 1 :
                 # Yes, cell can be solved with value.  Tell caller
                 cell = cells.pop() # only one cell in set
-                cells_to_set += CellToSet(cell, value)
+                cells_to_set.add( CellToSet(cell, value) )
 
         # Tell them solvable cells based on removing value
         return cells_to_set
@@ -309,7 +313,7 @@ class RCB(list) :
         return ret_unsolved_value_possibles
 
     def unsolved_cells_with_common_unique_values(self, match_size) :
-        ''''
+        '''
         Searches every rcb for pairs(match_size=2) and triples
         (match_size=3) of unsolved cells that all have the same
         possible value unique to those pairs/triples in this
@@ -806,7 +810,7 @@ class Test_rcb(unittest.TestCase):
         already_set_cell = rcb[0]
         self.assertRaises (AssertionError, rcb.a_cell_was_set, already_set_cell )
         
-        # Can't do this will a cell not in the RCB
+        # Can't do this with a cell not in the RCB
         non_rcb_cell = Cell(None, 80)
         self.assertRaises (AssertionError, rcb.a_cell_was_set, non_rcb_cell )
 
@@ -878,15 +882,19 @@ class Test_rcb(unittest.TestCase):
 
 
     def test_remove_from_possibles(self) :
+        # Note: Most of the actual operation testing is in
+        #       test_a_cell_was_set().  It was too hard
+        #       to manually put the rcb in the right position
+
         # Error conditions
         # Bad value
         rcb = self.all_unsolved_rcb_for_test(RCB_TYPE_BLK)
-        self.assertRaises (AssertionError, rcb.remove_from_possibles,18)
+        self.assertRaises (AssertionError, rcb.remove_from_possibles,18, [ rcb[4] ] )
 
         # Silently don't remove non-existent values
         # just returns empty set
         rcb = self.all_solved_rcb_for_test(RCB_TYPE_ROW)
-        ret = rcb.remove_from_possibles( 5 )
+        ret = rcb.remove_from_possibles( 5,  [rcb[0], rcb[3]] )
         self.assertEqual ( ret,                          set() )
         self.assertEqual ( rcb.unsolved_value_possibles, {}    )
         rcb.sanity_check()
@@ -894,74 +902,12 @@ class Test_rcb(unittest.TestCase):
         # Remove a possiblity that doesn't cause any other cells to be solved
         rcb = self.all_unsolved_rcb_for_test(RCB_TYPE_BLK)  # empty
         removed_value = 4
-        ret = rcb.remove_from_possibles( removed_value )
+        ret = rcb.remove_from_possibles( removed_value, [rcb[indx] for indx in range(3)])
 
-        self.assertEqual ( ret,                          set() )
-        self.assertTrue ( removed_value not in rcb.unsolved_value_possibles )
+        self.assertEqual ( ret, set() )
         rcb.sanity_check()
         
 
-        # Remove a possibility that forces another cell to be solvable
-        # Get which cells we are going to use from full rcb
-        # as partial rcb is a subset of that
-        rcb_type = RCB_TYPE_COL
-        full_rcb = self.all_solved_rcb_for_test(rcb_type)
-
-        removed_index   = 0
-        solvable_index  = 1
-        unsolved_index  = 2
-
-        removed_value = full_rcb[removed_index].value
-
-        solvable_cell_num   = full_rcb[solvable_index].cell_num
-        solvable_cell_value = full_rcb[solvable_index].value
-
-        # Now create an rcb without those cells set
-        rcb = self.partially_solved_rcb_for_test(RCB_TYPE_COL,
-                                                 [removed_index,
-                                                  solvable_index,
-                                                  unsolved_index] )
-        # Here's the current situation
-        #    col#6:
-        #    Cell#s:  6 15 24 33 42 51 60 69 78
-        #    Indexs:  0  1  2  3  4  5  6  7  8
-        #    Values:  _  _  _  6  1  3  8  4  7
-        #    Cell index possibles for unsolved values:
-        #    2:  0 1 2
-        #    5:  0 1 2
-        #    9:  0 1 2
-        #
-        #Cell#:6  index:0 possible_values: [2, 5, 9]
-        #Cell#:15 index:1 possible_values: [2, 5, 9]
-        #Cell#:24 index:2 possible_values: [2, 5, 9]
-        
-        # removed_value: 5
-        ret = rcb.remove_from_possibles(removed_value)
-
-        # Returns: []
-
-        # Leaves:
-        #   col#6:
-        #   Cell#s:  6 15 24 33 42 51 60 69 78
-        #   Indexs:  0  1  2  3  4  5  6  7  8
-        #   Values:  _  _  _  6  1  3  8  4  7
-        #   Cell index possibles for unsolved values:
-        #      2:  0 1 2
-        #      9:  0 1 2
-        # Cell#:  6 index:0 possible_values: [2, 9]
-        # Cell#: 15 index:1 possible_values: [2, 9]
-        # Cell#: 24 index:2 possible_values: [2, 9]
-
-        ###################################################
-        # Busted
-        return
-        ###################################################
-
-        self.assertEqual( len(ret), 1) # only one cell set
-        (cell_to_set, value_to_set) = ret.pop()
-        self.assertEqual(cell_to_set.cell_num, solvable_cell_cell_num)
-        self.assertEqual(value_to_set        , solvable_cell_value   )
-        
 
 
 
