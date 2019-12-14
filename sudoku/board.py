@@ -15,6 +15,7 @@ sudoku board full of Cells with values.
 #               Added copy constructor
 # 2019-12-10 tc copy_construtor.  Use name of copied board
 #               Added reduce_possibles_from_matching_cells()
+# 2019-12-14 tc Added a_cell_was_set()
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -77,6 +78,10 @@ class Board :
                       how long to solve, etc
 
     Board()[row][col] can be used to get Cell at (row,col)
+
+    Some seful functions (there are others)
+      solve()           Trys to solve the board
+      a_cell_was_set()  Should be called when any cell is solved
 
     A Board can be specified to Board() as a list of row, e.g
         [ [1,2,3,4,5,6,7,8,9],
@@ -438,6 +443,38 @@ class Board :
                         removed_some_possibles |= common_rcb.remove_value_from_possibles(value)
 
         return removed_some_possibles
+
+    def a_cell_was_set(self, solved_cell) :
+        ''' Should be called whenever a Cell is solved.
+        solved_cell is the Cell that was solved.
+
+        Returns a set of CellToSolve which can
+        be uniquely solved as a result of cell
+        being solved.
+
+        Currently called from Cell.set()
+
+        Maintains Board internal data:
+            removes cell from unsolved_cells
+
+        iterates thru rcbs:
+            RCB.a_cell_was_set(cell)
+            accumulates CellToSet for return
+        '''
+
+        # What we return
+        cells_to_solve = set()
+
+        # remove cell from unsolved_cells
+        assert solved_cell in self.unsolved_cells
+        self.unsolved_cells.remove(solved_cell)
+
+        # Iterates thru rcbs:        
+        for rcb in solved_cell.rcbs :
+            cells_to_solve |= rcb.a_cell_was_set(solved_cell)
+
+        # Tell them more cells to solve (if any)
+        return cells_to_solve
 
     def __getitem__(self, row) :
         ''' Returns our RCB at row
