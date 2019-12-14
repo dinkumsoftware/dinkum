@@ -385,7 +385,11 @@ class Board :
         # Iterate over unsolved rcbs
         for rcb in [rcb for rcb in self.rcbs if not rcb.is_solved()] :
 
-            # Extract a set() of cells that could provide "value"
+            # Build a set() of CellToSet's that could provide "value"
+            # We build the list and then Cell.set() in a separate pass
+            # to prevent "dictionary changed size during iteration" as
+            # Cell.set may modify rcb.unsolved_value_possibles
+            cells_to_solve = set()
             for (value, possible_cells) in rcb.unsolved_value_possibles.items() :
                 # If there is only one such cell ....
                 if len(possible_cells) == 1 :
@@ -395,12 +399,17 @@ class Board :
                     # See https://stackoverflow.com/questions/20625579/access-the-sole-element-of-a-set
                     [cell] = possible_cells
 
-                    # Set it
-                    cell.set(value)
+                    # Put it in set() to be solved
+                    cells_to_solve.add( CellToSet(cell, value))
 
                     # and remember that did so
                     we_set_a_cell = True
-
+                    
+            # Now solve those cells
+            ############### <todo> #### replace with Cell.solve_cells()
+            for (cell, value) in cells_to_solve :
+                cell.set(value)
+                    
         # Tell um how we did
         return we_set_a_cell
 

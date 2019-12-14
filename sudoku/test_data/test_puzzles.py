@@ -48,7 +48,6 @@ from dinkum.sudoku       import *
 from dinkum.sudoku.board import Board
 from dinkum.sudoku.stats import *
 
-
 class SolvedPuzzle :
     ''' Constructor receives spec for input_board,
     spec for solution_board, and the name to use
