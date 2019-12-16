@@ -15,7 +15,8 @@ sudoku board full of Cells with values.
 #               Added copy constructor
 # 2019-12-10 tc copy_construtor.  Use name of copied board
 #               Added reduce_possibles_from_matching_cells()
-# 2019-12-14 tc Added a_cell_was_set()
+# 2019-12-14 tc Added a_cell_was_set() and
+#               solve_cells()
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -81,6 +82,7 @@ class Board :
 
     Some seful functions (there are others)
       solve()           Trys to solve the board
+      solve_cells       solves(sets) a bunch of cells
       a_cell_was_set()  Should be called when any cell is solved
 
     A Board can be specified to Board() as a list of row, e.g
@@ -319,11 +321,13 @@ class Board :
             board_was_modified = False
 
             # Set cells with only 1 possible value
-            board_was_modified |= self.solve_cells_with_single_possible_value()
+            num_solved = self.solve_cells_with_single_possible_value()
+            board_was_modified |= (num_solved != 0)
 
             # Set row/col/blks where an unsolved value can only be
             # satisfied by a single cell
-            board_was_modified |= self.solve_rcbs_with_single_possible_value_solution()
+            num_solved = self.solve_rcbs_with_single_possible_value_solution()
+            board_was_modified |= (num_solved != 0)
 
             # Remove some possibles by looking for matching cells with same possibles
             # and projecting that into other rcb's.  This doesn't actually set any
@@ -348,39 +352,33 @@ class Board :
     
     def solve_cells_with_single_possible_value(self) :
         '''Sets all unsolved cells on the board that have a single possible value.
-        Returns True if any cell was set.
+        Returns number of cells solved.
         '''
 
-        # We are going to iterate thru this
-        # We have to make a copy because self.unsolved_cells
-        # will change during the iteration
-        unsolved_cells = self.unsolved_cells.copy()
-
-        we_set_a_cell = False
-        for cell in unsolved_cells :
+        # Examine all the unsolved cells, looking for ones
+        # that have only 1 possible solutions
+        cells_to_solve = set() # Put those cells in this set
+        for cell in self.unsolved_cells :
             if len(cell.possible_values) == 1 :
                 # Extract the only element in the set.  Leave num_possible_values intact
                 # See https://stackoverflow.com/questions/20625579/access-the-sole-element-of-a-set
-                [value] = cell.possible_values
+                [value] = list(cell.possible_values)
 
-                # and set that value into the cell
-                # This also adjusts all the row/col/blk of cell
-                # by removing value from their possible_values
-                cell.set(value) 
+                # and set that value into the set of CellToSet
+                cells_to_solve.add( CellToSet(cell, value) )
 
-                # Remember we set a cell
-                we_set_a_cell = True
 
-        return we_set_a_cell
+        # solve all those Cells (and any other Cells that solution causes)
+        # return the total number solved
+        return self.solve_cells( cells_to_solve )
 
-    
     def solve_rcbs_with_single_possible_value_solution(self) :
         ''' sets all cells in all unsolved RCBs that 
         where an unsolved value can only be satisfied by a single cell (that cell)
 
-        Returns True if sets a cell
+        Returns number of cells that were solved
         '''
-        we_set_a_cell = False
+        num_solved = 0 # what we return
 
         # Iterate over unsolved rcbs
         for rcb in [rcb for rcb in self.rcbs if not rcb.is_solved()] :
@@ -402,16 +400,12 @@ class Board :
                     # Put it in set() to be solved
                     cells_to_solve.add( CellToSet(cell, value))
 
-                    # and remember that did so
-                    we_set_a_cell = True
                     
             # Now solve those cells
-            ############### <todo> #### replace with Cell.solve_cells()
-            for (cell, value) in cells_to_solve :
-                cell.set(value)
+            num_solved += self.solve_cells( cells_to_solve )
                     
         # Tell um how we did
-        return we_set_a_cell
+        return num_solved
 
 
     def reduce_possibles_from_matching_cells(self) :
@@ -507,8 +501,47 @@ class Board :
         assert False, "Impossible place"
 
 
+    def solve_cells( self, cells_to_solve ) :
+        ''' All Cells in cells_to_solve will
+        be solved, along with any Cells that
+        become solvable as a result of
+        solving one of the cells in cells_to_solve.
 
+        cells_to_solve should be iterable containing
+        CellToSet's (class holds a Cell and a value
+        to solve it with)
 
+        Returns the total number of cell's solved.
+
+        Cells in cells_to_solve which have already
+        been solved are silently ignored as long
+        as they have been solved with passed in
+        value in CellToSet
+        '''
+
+        # What we return
+        num_solved = 0
+
+        # What we learn from setting a cell.
+        additional_cells_to_solve = set()
+
+        for (cell,value) in cells_to_solve :
+            if cell.is_solved() :
+                # Already solved, make sure values match
+                assert cell.value == value
+            else :
+                # cell not solve, solve it
+                additional_cells_to_solve |= cell.set(value)
+                num_solved += 1
+
+        # Any more to set?
+        if additional_cells_to_solve :
+            # Yes, Recurse
+            num_solved += self.solve_cells( additional_cells_to_solve )
+
+        # All done
+        return num_solved
+        
 
     def is_solved(self) :
         ''' returns true if board is solved '''
@@ -743,7 +776,7 @@ class Test_board(unittest.TestCase):
                       1 7 3 8 6 2 5 9 4
         '''
         self.assertEqual( Board(lrl_spec), Board(str_board_spec),
-                          "string and list of row-lists generate differnt Boards")
+                          "string and list of row-lists generate different Boards")
 
     def test_copy_constructor(self) :
 
@@ -1102,6 +1135,86 @@ class Test_board(unittest.TestCase):
         # The error message may differ
         self.assertRaises(ExcBadPuzzleInput, Board, str(dup_in_blk))
 
+    def test_solve_cells(self) :
+        # Empty Board
+        board = Board()
+
+        # Solve 1 cell only
+        # Shouldn't set any others
+        cells_to_solve = set( [CellToSet( board[4][6], 3)])
+        num_solved = board.solve_cells( cells_to_solve)
+        self.assertEqual( num_solved, 1)
+        self.assertEqual( len( board.unsolved_cells), NUM_CELLS-1)
+
+
+        # Board with 4 unsolved that don't influence each other
+        input_spec ='''
+         0 4 6 1 2 7 9 5 8 
+         7 8 5 6 9 4 1 3 0 
+         2 1 9 3 8 5 4 6 7 
+         4 0 2 5 3 1 8 7 9 
+         9 3 1 2 7 8 6 0 5 
+         8 5 7 9 4 6 2 1 3 
+         5 9 8 4 1 3 7 2 6
+         6 2 4 7 5 9 3 8 1
+         1 7 3 8 6 2 5 9 4
+        '''
+        board = Board(input_spec)
+        solutions = [ CellToSet( board[0][0] , 3 ),
+                      CellToSet( board[1][8] , 2 ),
+                      CellToSet( board[3][1] , 6 ),
+                      CellToSet( board[4][7] , 4 )
+                      ]
+        # Make sure we got that right
+        self.assertEqual (len(solutions), len(board.unsolved_cells))
+        for (cell,value) in solutions :
+            self.assertTrue (cell in board.unsolved_cells)
+
+
+        # Solve each cell in turn and make sure they solve the right amt of others
+        for cell_to_solve in solutions :
+            num_solved = board.solve_cells( set([ cell_to_solve ]))
+            self.assertEqual( num_solved, 1)
+        self.assertTrue ( board.is_solved() )
+
+            
+            
+
+        # Partially populated board
+        input_spec ='''
+         3 0 6 1 2 7 9 5 8 
+         7 0 0 6 9 4 1 3 2 
+         2 1 9 3 8 5 4 6 7 
+         4 6 2 5 3 1 8 7 9 
+         9 3 1 2 7 8 6 4 5 
+         0 0 0 9 0 6 2 1 3 
+         5 9 8 4 1 3 7 2 6
+         6 2 4 7 5 9 3 8 1
+         1 7 3 8 6 2 5 9 0
+        '''
+
+        board = Board(input_spec)
+
+        # All the cells that will solve this
+        solutions = [ CellToSet( board[0][1] , 4 ),
+                      CellToSet( board[1][1] , 8 ),
+                      CellToSet( board[1][2] , 5 ),
+                      CellToSet( board[5][0] , 8 ),
+                      CellToSet( board[5][1] , 5 ),
+                      CellToSet( board[5][2] , 7 ),
+                      CellToSet( board[5][4] , 4 ),
+                      CellToSet( board[8][8] , 4 )
+                      ]
+        # Make sure we got that right
+        self.assertEqual (len(solutions), len(board.unsolved_cells))
+        for (cell,value) in solutions :
+            self.assertTrue (cell in board.unsolved_cells)
+
+            
+        # Now solve it
+        num_solved = board.solve_cells ( solutions )
+        self.assertEqual ( num_solved, len( solutions) )
+        self.assertTrue  ( board.is_solved() )
 
 
 if __name__ == "__main__" :
