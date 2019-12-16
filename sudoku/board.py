@@ -1217,6 +1217,56 @@ class Test_board(unittest.TestCase):
         self.assertTrue  ( board.is_solved() )
 
 
+    def test_common_rcbs(self) :
+
+        # empty board
+        board = Board()
+
+        #### Cells with no rcbs in common
+        ncc = [\
+               board[0][0],
+               board[1][3],
+               board[2][6],
+               board[3][1],
+               board[4][4],
+               board[5][7],
+               board[6][2],
+               board[7][5],
+               board[8][8],
+               ]
+        for cell in ncc :
+            # One at a time, test against all others
+            common_rcbs = cell.common_rcbs( [ other_cell for other_cell in ncc if cell != other_cell])
+            self.assertFalse (common_rcbs) 
+
+
+        #### Row and blk in common
+        cell_a = board[6][7]
+        cell_b = board[6][6]
+        self.assertEqual   ( cell_a.row_num,  cell_b.row_num )
+        self.assertEqual   ( cell_a.blk_num,  cell_b.blk_num )
+        self.assertNotEqual( cell_a.col_num,  cell_b.col_num )
+
+        ones_in_common = cell_a.common_rcbs( [cell_b] )
+        self.assertEqual ( len(ones_in_common), 2)
+        self.assertTrue  ( board.rows[6] in ones_in_common )
+        self.assertTrue  ( board.blks[8] in ones_in_common )
+
+        ### col and blk in common
+        cell_a = board[4][7]
+        cell_b = board[5][7]
+        self.assertNotEqual( cell_a.row_num,  cell_b.row_num )
+        self.assertEqual   ( cell_a.blk_num,  cell_b.blk_num )
+        self.assertEqual   ( cell_a.col_num,  cell_b.col_num )
+
+        ones_in_common = cell_a.common_rcbs( [cell_b] )
+        self.assertEqual ( len(ones_in_common), 2)
+        self.assertTrue  ( board.blks[5] in ones_in_common )
+        self.assertTrue  ( board.cols[7] in ones_in_common )
+
+        
+    
+
 if __name__ == "__main__" :
     # Run the unittests
     unittest.main()
