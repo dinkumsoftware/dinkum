@@ -40,6 +40,8 @@ of that puzzle, regardless of whether the puzzle is solved or not
 #               read/write_prior_solve_stats()
 # 2019-12-10 tc move import testing of solvability to unittests
 #               fixed bug in pre_solved and real_easy
+# 2019-12-16 tc Solved the saturday globe
+
 from copy                import deepcopy
 import pickle
 import os
@@ -220,7 +222,7 @@ puzzle_ans = '''
 817 236 594
 '''
 puzzle = SolvedPuzzle(name, desc, puzzle_in, puzzle_ans)
-all_known_unsolved_puzzles.append(puzzle)
+all_known_solved_puzzles.append(puzzle)
 
 
 # ***
@@ -348,6 +350,12 @@ class Test_test_puzzles(unittest.TestCase) :
             # Verify we can't solvable the unsolvable
             for sp in all_known_unsolved_puzzles :
                 our_solution = sp.input_board.solve()
+                if our_solution :
+                    # we just solved an unsolvable puzzle
+                    # print out it's value so they can edit in the solution
+                    print("\nboard_name:", sp.input_board.name )
+                    print (our_solution)
+
                 self.assertIsNone (our_solution, "%s: we can solve an unsolvable puzzle")
 
 

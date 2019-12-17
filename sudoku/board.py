@@ -17,6 +17,7 @@ sudoku board full of Cells with values.
 #               Added reduce_possibles_from_matching_cells()
 # 2019-12-14 tc Added a_cell_was_set() and
 #               solve_cells()
+# 2019-12-16 tc Solved the saturday globe
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -332,7 +333,8 @@ class Board :
             # Remove some possibles by looking for matching cells with same possibles
             # and projecting that into other rcb's.  This doesn't actually set any
             # cells, but may modifify the board
-            board_was_modified |= self.reduce_possibles_from_matching_cells()
+            num_solved = self.solve_possibles_from_matching_cells()
+            board_was_modified |= (num_solved != 0)
 
             # How did we do?
             if not board_was_modified :
@@ -408,7 +410,7 @@ class Board :
         return num_solved
 
 
-    def reduce_possibles_from_matching_cells(self) :
+    def solve_possibles_from_matching_cells(self) :
         '''
         Searches every rcb for pairs and triples
         of unsolved cells that all have the same possible value
@@ -418,7 +420,10 @@ class Board :
         It then removes their values from any common rcb in
         the pair.
 
-        returns True if any possibles were eliminated.
+        It solves any Cells that become solvable as a result
+        of this call.
+
+        returns the number of solved cells
         '''
 
         # What we return
@@ -430,6 +435,7 @@ class Board :
             #       be in the same rcb, except us
             #       and there are no other unsolved
             #       cells with their value
+            cells_to_solve = set() # Where we accumulate what to solve
             for match_size in [2,3] :
                 # returns [] of (common_unique_value, set() of cells)
                 value_and_cells = rcb.unsolved_cells_with_common_unique_values(match_size)
@@ -440,12 +446,14 @@ class Board :
                     assert len(cells) == match_size
 
                     # Iterate thru a list of rcbs that the matching cells have in common
-                    first_cell = cells.pop() # pull a cell out of cells
+                    first_cell = list(cells)[0]  # get a arbitary cell out of the set
 
                     for common_rcb in first_cell.common_rcbs( cells ) :
-                        removed_some_possibles |= common_rcb.remove_value_from_possibles(value)
+                        cells_to_solve|= common_rcb.remove_from_possibles(value, cells)
 
-        return removed_some_possibles
+        # Now solve the Cells we found
+        # and tell them how many we solved
+        return self.solve_cells(cells_to_solve)
 
     def a_cell_was_set(self, solved_cell) :
         ''' Should be called whenever a Cell is solved.
