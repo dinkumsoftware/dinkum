@@ -18,6 +18,8 @@ sudoku board full of Cells with values.
 # 2019-12-14 tc Added a_cell_was_set() and
 #               solve_cells()
 # 2019-12-16 tc Solved the saturday globe
+# 2019-12-19 tc set as verb ==> solve
+
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -84,7 +86,7 @@ class Board :
     Some seful functions (there are others)
       solve()           Trys to solve the board
       solve_cells       solves(sets) a bunch of cells
-      a_cell_was_set()  Should be called when any cell is solved
+      a_cell_was_solved()  Should be called when any cell is solved
 
     A Board can be specified to Board() as a list of row, e.g
         [ [1,2,3,4,5,6,7,8,9],
@@ -183,14 +185,14 @@ class Board :
         for rcb in self.rcbs :
             rcb.sanity_check() 
 
-        # Is there any input to set cells with?
+        # Is there any input to solve cells with?
         if not list_of_rows :
             return # nope, all done
 
         # We need to populate it with values as spec'ed by the caller
 
-        # Go thru and set each cell value from our input,
-        # set() adjusts all the data structures
+        # Go thru and solve each cell value from our input,
+        # solve() adjusts all the data structures
         if len(list_of_rows) != RCB_SIZE :    # Sanity check input
             raise ExcBadPuzzleInput( "Wrong number of rows: %d" % len(list_of_rows) )
 
@@ -216,7 +218,7 @@ class Board :
                     # (cell_num, row_num, col_num, value, "row/col/blk"
                     err_fmt_str = "cell#%d at (%d,%d) value:%d is duplicated in cell's %s"
 
-                    # We know that cell is currently unset
+                    # We know that cell is currently unsolved
                     assert cell.value == Cell.unsolved_cell_value
 
                     # Can't have duplicate values in a row/col/blk
@@ -230,8 +232,8 @@ class Board :
                         raise ExcBadPuzzleInput( err_fmt_str % (cell_num, row_num, col_num,
                                                                 value, "blk"))
 
-                    # All looks good, set it
-                    cell.set(value)
+                    # All looks good, solve it
+                    cell.solve(value)
 
                 cell_num += 1
                 col_num += 1
@@ -312,8 +314,8 @@ class Board :
         ret_value = self # overwritten if can't solve
 
         # We try all the solution techniques we know about
-        # Each is required to return True if they set a cell
-        # We give up when no cell is set in a pass
+        # Each is required to return True if they solve a cell
+        # We give up when no cell is solved in a pass
         self.solve_stats.num_solve_passes = 0
         while (not self.is_solved()) :
             # count the # of times thru the loop
@@ -321,17 +323,17 @@ class Board :
 
             board_was_modified = False
 
-            # Set cells with only 1 possible value
+            # Solve cells with only 1 possible value
             num_solved = self.solve_cells_with_single_possible_value()
             board_was_modified |= (num_solved != 0)
 
-            # Set row/col/blks where an unsolved value can only be
+            # Solve row/col/blks where an unsolved value can only be
             # satisfied by a single cell
             num_solved = self.solve_rcbs_with_single_possible_value_solution()
             board_was_modified |= (num_solved != 0)
 
             # Remove some possibles by looking for matching cells with same possibles
-            # and projecting that into other rcb's.  This doesn't actually set any
+            # and projecting that into other rcb's.  This doesn't actually solve any
             # cells, but may modifify the board
             num_solved = self.solve_possibles_from_matching_cells()
             board_was_modified |= (num_solved != 0)
@@ -353,7 +355,7 @@ class Board :
 
     
     def solve_cells_with_single_possible_value(self) :
-        '''Sets all unsolved cells on the board that have a single possible value.
+        '''Solves all unsolved cells on the board that have a single possible value.
         Returns number of cells solved.
         '''
 
@@ -366,8 +368,8 @@ class Board :
                 # See https://stackoverflow.com/questions/20625579/access-the-sole-element-of-a-set
                 [value] = list(cell.possible_values)
 
-                # and set that value into the set of CellToSet
-                cells_to_solve.add( CellToSet(cell, value) )
+                # and solve that value into the set of CellToSolve
+                cells_to_solve.add( CellToSolve(cell, value) )
 
 
         # solve all those Cells (and any other Cells that solution causes)
@@ -375,7 +377,7 @@ class Board :
         return self.solve_cells( cells_to_solve )
 
     def solve_rcbs_with_single_possible_value_solution(self) :
-        ''' sets all cells in all unsolved RCBs that 
+        ''' solves all cells in all unsolved RCBs that 
         where an unsolved value can only be satisfied by a single cell (that cell)
 
         Returns number of cells that were solved
@@ -385,10 +387,10 @@ class Board :
         # Iterate over unsolved rcbs
         for rcb in [rcb for rcb in self.rcbs if not rcb.is_solved()] :
 
-            # Build a set() of CellToSet's that could provide "value"
-            # We build the list and then Cell.set() in a separate pass
+            # Build a set() of CellToSolve's that could provide "value"
+            # We build the list and then Cell.solve() in a separate pass
             # to prevent "dictionary changed size during iteration" as
-            # Cell.set may modify rcb.unsolved_value_possibles
+            # Cell.solve may modify rcb.unsolved_value_possibles
             cells_to_solve = set()
             for (value, possible_cells) in rcb.unsolved_value_possibles.items() :
                 # If there is only one such cell ....
@@ -400,7 +402,7 @@ class Board :
                     [cell] = possible_cells
 
                     # Put it in set() to be solved
-                    cells_to_solve.add( CellToSet(cell, value))
+                    cells_to_solve.add( CellToSolve(cell, value))
 
                     
             # Now solve those cells
@@ -455,7 +457,7 @@ class Board :
         # and tell them how many we solved
         return self.solve_cells(cells_to_solve)
 
-    def a_cell_was_set(self, solved_cell) :
+    def a_cell_was_solved(self, solved_cell) :
         ''' Should be called whenever a Cell is solved.
         solved_cell is the Cell that was solved.
 
@@ -463,14 +465,14 @@ class Board :
         be uniquely solved as a result of cell
         being solved.
 
-        Currently called from Cell.set()
+        Currently called from Cell.solve()
 
         Maintains Board internal data:
             removes cell from unsolved_cells
 
         iterates thru rcbs:
-            RCB.a_cell_was_set(cell)
-            accumulates CellToSet for return
+            RCB.a_cell_was_solve(cell)
+            accumulates CellToSolve for return
         '''
 
         # What we return
@@ -482,7 +484,7 @@ class Board :
 
         # Iterates thru rcbs:        
         for rcb in solved_cell.rcbs :
-            cells_to_solve |= rcb.a_cell_was_set(solved_cell)
+            cells_to_solve |= rcb.a_cell_was_solved(solved_cell)
 
         # Tell them more cells to solve (if any)
         return cells_to_solve
@@ -516,7 +518,7 @@ class Board :
         solving one of the cells in cells_to_solve.
 
         cells_to_solve should be iterable containing
-        CellToSet's (class holds a Cell and a value
+        CellToSolve's (class holds a Cell and a value
         to solve it with)
 
         Returns the total number of cell's solved.
@@ -524,13 +526,13 @@ class Board :
         Cells in cells_to_solve which have already
         been solved are silently ignored as long
         as they have been solved with passed in
-        value in CellToSet
+        value in CellToSolve
         '''
 
         # What we return
         num_solved = 0
 
-        # What we learn from setting a cell.
+        # What we learn from solving a cell.
         additional_cells_to_solve = set()
 
         for (cell,value) in cells_to_solve :
@@ -539,10 +541,10 @@ class Board :
                 assert cell.value == value
             else :
                 # cell not solve, solve it
-                additional_cells_to_solve |= cell.set(value)
+                additional_cells_to_solve |= cell.solve(value)
                 num_solved += 1
 
-        # Any more to set?
+        # Any more to solve?
         if additional_cells_to_solve :
             # Yes, Recurse
             num_solved += self.solve_cells( additional_cells_to_solve )
@@ -634,7 +636,7 @@ class Board :
         '''
         # Iterate over both our cells
         for (our_cell, their_cell) in zip(self.cells, their_board.cells) :
-            # Is our cell set?
+            # Is our cell solved?
             if our_cell.value != Cell.unsolved_cell_value :
                 # Yes, is it the same?
                 if our_cell.value != their_cell.value :
@@ -725,12 +727,12 @@ class Test_board(unittest.TestCase):
 
 
     def test_empty_board(self) :
-        board = Board() # No cells should be set
+        board = Board() # No cells should be solved
 
-        # Confirm none set
+        # Confirm none solved
         for cell in board.cells :
             self.assertEqual (cell.value, Cell.unsolved_cell_value,
-                         "Cell# %d should be unset, it is: %d" % (cell.cell_num, cell.value))
+                         "Cell# %d should be unsolved, it is: %d" % (cell.cell_num, cell.value))
             # All values should be possible
             self.assertSetEqual (cell.possible_values, Cell.all_cell_values,
                                  "Cell# %d: num_possibles should have all possible values" %cell.cell_num)
@@ -1148,8 +1150,8 @@ class Test_board(unittest.TestCase):
         board = Board()
 
         # Solve 1 cell only
-        # Shouldn't set any others
-        cells_to_solve = set( [CellToSet( board[4][6], 3)])
+        # Shouldn't solve any others
+        cells_to_solve = set( [CellToSolve( board[4][6], 3)])
         num_solved = board.solve_cells( cells_to_solve)
         self.assertEqual( num_solved, 1)
         self.assertEqual( len( board.unsolved_cells), NUM_CELLS-1)
@@ -1168,10 +1170,10 @@ class Test_board(unittest.TestCase):
          1 7 3 8 6 2 5 9 4
         '''
         board = Board(input_spec)
-        solutions = [ CellToSet( board[0][0] , 3 ),
-                      CellToSet( board[1][8] , 2 ),
-                      CellToSet( board[3][1] , 6 ),
-                      CellToSet( board[4][7] , 4 )
+        solutions = [ CellToSolve( board[0][0] , 3 ),
+                      CellToSolve( board[1][8] , 2 ),
+                      CellToSolve( board[3][1] , 6 ),
+                      CellToSolve( board[4][7] , 4 )
                       ]
         # Make sure we got that right
         self.assertEqual (len(solutions), len(board.unsolved_cells))
@@ -1204,14 +1206,14 @@ class Test_board(unittest.TestCase):
         board = Board(input_spec)
 
         # All the cells that will solve this
-        solutions = [ CellToSet( board[0][1] , 4 ),
-                      CellToSet( board[1][1] , 8 ),
-                      CellToSet( board[1][2] , 5 ),
-                      CellToSet( board[5][0] , 8 ),
-                      CellToSet( board[5][1] , 5 ),
-                      CellToSet( board[5][2] , 7 ),
-                      CellToSet( board[5][4] , 4 ),
-                      CellToSet( board[8][8] , 4 )
+        solutions = [ CellToSolve( board[0][1] , 4 ),
+                      CellToSolve( board[1][1] , 8 ),
+                      CellToSolve( board[1][2] , 5 ),
+                      CellToSolve( board[5][0] , 8 ),
+                      CellToSolve( board[5][1] , 5 ),
+                      CellToSolve( board[5][2] , 7 ),
+                      CellToSolve( board[5][4] , 4 ),
+                      CellToSolve( board[8][8] , 4 )
                       ]
         # Make sure we got that right
         self.assertEqual (len(solutions), len(board.unsolved_cells))

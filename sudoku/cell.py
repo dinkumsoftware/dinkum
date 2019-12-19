@@ -18,6 +18,7 @@ a value to set it to.
 # 2019-12-10 tc Added common_rcbs(), made __str__() terser
 #               Moved former __str__() to detailed_str()
 # 2019-12-11 tc Support for CellToSet
+# 2019-12-19 tc set as verb ==> solve
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
 
@@ -25,7 +26,7 @@ from dinkum.sudoku import *  # Get package wide constants from __init__.py
 class Cell :
     ''' Represents a single cell on the sudoku board. Has
     value           can be unsolved_cell_value or 1-9
-    possible_values set of potential values, empty if value has been set
+    possible_values set of potential values, empty if value has been solved
     board           The Board we belong to
 
     row/col/blk     The RCB we belong to
@@ -47,7 +48,7 @@ class Cell :
     row/col/blk The RCBs we belong to, e.g. board.rows[row_idx]
 
     '''
-    unsolved_cell_value = 0 # Used to signal cell hasn't been set()
+    unsolved_cell_value = 0 # Used to signal cell hasn't been solved()
     num_values = RCB_SIZE
     all_cell_values = set(range(1,num_values+1))
 
@@ -97,17 +98,18 @@ class Cell :
             self.rcbs = (self.row, self.col, self.blk)
             
 
-    def set(self, value) :
-        '''Sets value into cell
+    def solve(self, value) :
+        '''Solves the Cell by
+        Putting value into cell
         Alters:
            value, possible_values
         
         We remove ourself as a possibility from our RCBs
         and our neighbor cells in those RCBs.
-        This is done via Board.a_cell_was_set()
+        This is done via Board.a_cell_was_solved()
 
         We return a set() of CellToSet's that could/should
-        bet set as a result of our being set.
+        be solved as a result of our being solved.
         '''
         # Error check value
         assert value in Cell.all_cell_values
@@ -123,12 +125,12 @@ class Cell :
 
         # Are we attached to a board?
         if self.board :
-            # Yes, tell it we were set
+            # Yes, tell it we were solved
             # This will notify all our neighbors
-            # Tell our caller what other cells to set
-            return self.board.a_cell_was_set(self)
+            # Tell our caller what other cells to solve
+            return self.board.a_cell_was_solved(self)
         else :
-            # No board attached, no other cells to set
+            # No board attached, no other cells to solve
             return set()
         
         assert False, "Impossible Place"
@@ -141,7 +143,7 @@ class Cell :
 
         If after removal of value, there remains only
         a single possible value that this cell can be,
-        It is returned in a set() of CellToSet(self,value).
+        It is returned in a set() of CellToSolve(self,value).
 
         Otherwise returns an empty set.
 
@@ -164,9 +166,9 @@ class Cell :
             # a way to get the value out of a set
             # with only one value
             [remaining_value] = list(self.possible_values)
-            return set( [ CellToSet(self, remaining_value) ] )
+            return set( [ CellToSolve(self, remaining_value) ] )
 
-        # We aren't settable based on this
+        # We aren't solvable based on this
         return set()
         
 
@@ -302,7 +304,7 @@ class Cell :
 
     def __str__(self) :
         '''returns human readable description, e.g.
-            cell#3 :4         if set
+            cell#3 :4         if solve
             cell#3 :?         if not
         '''
         return "%s:%s" % ( self.name(), self.str_value(unsolved_char='?') )
@@ -340,7 +342,7 @@ class Cell :
 
 
 
-class CellToSet(tuple) :
+class CellToSolve(tuple) :
     ''' We are immutable which holds a:
         cell   Cell
         value  The value it should be set to
@@ -351,7 +353,7 @@ class CellToSet(tuple) :
     
     This is done so that all the comparision
     operators (e.g. __eq__) work properly on
-    CellToSet members
+    CellToSolve members
     '''
 
     def __new__(cls, cell, value) :
@@ -360,7 +362,7 @@ class CellToSet(tuple) :
 
         # See https://stackoverflow.com/questions/12652683/how-to-initialize-an-instance-of-a-subclass-of-tuple-in-python
         return tuple.__new__(cls, (cell, value) )
-        # since we are returning an instance of CellToSet,
+        # since we are returning an instance of CellToSolve,
         # the follwing __init__ will be called for the instance we
         # just returned
 
@@ -465,7 +467,7 @@ class Test_cell(unittest.TestCase):
         # Should remember the board
         self.assertEqual( cell.board, None )
 
-        # Should be unset
+        # Should be unsolved
         self.assertEqual( cell.value, Cell.unsolved_cell_value )
 
         # All should be possible
@@ -553,36 +555,36 @@ class Test_cell(unittest.TestCase):
         self.assertEqual (cell.__str__(), "Cell#18:6")
         
 
-    def test_CellToSet(self) :
+    def test_CellToSolve(self) :
 
         cell = Cell(None, 18)
 
         # Verify it constructs
-        cts  = CellToSet(cell, 5)
+        cts  = CellToSolve(cell, 5)
 
         self.assertEqual(cts.cell, cell)
         self.assertEqual(cts.value, 5)
 
         # Verify illegal values
-        self.assertRaises(AssertionError, CellToSet, cell, 18)
+        self.assertRaises(AssertionError, CellToSolve, cell, 18)
 
 
-    def test_set(self) :
+    def test_solve(self) :
         # Make a random cell with no Board
         cell = Cell(None, 29)
 
         # Set it's value to 2
-        # should return no cells to set
-        self.assertSetEqual( cell.set(2), set() )
+        # should return no cells to solve
+        self.assertSetEqual( cell.solve(2), set() )
         self.assertEqual(cell.value, 2)
         self.assertSetEqual(cell.possible_values, set()) # No other possibles
 
         # Verify illegal values
-        self.assertRaises(AssertionError, cell.set, 18)
-        self.assertRaises(AssertionError, cell.set,  0)
+        self.assertRaises(AssertionError, cell.solve, 18)
+        self.assertRaises(AssertionError, cell.solve,  0)
 
         # Make a dummy board class that has a member function
-        # That cell.set() should call and data that cell.__init__()
+        # That cell.solve() should call and data that cell.__init__()
         # needs
         class DummyBoard() :
             def __init__(self) :
@@ -590,27 +592,27 @@ class Test_cell(unittest.TestCase):
                 self.cols = [None] * RCB_SIZE
                 self.blks = [None] * RCB_SIZE
 
-            def a_cell_was_set(self, cell) :
-                self.set_cell = cell
-                return returned_cells_to_set
+            def a_cell_was_solved(self, cell) :
+                self.solve_cell = cell
+                return returned_cells_to_solve
 
-        # what DummyBoard.a_cell_to_set() returns
-        returned_cells_to_set = set ( [CellToSet( Cell(None,  2), 3),
-                                       CellToSet( Cell(None, 80), 9)])
+        # what DummyBoard.a_cell_to_solve() returns
+        returned_cells_to_solve = set ( [CellToSolve( Cell(None,  2), 3),
+                                         CellToSolve( Cell(None, 80), 9)])
 
         dummy_board = DummyBoard()
         cell = Cell(dummy_board, 22)
         dummy_board.unsolved_cells = set([cell])
         
-        cells_to_set = cell.set(2)
-        self.assertEqual( len(cells_to_set), 2)
-        self.assertSetEqual( cells_to_set,
-                             returned_cells_to_set)
+        cells_to_solve = cell.solve(2)
+        self.assertEqual( len(cells_to_solve), 2)
+        self.assertSetEqual( cells_to_solve,
+                             returned_cells_to_solve)
 
-        # Make sure you can't set a cell twice
+        # Make sure you can't solve a cell twice
         cell = Cell(None, 33)
-        cell.set(4)
-        self.assertRaises( AssertionError, cell.set, 4)
+        cell.solve(4)
+        self.assertRaises( AssertionError, cell.solve, 4)
 
 
     def test_remove_from_possibles(self) :
@@ -625,38 +627,38 @@ class Test_cell(unittest.TestCase):
         # Remove values 1-7 (leaving 8&9)
         for value in range(1,8) :
             ret_set = cell.remove_from_possibles(value)
-            self.assertSetEqual(ret_set, set() )  # self can't be set yet
+            self.assertSetEqual(ret_set, set() )  # self can't be solve yet
             self.assertEqual (len(cell.possible_values), 9-value)  #8,7,...
         
-        # When we remove 8, cell.set() should tell us to set itself
+        # When we remove 8, cell.solve() should tell us to solve itself
         ret_set = cell.remove_from_possibles(8)
         self.assertEqual(len(ret_set), 1)
 
-        [cell_to_set] = list(ret_set)
-        self.assertEqual(cell_to_set.cell,  cell)
-        self.assertEqual(cell_to_set.value,    9)        
+        [cell_to_solve] = list(ret_set)
+        self.assertEqual(cell_to_solve.cell,  cell)
+        self.assertEqual(cell_to_solve.value,    9)        
 
 
-    def test_CellToSet(self) :
+    def test_CellToSolve(self) :
         # A test cell
         cell = Cell(None, 8)
 
         # Error conditions
         # Bad value
-        self.assertRaises(AssertionError, CellToSet,cell, 50)
+        self.assertRaises(AssertionError, CellToSolve,cell, 50)
 
         # Bad cell
-        self.assertRaises(AssertionError, CellToSet,list(), 50 )
+        self.assertRaises(AssertionError, CellToSolve,list(), 50 )
 
         # See if it works
         value = 3
-        cts = CellToSet(cell, value)
+        cts = CellToSolve(cell, value)
         self.assertEqual( cts.cell,  cell)
         self.assertEqual( cts.value, value)
 
         # __eq__
-        cell_a = CellToSet(cell, 4)
-        cell_b = CellToSet(cell, 4)
+        cell_a = CellToSolve(cell, 4)
+        cell_b = CellToSolve(cell, 4)
         self.assertEqual( cell_a, cell_b)
 
 if __name__ == "__main__" :

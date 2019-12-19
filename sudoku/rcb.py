@@ -7,10 +7,10 @@ Each RCB is a [] of cells.
 # 2019-11-25 tc Moved fom sudoku.py
 # 2019-12-07 tc Added unsolved_cells and unsolved_value_possibles
 # 2019-12-12 tc Added a_cell_was_set() and remove_from_possibles()
-
+# 2019-12-19 tc set as verb ==> solve
 
 from dinkum.sudoku      import * # All package wide def's
-from dinkum.sudoku.cell import Cell, CellToSet
+from dinkum.sudoku.cell import Cell, CellToSolve
 
 class RCB(list) :
     ''' Represents a row, column, or block.
@@ -27,7 +27,7 @@ class RCB(list) :
 
     some funcs:
       initial_cell_placement  Should be called to initially populate the rcb
-      a_cell_was_set          Should be called when a cell in the rcb was set
+      a_cell_was_solved       Should be called when a cell in the rcb was solved
                               either in initial board or during solution
       remove_from_possibles   Removes a value as a possible solution
 
@@ -112,37 +112,37 @@ class RCB(list) :
                 # Start it off with this cell
                 self.unsolved_value_possibles[value] = set([cell])
 
-    def a_cell_was_set(self, set_cell) :
-        ''' Should be called when set_cell (one of our cells,
-        has been set.
+    def a_cell_was_solved(self, solved_cell) :
+        ''' Should be called when solved_cell (one of our cells,
+        has been solved.
 
-        Returns a set() of CellToSet which should be set
-        as a result of the setting of set_cell.
+        Returns a set() of CellToSolve which should be solved
+        as a result of the solving of solved_cell.
 
         Specifically:
-            removes set_cell from unsolved_cells
-            deletes unsolved_value_possibles[cell.value]
-            calls remove_from_possibles(set_cell.value)
-            returning any cells that can be set as a result
+            removes solved_cell from unsolved_cells
+            deletes unsolved_value_possibles[solved_cell.value]
+            calls remove_from_possibles(solved_cell.value)
+            returning any cells that can be solved as a result
         '''
         # Enforce our assumptions
-        assert set_cell.is_solved()
-        assert set_cell in self.unsolved_cells
-        assert set_cell in self.unsolved_value_possibles[set_cell.value]
+        assert solved_cell.is_solved()
+        assert solved_cell in self.unsolved_cells
+        assert solved_cell in self.unsolved_value_possibles[solved_cell.value]
 
-        set_value = set_cell.value  # What the set_cell was set to
-        assert set_cell in self.unsolved_value_possibles[set_value]
+        solved_value = solved_cell.value  # What the solved_cell was set to
+        assert solved_cell in self.unsolved_value_possibles[solved_value]
 
-        # remove set_cell from unsolved_cells
-        self.unsolved_cells.remove(set_cell)
+        # remove solved_cell from unsolved_cells
+        self.unsolved_cells.remove(solved_cell)
 
         # deletes unsolved_value_possibles[cell.value]
-        # As this value is set, no one can provide it
-        del self.unsolved_value_possibles[set_value]
+        # As this value is solved, no one can provide it
+        del self.unsolved_value_possibles[solved_value]
 
-        # Remove set_cell.value as a possibility for all other
+        # Remove solved_cell.value as a possibility for all other
         # cells in our RCB.  Also rebuilds unsolved_value_possibles
-        returned_set = self.remove_from_possibles( set_value, [set_cell])
+        returned_set = self.remove_from_possibles( solved_value, [solved_cell])
 
         # All done
         return returned_set
@@ -156,7 +156,7 @@ class RCB(list) :
         provided. (Otherwise the RCB isn't solvable
         as no cell could provide value.)
 
-        returns a (possibly empty) set of CellToSet's that
+        returns a (possibly empty) set of CellToSolve's that
         consists of any other Cell that becomes solvable
         by removing value as a possibility.
 
@@ -167,29 +167,29 @@ class RCB(list) :
 
         iterates thru unsolved_cells( sans except_cells )
              Cell.remove_from_possibles(value)
-             accumulates set(CellsToSet)
+             accumulates set(CellsToSolve)
 
         Rebuilds unsolved_value_possibles
 
         If there remains only a single Cell that can provide
         a value, that Cell and the value to set it to is
-        added to the returned set of CellToSet's
+        added to the returned set of CellToSolve's
 
-        return set of CellsToSet's
+        return set of CellsToSolve's
         '''
         assert value in Cell.all_cell_values
         assert len(except_cells) > 0
         assert [ cell in self for cell in except_cells ]
 
         # What we return
-        cells_to_set = set()
+        cells_to_solve = set()
 
         # iterates thru unsolved_cells sans except_cells
         #    Cell.remove_from_possibles(value)
-        #    accumulates set(CellsToSet)
+        #    accumulates set(CellsToSolve)
         for cell in self.unsolved_cells :
             if cell not in except_cells :
-                cells_to_set |= cell.remove_from_possibles(value)
+                cells_to_solve |= cell.remove_from_possibles(value)
 
         # rebuild unsolved_value_possibles from scratch
         # This scans all unsolved_cells and returns
@@ -203,10 +203,10 @@ class RCB(list) :
             if len(cells) == 1 :
                 # Yes, cell can be solved with value.  Tell caller
                 [cell] = list(cells)     # only one cell in set
-                cells_to_set.add( CellToSet(cell, value) )
+                cells_to_solve.add( CellToSolve(cell, value) )
 
         # Tell them solvable cells based on removing value
-        return cells_to_set
+        return cells_to_solve
 
     def unsolved_values(self) :
         ''' returns a set of values to be solved
@@ -528,7 +528,7 @@ class Test_rcb(unittest.TestCase):
         constructor does, but we can't do that here because
         we end up with circular imports.
 
-        All the cells in the returned rcb are unset.
+        All the cells in the returned rcb are unsolved.
         '''
 
         # Get the cell numbers we are going to assign
@@ -560,7 +560,7 @@ class Test_rcb(unittest.TestCase):
     def all_solved_rcb_for_test(self, rcb_type) :
         ''' returns an rcb with every cell having a value.
         '''
-        # Start with one with nothing set
+        # Start with one with nothing solved
         rcb = self.all_unsolved_rcb_for_test(rcb_type)
 
         for (indx, value) in zip( range(RCB_SIZE),             # index
@@ -581,9 +581,9 @@ class Test_rcb(unittest.TestCase):
         return rcb
 
 
-    def partially_solved_rcb_for_test(self, rcb_type, not_set_indexes) :
-        ''' returns a board with some cells set and others unknown.
-        not_set_indexes is an iterable of cell indexes (0-8) that are NOT set
+    def partially_solved_rcb_for_test(self, rcb_type, not_solved_indexes) :
+        ''' returns a board with some cells solved and others unknown.
+        not_solved_indexes is an iterable of cell indexes (0-8) that are NOT solved
         '''
         # Get a full one
         rcb = self.all_solved_rcb_for_test(rcb_type)
@@ -594,22 +594,22 @@ class Test_rcb(unittest.TestCase):
 
         # On first pass go thru and accumulate the values
         # of all the cells we are going to unset
-        unset_cell_values = set()
-        for indx in not_set_indexes :
+        unsolved_cell_values = set()
+        for indx in not_solved_indexes :
             cell = rcb[indx]
 
             # build our possibles
-            unset_cell_values.add ( cell.value )
+            unsolved_cell_values.add ( cell.value )
 
-        # Pass two. Set what we need to.
-        # Diddle the cells. We assume all unset cells could have any of those values
+        # Pass two. Solve what we need to.
+        # Diddle the cells. We assume all unsolved cells could have any of those values
         # mark the cell unsolved in the rcb
-        for indx in not_set_indexes :
+        for indx in not_solved_indexes :
             cell = rcb[indx]
 
             # adjust the cell
             cell.value = Cell.unsolved_cell_value
-            cell.possible_values |= unset_cell_values
+            cell.possible_values |= unsolved_cell_values
 
             # adjust rcb
             rcb.unsolved_cells.add ( cell )
@@ -810,8 +810,8 @@ class Test_rcb(unittest.TestCase):
 
 
 
-    def test_a_cell_was_set(self) :
-        # Get a partially populated rcb with index 3,4,5 unset
+    def test_a_cell_was_solved(self) :
+        # Get a partially populated rcb with index 3,4,5 unsolved
         rcb = self.partially_solved_rcb_for_test(RCB_TYPE_COL, [3,4,5])
 
         # Initial:
@@ -824,25 +824,25 @@ class Test_rcb(unittest.TestCase):
         # 3:  3  4  5 
         # 6:  3  4  5 
 
-        # Can't set a previously set Cell
-        already_set_cell = rcb[0]
-        self.assertRaises (AssertionError, rcb.a_cell_was_set, already_set_cell )
+        # Can't solve a previously solved Cell
+        already_solved_cell = rcb[0]
+        self.assertRaises (AssertionError, rcb.a_cell_was_solved, already_solved_cell )
         
         # Can't do this with a cell not in the RCB
         non_rcb_cell = Cell(None, 80)
-        self.assertRaises (AssertionError, rcb.a_cell_was_set, non_rcb_cell )
+        self.assertRaises (AssertionError, rcb.a_cell_was_solved, non_rcb_cell )
 
-        # Can't do this with unset cell
-        unset_cell = rcb[3]
-        self.assertRaises( AssertionError, rcb.a_cell_was_set, unset_cell )
+        # Can't do this with unsolved cell
+        unsolved_cell = rcb[3]
+        self.assertRaises( AssertionError, rcb.a_cell_was_solved, unsolved_cell )
 
         # Test if it actually works
         # Set one of our unsolved cells to an unsolved value
-        set_cell  = rcb[3]
-        set_value = 1
-        set_cell.set(set_value)
+        solved_cell  = rcb[3]
+        solved_value = 1
+        solved_cell.solve(solved_value)
 
-        # After rcb[3] set to 1
+        # After rcb[3] solved to 1
         # col[6]:
         # Cell#s:  6 15 24 33 42 51 60 69 78
         # Indexs:  0  1  2  3  4  5  6  7  8
@@ -851,57 +851,57 @@ class Test_rcb(unittest.TestCase):
         # 3:  4  5 
         # 6:  4  5 
 
-        ret_set = rcb.a_cell_was_set(set_cell)
-        self.assertEqual (ret_set, set() ) # No other cells can be set
+        ret_set = rcb.a_cell_was_solved(solved_cell)
+        self.assertEqual (ret_set, set() ) # No other cells can be solved
                                            # as a result of this
         # cell is no longer unsolved
         self.assertEqual (rcb.unsolved_cells, set([ rcb[4], rcb[5] ]))
 
         # No one can provide it's value
-        self.assertTrue (set_cell.value not in rcb.unsolved_value_possibles)
+        self.assertTrue (solved_cell.value not in rcb.unsolved_value_possibles)
 
         # Cell can't provide any other value
         for cells in rcb.unsolved_value_possibles.values() :
-            self.assertTrue( set_cell not in cells )
+            self.assertTrue( solved_cell not in cells )
 
         rcb.sanity_check()
 
-        # Set another our unsolved cells to an unsolved value
-        set_cell  = rcb[4]
-        set_value = 3
-        set_cell.set(set_value)
+        # Solved another our unsolved cells to an unsolved value
+        solved_cell  = rcb[4]
+        solved_value = 3
+        solved_cell.solve(solved_value)
 
-        # After rcb[4] set to 4
+        # After rcb[4] solved to 4
         # col[6]:
         # Cell#s:  6 15 24 33 42 51 60 69 78
         # Indexs:  0  1  2  3  4  5  6  7  8
         # Values:  5  2  9  1  3  _  8  4  7
         # Cell index possibles for unsolved values:
         # 6:  5 
-        # Note that cell rcb[5] can be set to 6
+        # Note that cell rcb[5] can be solved to 6
 
-        ret_set = rcb.a_cell_was_set(set_cell)
+        ret_set = rcb.a_cell_was_solved(solved_cell)
 
         # We know that cell at rcb[5] can be set to 6
-        should_be = set([ CellToSet(rcb[5], 6) ])
+        should_be = set([ CellToSolve(rcb[5], 6) ])
         self.assertEqual (ret_set, should_be )
 
         # cell is no longer unsolved
         self.assertEqual (rcb.unsolved_cells, set([ rcb[5] ]))
 
         # No one can provide it's value
-        self.assertTrue (set_cell.value not in rcb.unsolved_value_possibles)
+        self.assertTrue (solved_cell.value not in rcb.unsolved_value_possibles)
 
         # Cell can't provide any other value
         for cells in rcb.unsolved_value_possibles.values() :
-            self.assertTrue( set_cell not in cells )
+            self.assertTrue( solved_cell not in cells )
 
         rcb.sanity_check()
 
 
     def test_remove_from_possibles(self) :
         # Note: Most of the actual operation testing is in
-        #       test_a_cell_was_set().  It was too hard
+        #       test_a_cell_was_solved().  It was too hard
         #       to manually put the rcb in the right position
 
         # Error conditions
