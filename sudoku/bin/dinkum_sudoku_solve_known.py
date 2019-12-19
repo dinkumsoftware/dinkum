@@ -29,6 +29,7 @@ EXIT STATUS
 # 2019-12-07 tc Added --update and print delta times.
 # 2019-12-09 tc support for sudoku.Stats
 # 2019-12-10 tc added -n, --num_to_average
+# 2019-12-19 tc check for negative --num_to_average
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -99,6 +100,13 @@ def main ():
 
     parser.parse_args()
     args = parser.parse_args()
+
+    # A little sanity checking
+    if args.num_to_average < 1 :
+        # Alert them and set it to 1
+        print ("NUM_TO_AVERAGE (%d) is less than 1.  Setting it to 1" % args.num_to_average,
+               file=sys.stderr)
+        args.num_to_average = 1
 
     # They just want a listing?
     if args.list :
