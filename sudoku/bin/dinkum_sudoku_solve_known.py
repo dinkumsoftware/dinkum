@@ -30,6 +30,7 @@ EXIT STATUS
 # 2019-12-09 tc support for sudoku.Stats
 # 2019-12-10 tc added -n, --num_to_average
 # 2019-12-19 tc check for negative --num_to_average
+#               Print dot's as solve puzzles
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -147,6 +148,11 @@ def main ():
     # Attempt to solve
     for puzzle_name in puzzle_names_to_solve :
 
+        # Print and flush a dot so user knows we are trying to solve
+        # a puzzle.  We'll print a \n when all done with puzzles
+        # to close the line
+        print (".", end="") ; sys.stdout.flush()
+
         # Grab the SolvedPuzzle from the dictionary
         try:
             sp = all_known_puzzle_names[puzzle_name]
@@ -187,6 +193,9 @@ def main ():
             prior_solve_stats_dict[puzzle_name] = solve_results_board.solve_stats
 
     # end of per puzzle solution loop
+
+    # Close the line of dots we printing while solving
+    print ("\n") ; sys.stdout.flush()
 
     # print all the info previously recorded
     # we print in fixed width columns.
@@ -315,7 +324,8 @@ def build_printed_output( board, prior_stats=None) :
     verbose_lines += '\n' # Space it nicely
     
     if not board.is_solved() :
-        verbose_lines += "Num unsolved: %d\n" % board.num_unsolved() 
+        verbose_lines += "Num   solved: %2d\n" % board.num_solved() 
+        verbose_lines += "Num unsolved: %2d\n" % board.num_unsolved() 
 
         # Print all the stats
         stats = board.solve_stats

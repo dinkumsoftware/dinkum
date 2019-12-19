@@ -563,6 +563,13 @@ class Board :
         return len(self.unsolved_cells)
 
 
+    def num_solved(self) :
+        ''' returns the number of solved cells.
+        '''
+        return NUM_CELLS - self.num_unsolved()
+
+
+
     def output(self) :
         ''' returns list of rows of the Board.
         Same format as __init__ argument '''
