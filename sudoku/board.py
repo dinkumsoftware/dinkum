@@ -19,7 +19,7 @@ sudoku board full of Cells with values.
 #               solve_cells()
 # 2019-12-16 tc Solved the saturday globe
 # 2019-12-19 tc set as verb ==> solve
-
+# 2019-12-19 tc Major redesign #3: __eq__ also tests cell.possible_values
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -656,6 +656,7 @@ class Board :
     # Operators
     def __eq__(self, their) :
         ''' == tester.  We just require all cells to have the same value
+        and some possible_values
         '''
         # If they aren't a Board, we aren't equal
         if not isinstance (their, Board)  :
@@ -665,6 +666,8 @@ class Board :
         for (our_cell, their_cell) in zip(self.cells, their.cells) :
             if our_cell.value != their_cell.value :
                 return False  # we are NOT equal
+            if our_cell.possible_values != their_cell.possible_values :
+                return False
 
         # If we fall out, all cells matched.
         return True
@@ -729,9 +732,59 @@ class Board :
 # Test code
 import unittest
 import copy
+import itertools
 
 class Test_board(unittest.TestCase):
+    # Some CLASS-WIDE board specifications
+    partial_spec_lrl = \
+          [[0, 4, 6, 1, 2, 7, 9, 5, 8], 
+           [7, 0, 5, 6, 9, 4, 1, 3, 2], 
+           [2, 1, 9, 3, 8, 5, 4, 6, 7], 
+           [4, 6, 2, 5, 3, 1, 8, 7, 9], 
+           [9, 3, 1, 2, 7, 8, 6, 4, 5], 
+           [8, 5, 7, 9, 4, 6, 2, 1, 3], 
+           [5, 9, 8, 4, 1, 3, 7, 2, 6],
+           [6, 2, 4, 7, 5, 9, 3, 8, 1],
+           [1, 7, 3, 8, 6, 2, 5, 9, 4]]
 
+
+    partial_spec_str = '''
+           0 4 6 1 2 7 9 5 8 
+           7 0 5 6 9 4 1 3 2 
+           2 1 9 3 8 5 4 6 7 
+           4 6 2 5 3 1 8 7 9 
+           9 3 1 2 7 8 6 4 5 
+           8 5 7 9 4 6 2 1 3 
+           5 9 8 4 1 3 7 2 6
+           6 2 4 7 5 9 3 8 1
+           1 7 3 8 6 2 5 9 4
+    '''
+
+    partial_1_spec_str = '''
+           3 0 6 1 2 7 9 5 8 
+           7 0 0 6 9 4 1 3 2 
+           2 1 9 3 8 5 4 6 7 
+           4 6 2 5 3 1 8 7 9 
+           9 3 1 2 7 8 6 4 5 
+           0 0 0 9 0 6 2 1 3 
+           5 9 8 4 1 3 7 2 6
+           6 2 4 7 5 9 3 8 1
+           1 7 3 8 6 2 5 9 0
+    '''
+
+
+    full_spec_lrl = [
+        [3, 4, 6, 1, 2, 7, 9, 5, 8], 
+        [7, 8, 5, 6, 9, 4, 1, 3, 2], 
+        [2, 1, 9, 3, 8, 5, 4, 6, 7], 
+        [4, 6, 2, 5, 3, 1, 8, 7, 9], 
+        [9, 3, 1, 2, 7, 8, 6, 4, 5], 
+        [8, 5, 7, 9, 4, 6, 2, 1, 3], 
+        [5, 9, 8, 4, 1, 3, 7, 2, 6],
+        [6, 2, 4, 7, 5, 9, 3, 8, 1],
+        [1, 7, 3, 8, 6, 2, 5, 9, 4]
+    ]
+    
 
     def test_empty_board(self) :
         board = Board() # No cells should be solved
@@ -770,29 +823,9 @@ class Test_board(unittest.TestCase):
 
     def test_str_constructor(self) :
         ''' Make sure string and list of row-list generate same board '''
-        lrl_spec =   [[0, 4, 6, 1, 2, 7, 9, 5, 8], 
-                      [7, 0, 5, 6, 9, 4, 1, 3, 2], 
-                      [2, 1, 9, 3, 8, 5, 4, 6, 7], 
-                      [4, 6, 2, 5, 3, 1, 8, 7, 9], 
-                      [9, 3, 1, 2, 7, 8, 6, 4, 5], 
-                      [8, 5, 7, 9, 4, 6, 2, 1, 3], 
-                      [5, 9, 8, 4, 1, 3, 7, 2, 6],
-                      [6, 2, 4, 7, 5, 9, 3, 8, 1],
-                      [1, 7, 3, 8, 6, 2, 5, 9, 4]]
-
-
-        str_board_spec = '''
-                      0 4 6 1 2 7 9 5 8 
-                      7 0 5 6 9 4 1 3 2 
-                      2 1 9 3 8 5 4 6 7 
-                      4 6 2 5 3 1 8 7 9 
-                      9 3 1 2 7 8 6 4 5 
-                      8 5 7 9 4 6 2 1 3 
-                      5 9 8 4 1 3 7 2 6
-                      6 2 4 7 5 9 3 8 1
-                      1 7 3 8 6 2 5 9 4
-        '''
-        self.assertEqual( Board(lrl_spec), Board(str_board_spec),
+        lrl_spec = self.partial_spec_lrl
+        str_spec = self.partial_spec_str
+        self.assertEqual( Board(lrl_spec), Board(str_spec),
                           "string and list of row-lists generate different Boards")
 
     def test_copy_constructor(self) :
@@ -804,18 +837,7 @@ class Test_board(unittest.TestCase):
         self.assertEqual(in_board, out_board)
 
         # random filled in board
-        str_board_spec = '''
-                      0 4 6 1 2 7 9 5 8 
-                      7 0 5 6 9 4 1 3 2 
-                      2 1 9 3 8 5 4 6 7 
-                      4 6 2 5 3 1 8 7 9 
-                      9 3 1 2 7 8 6 4 5 
-                      8 5 7 9 4 6 2 1 3 
-                      5 9 8 4 1 3 7 2 6
-                      6 2 4 7 5 9 3 8 1
-                      1 7 3 8 6 2 5 9 4
-        '''
-        in_board = Board(str_board_spec)
+        in_board = Board(self.partial_spec_str)
         out_board = Board(in_board)
 
         self.assertEqual(in_board, out_board) # produces same board
@@ -843,16 +865,7 @@ class Test_board(unittest.TestCase):
 
     def test_subset(self) :
         # What we test with
-        some_board_spec = [ \
-                    [3, 4, 6, 1, 2, 7, 9, 5, 8], 
-                    [7, 8, 5, 6, 9, 4, 1, 3, 2], 
-                    [2, 1, 9, 3, 8, 5, 4, 6, 7], 
-                    [4, 6, 2, 5, 3, 1, 8, 7, 9], 
-                    [9, 3, 1, 2, 7, 8, 6, 4, 5], 
-                    [8, 5, 7, 9, 4, 6, 2, 1, 3], 
-                    [5, 9, 8, 4, 1, 3, 7, 2, 6],
-                    [6, 2, 4, 7, 5, 9, 3, 8, 1],
-                    [1, 7, 3, 8, 6, 2, 5, 9, 4]]
+        some_board_spec = self.full_spec_lrl
         some_board = Board(some_board_spec, "some_board" )
 
         # An empty board is a subset of everything
@@ -907,19 +920,8 @@ class Test_board(unittest.TestCase):
         self.assertIsNotNone( board.solve_stats.solve_time_secs )        
 
         # solvable
-        board_spec = '''
-         3 4 6  1 2 7  9 5 8
-         7 8 5  6 9 4  1 3 2
-         2 1 9  3 8 5  4 6 7
+        board_spec = self.full_spec_lrl  # fully populated
 
-         4 6 2  5 3 1  8 7 9
-         9 3 1  2 7 8  6 4 5
-         8 5 7  9 4 6  2 1 3
-
-         5 9 8  4 1 3  7 2 6
-         6 2 4  7 5 9  3 8 1
-         1 7 3  8 6 2  5 9 4
-        '''
         board = Board(board_spec) 
         self.assertIsNone   ( board.solve_stats.solve_time_secs )
         board.solve()
@@ -964,37 +966,50 @@ class Test_board(unittest.TestCase):
         self.assertEqual ( board.num_unsolved(), RCB_SIZE * RCB_SIZE )
 
         # Full populated board
-        input_spec ='''
-         3 4 6 1 2 7 9 5 8 
-         7 8 5 6 9 4 1 3 2 
-         2 1 9 3 8 5 4 6 7 
-         4 6 2 5 3 1 8 7 9 
-         9 3 1 2 7 8 6 4 5 
-         8 5 7 9 4 6 2 1 3 
-         5 9 8 4 1 3 7 2 6
-         6 2 4 7 5 9 3 8 1
-         1 7 3 8 6 2 5 9 4
-        '''
+        input_spec = self.full_spec_lrl
         board = Board(input_spec)
         self.assertTrue ( board.is_solved() )
         self.assertEqual ( board.num_unsolved(), 0 )
         
-
         # Partially populated board
-        input_spec ='''
-         3 0 6 1 2 7 9 5 8 
-         7 0 0 6 9 4 1 3 2 
-         2 1 9 3 8 5 4 6 7 
-         4 6 2 5 3 1 8 7 9 
-         9 3 1 2 7 8 6 4 5 
-         0 0 0 9 0 6 2 1 3 
-         5 9 8 4 1 3 7 2 6
-         6 2 4 7 5 9 3 8 1
-         1 7 3 8 6 2 5 9 0
-        '''
+        input_spec = self.partial_1_spec_str
         board = Board(input_spec)
         self.assertFalse ( board.is_solved() )
         self.assertEqual ( board.num_unsolved(), 8 )
+
+
+    def test___eq__(self) :
+        # Make some boards
+        empty_board=Board()
+        board_a = Board(self.partial_spec_str)
+        board_b = Board(self.partial_1_spec_str)
+        all_boards = [empty_board, board_a, board_b]
+
+        # Board always equals itself
+        for board in all_boards :
+            self.assertEqual(board, board)
+
+        # None of these boards should equal each other
+        for ( left_board, right_board) in itertools.combinations( all_boards, 2) :
+            self.assertNotEqual( left_board, right_board)
+
+        # Copied boards should match
+        board_a_copy = Board(board_a)
+        self.assertEqual (board_a, board_a_copy)
+
+        # Now we mildly diddle one cell and verify not equal
+        #          0 1 2 3 4 5 6 7 8
+        # Row#2:   7 0 0 6 9 4 1 3 2 
+
+        # Change a Cell value
+        board_diddled = Board(board_b)
+        board_diddled[2][1].value = 4
+        self.assertNotEqual( board_a, board_diddled )
+
+        # Change a Cell possible_values
+        board_diddled = Board(board_b)
+        board_diddled[2][2].possible_values = set([4,5])
+        self.assertNotEqual( board_a, board_diddled )
 
 
     def test_common_cell_rcbs(self) :
@@ -1195,8 +1210,6 @@ class Test_board(unittest.TestCase):
         self.assertTrue ( board.is_solved() )
 
             
-            
-
         # Partially populated board
         input_spec ='''
          3 0 6 1 2 7 9 5 8 

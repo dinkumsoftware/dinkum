@@ -41,96 +41,98 @@ class Test_board(74,2136
             class Foo 118,3470
     def test_str(137,4092
 
-sudoku/bin/dinkum_sudoku_solve_known.py,103
-def main 51,1476
-def solve(214,7614
-def build_printed_output(259,9385
-def str_stat_value(334,12186
+sudoku/bin/dinkum_sudoku_solve_known.py,104
+def main 53,1573
+def solve(231,8276
+def build_printed_output(276,10047
+def str_stat_value(352,12918
 
-sudoku/board.py,1422
-def str_to_list_of_rows(27,832
-class Board 58,1769
-    def __init__(112,3581
-    def _pick_name_and_desc(245,9415
-    def solve(298,11221
-    def solve_cells_with_single_possible_value(351,13239
-    def solve_rcbs_with_single_possible_value_solution(379,14311
-    def reduce_possibles_from_matching_cells(419,16043
-    def a_cell_was_set(458,17617
-    def __getitem__(490,18551
-    def rcb(496,18716
-    def solve_cells(512,19217
-    def is_solved(549,20385
-    def num_unsolved(553,20500
-    def output(559,20633
-    def __str__(568,20947
-    def str_unsolved_rcbs(605,21910
-    def _unique_board_name(618,22296
-    def is_subset_of(626,22558
-    def __eq__(643,23165
-    def sanity_check(658,23670
-class Test_board(719,26988
-    def test_empty_board(722,27027
-    def test_board_name(733,27585
-    def test_unique_board_names(745,28044
-    def test_str_constructor(757,28352
-    def test_copy_constructor(784,29488
-    def test_subset(830,31257
-    def test_str_to_row_lists_errors(871,32892
-    def test_solve_stats(884,33345
-    def test_cell_all_neighbors(916,34213
-    def test_is_solved_and_cnt(946,35621
-    def test_common_cell_rcbs(986,36741
-    def test_input_bad_input_wrong_row_cnt(1024,38204
-    def test_input_bad_value(1042,38802
-    def test_input_bad_input_wrong_row_size(1059,39325
-    def test_input_duplicate_values(1080,39989
-    def test_solve_cells(1141,42800
+sudoku/board.py,1492
+def str_to_list_of_rows(30,913
+class Board 61,1850
+    def __init__(115,3665
+    def _pick_name_and_desc(248,9512
+    def solve(301,11318
+    def solve_cells_with_single_possible_value(357,13448
+    def solve_rcbs_with_single_possible_value_solution(379,14439
+    def solve_possibles_from_matching_cells(415,16020
+    def a_cell_was_solved(460,17834
+    def __getitem__(492,18780
+    def rcb(498,18945
+    def solve_cells(514,19446
+    def is_solved(556,20747
+    def num_unsolved(560,20862
+    def num_solved(566,20995
+    def output(573,21132
+    def __str__(582,21446
+    def str_unsolved_rcbs(619,22409
+    def _unique_board_name(632,22795
+    def is_subset_of(640,23057
+    def __eq__(657,23667
+    def sanity_check(672,24172
+class Test_board(733,27490
+    def test_empty_board(736,27529
+    def test_board_name(747,28096
+    def test_unique_board_names(759,28555
+    def test_str_constructor(771,28863
+    def test_copy_constructor(798,29999
+    def test_subset(844,31768
+    def test_str_to_row_lists_errors(885,33403
+    def test_solve_stats(898,33856
+    def test_cell_all_neighbors(930,34724
+    def test_is_solved_and_cnt(960,36132
+    def test_common_cell_rcbs(1000,37252
+    def test_input_bad_input_wrong_row_cnt(1038,38715
+    def test_input_bad_value(1056,39313
+    def test_input_bad_input_wrong_row_size(1073,39836
+    def test_input_duplicate_values(1094,40500
+    def test_solve_cells(1155,43311
+    def test_common_rcbs(1237,46084
 
-sudoku/rcb.py,1161
-class RCB(15,421
-    def __init__(38,1351
-    def initial_cell_placement(74,2647
-    def a_cell_was_set(115,4322
-    def remove_from_possibles(177,6793
-    def unsolved_values(237,9052
-    def solved_values(243,9206
-    def solved_cells(248,9366
-    def sanity_check(254,9516
-    def build_unsolved_value_possibles(294,11002
-    def unsolved_cells_with_common_unique_values(315,11876
-    def is_solved(344,12960
-    def name(348,13098
-    def __str__(354,13255
-    def detailed_str(375,13817
-    def str_unsolved_value_possibles(442,15889
-class Test_rcb(508,18246
-    def all_unsolved_rcb_for_test(511,18325
-    def all_solved_rcb_for_test(546,19496
-    def partially_solved_rcb_for_test(570,20243
-    def test_construction(612,21675
-    def test_bad_rcb_type(620,21901
-        def test_iteration(628,22147
-    def test_solved_cells(641,22504
-    def test_solved_values(663,23369
-    def test_unsolved_values(686,24315
-    def test_sanity_check(708,25216
-    def test_name(743,26550
-    def test_str(754,26851
-    def test_detailed_str(767,27249
-    def test_a_cell_was_set(795,28192
-    def test_remove_from_possibles(884,31248
+sudoku/rcb.py,1167
+class RCB(15,460
+    def __init__(38,1393
+    def initial_cell_placement(74,2689
+    def a_cell_was_solved(115,4364
+    def remove_from_possibles(151,5773
+    def unsolved_values(211,8060
+    def solved_values(217,8214
+    def solved_cells(222,8374
+    def sanity_check(228,8524
+    def build_unsolved_value_possibles(268,10010
+    def unsolved_cells_with_common_unique_values(289,10884
+    def is_solved(318,11968
+    def name(322,12106
+    def __str__(328,12263
+    def detailed_str(349,12825
+    def str_unsolved_value_possibles(456,16549
+class Test_rcb(522,18906
+    def all_unsolved_rcb_for_test(525,18985
+    def all_solved_rcb_for_test(560,20159
+    def partially_solved_rcb_for_test(584,20909
+    def test_construction(626,22373
+    def test_bad_rcb_type(634,22599
+        def test_iteration(642,22845
+    def test_solved_cells(655,23202
+    def test_solved_values(677,24067
+    def test_unsolved_values(700,25013
+    def test_sanity_check(722,25914
+    def test_name(757,27248
+    def test_str(768,27549
+    def test_detailed_str(781,27947
+    def test_a_cell_was_solved(813,29082
+    def test_remove_from_possibles(902,32242
 
 sudoku/test_data/test_puzzles.py,310
-class SolvedPuzzle 51,1712
-    def __init__(60,1988
-def prior_stats_filename(263,7642
-def read_prior_stats(275,8024
-def write_prior_stats(292,8530
-class Test_test_puzzles(304,8782
-    def test_simple_construction(308,8932
-    def test_all_known_puzzle_names(322,9472
-    def test_solvability(328,9733
+class SolvedPuzzle 53,1755
+    def __init__(62,2031
+def prior_stats_filename(265,7683
+def read_prior_stats(277,8065
+def write_prior_stats(294,8571
+class Test_test_puzzles(306,8823
+    def test_simple_construction(310,8973
+    def test_all_known_puzzle_names(324,9513
+    def test_solvability(330,9774
 
 sudoku/labeled_printer.py,638
 def print_labeled_board(97,4575
@@ -151,41 +153,41 @@ class Test_labeled_printer(444,17300
     def test_caller_supplied_empty(605,27799
     def test_populated_board(665,31615
 
-sudoku/cell.py,1094
-class Cell 25,726
-    def __init__(54,1776
-    def set(100,3603
-    def remove_from_possibles(137,4753
-    def common_rcbs(173,5899
-    def rcb_num_and_idx(207,6958
-    def all_neighbors(229,7682
-    def is_solved(249,8213
-    def map_row_col_to_indexes(255,8360
-    def name(295,9636
-    def __str__(303,9849
-    def detailed_str(310,10088
-    def str_value(333,11076
-class CellToSet(343,11444
-    def __new__(357,11783
-    def __init__(368,12231
-    def __str__(377,12334
-class Test_cell(388,12533
-    def test_cell_constructor(390,12570
-            def err_msg(407,13380
-    def test_bad_cell_num(432,14717
-    def test_sample_nums_and_idxs(437,14868
-    def test_values(462,15855
-    def test_rcb_num_and_idx(474,16210
-    def test_name(511,17411
-    def test_str_value(519,17599
-    def test_str(547,18748
-    def test_CellToSet(556,18976
-    def test_set(570,19283
-        class DummyBoard(587,19912
-            def __init__(588,19941
-            def a_cell_was_set(593,20113
-    def test_remove_from_possibles(616,20897
-    def test_CellToSet(640,21786
+sudoku/cell.py,1107
+class Cell 26,764
+    def __init__(55,1820
+    def solve(101,3647
+    def remove_from_possibles(139,4847
+    def common_rcbs(175,5995
+    def rcb_num_and_idx(209,7054
+    def all_neighbors(231,7778
+    def is_solved(251,8309
+    def map_row_col_to_indexes(257,8456
+    def name(297,9732
+    def __str__(305,9945
+    def detailed_str(312,10186
+    def str_value(335,11174
+class CellToSolve(345,11542
+    def __new__(359,11885
+    def __init__(370,12335
+    def __str__(379,12438
+class Test_cell(390,12637
+    def test_cell_constructor(392,12674
+            def err_msg(409,13484
+    def test_bad_cell_num(434,14821
+    def test_sample_nums_and_idxs(439,14972
+    def test_values(464,15959
+    def test_rcb_num_and_idx(476,16317
+    def test_name(513,17518
+    def test_str_value(521,17706
+    def test_str(549,18855
+    def test_CellToSolve(558,19083
+    def test_solve(572,19396
+        class DummyBoard(589,20037
+            def __init__(590,20066
+            def a_cell_was_solved(595,20238
+    def test_remove_from_possibles(618,21055
+    def test_CellToSolve(642,21956
 
 utils/state_space.py,678
 class ExcAttemptToChangeStateRootToNonExistantDir(67,2464
@@ -251,7 +253,7 @@ utils/__init__.py,0
 
 sudoku/test_data/__init__.py,0
 
-sudoku/bin/dinkum_print_sudoku_worksheet.py,0
+sudoku/bin/dinkum_sudoku_print_worksheet.py,0
 
 git/__init__.py,0
 
