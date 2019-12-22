@@ -8,6 +8,7 @@ Each RCB is a [] of cells.
 # 2019-12-07 tc Added unsolved_cells and unsolved_value_possibles
 # 2019-12-12 tc Added a_cell_was_set() and remove_from_possibles()
 # 2019-12-19 tc set as verb ==> solve
+# 2019-12-22 tc Major redesign #3 
 
 from dinkum.sudoku      import * # All package wide def's
 from dinkum.sudoku.cell import Cell, CellToSolve
@@ -28,8 +29,8 @@ class RCB(list) :
     some funcs:
       initial_cell_placement  Should be called to initially populate the rcb
       a_cell_was_solved       Should be called when a cell in the rcb was solved
-                              either in initial board or during solution
       remove_from_possibles   Removes a value as a possible solution
+      cell_possibles_changed  Should be call when one of our Cells possible_values changed
 
       [x] gets/sets cells[x]
       iterators iterator over cells[]
@@ -128,31 +129,35 @@ class RCB(list) :
         # Enforce our assumptions
         assert solved_cell.is_solved()
         assert solved_cell in self.unsolved_cells
-        assert solved_cell in self.unsolved_value_possibles[solved_cell.value]
 
         solved_value = solved_cell.value  # What the solved_cell was set to
-        assert solved_cell in self.unsolved_value_possibles[solved_value]
 
         # remove solved_cell from unsolved_cells
         self.unsolved_cells.remove(solved_cell)
 
         # deletes unsolved_value_possibles[cell.value]
         # As this value is solved, no one can provide it
-        del self.unsolved_value_possibles[solved_value]
+        if solved_value in self.unsolved_value_possibles :
+            # Sometimes, some other actions make have rebuilt
+            # unsolved_value_possibles after this cell was solved
+            del self.unsolved_value_possibles[solved_value]
 
         # Remove solved_cell.value as a possibility for all other
         # cells in our RCB.  Also rebuilds unsolved_value_possibles
-        returned_set = self.remove_from_possibles( solved_value, [solved_cell])
+        returned_set = self.remove_from_possibles( solved_value, solved_cell)
 
         # All done
         return returned_set
 
 
-    def remove_from_possibles(self, value, except_cells) :
-        ''' Removes value as a possible solution for us.
+    def remove_from_possibles(self, value_or_values, except_cell_or_cells) :
+        ''' Removes value_or_values as a possible solution for us.
 
-        except_cells is an iterable of Cells in this
-        RCB that are excluded.  At least one must be
+        value_or_values can be a single value --or-- and iterable
+        of values.
+
+        except_cell_or_cells is a single Cell or iterable of Cells in
+        this RCB that are excluded.  At least one must be
         provided. (Otherwise the RCB isn't solvable
         as no cell could provide value.)
 
@@ -166,18 +171,38 @@ class RCB(list) :
         The details:
 
         iterates thru unsolved_cells( sans except_cells )
-             Cell.remove_from_possibles(value)
-             accumulates set(CellsToSolve)
+             if cell.remove_from_possibles(values) removed something:
+                 if 0 cell.possible_values left, assertion error    
+                 if 1 cell.possible_values left, add to set(CellToSolve)
+                 else:
+                     for rcb in other_rcbs(cell):
+                        rcb.cell_possibles_changed(cell)
+                        accumulating set(CellsToSolve)
 
-        Rebuilds unsolved_value_possibles
+        If any cell.possibles changed
+             set(CellToSolve) |= self.cell_possibles_changed
 
-        If there remains only a single Cell that can provide
-        a value, that Cell and the value to set it to is
-        added to the returned set of CellToSolve's
-
-        return set of CellsToSolve's
+        return set(CellToSolve)
         '''
-        assert value in Cell.all_cell_values
+
+        # Convert any non-iterable argument in an iterable
+        # value?  or values?
+        values = value_or_values # Assume it's iterable, ie values
+        try:
+            iter(value_or_values)
+        except TypeError :
+            values = [value_or_values] # wrong assumption, it was a single value
+                                       # Make a single item iterable
+        except_cells = except_cell_or_cells # Assume it's iterable, ie values
+        try:
+            iter(except_cell_or_cells)
+        except TypeError :
+            except_cells = [except_cell_or_cells] # wrong assumption, it was a single value
+                                            # Make a single item iterable
+
+        # Check our assumptions                                            
+        for value in values :
+            assert value in Cell.all_cell_values
         assert len(except_cells) > 0
         assert [ cell in self for cell in except_cells ]
 
@@ -187,26 +212,82 @@ class RCB(list) :
         # iterates thru unsolved_cells sans except_cells
         #    Cell.remove_from_possibles(value)
         #    accumulates set(CellsToSolve)
+        #    Keeps track of our cell's whose possible values changed
+        our_cells_whose_possible_values_changed = set()
         for cell in self.unsolved_cells :
             if cell not in except_cells :
-                cells_to_solve |= cell.remove_from_possibles(value)
+                if cell.remove_from_possibles(values) :
+                    # cell's possible_values changed
+                    our_cells_whose_possible_values_changed.add( cell )
+                    num_remaining_possibles = len(cell.possible_values)
 
-        # rebuild unsolved_value_possibles from scratch
-        # This scans all unsolved_cells and returns
-        # a dict keyed by value having a set of Cells which
-        # can supply that value.
+                    # this would mean it could never be solved
+                    assert (num_remaining_possibles != 0) 
+                    
+                    # Solvable?
+                    if num_remaining_possibles == 1 :
+                        # Yes, tell caller to solve it
+                        sole_remaining_possible_value = list(cell.possible_values)[0]
+                        cells_to_solve.add ( CellToSolve(cell, sole_remaining_possible_value ) )
+                    else :
+                        # cell is not solvable, but it's possible_values changed
+                        # we need to alter the rcbs of this cell (other than self)
+                        for other_rcb in self.other_rcbs(cell) :
+                            cells_to_solve |= other_rcb.cell_possibles_changed(cell)
+
+        # Adjust ourself for any of our cell's whose possible_values changed
+        cells_to_solve |= self.cell_possibles_changed( our_cells_whose_possible_values_changed )
+
+        # Tell caller some solvable cells
+        return cells_to_solve ;
+
+
+    def cell_possibles_changed(self, cell_or_cells) :
+        ''' should be called when the possible_values for
+        cell_or_cells has changed.
+
+        cell_or_cells should either be a single Cell or
+        an iterable of Cells.
+
+        We return a set(CellToSolve) of any solvable
+        Cells that can be solvable as a result of the
+        changed possible values.
+
+        Specifically:
+            rebuild unsolved_value_possibles
+
+            for value in unsolved_value_possibles :
+                assertion error if no cells supply that value
+                Add to return set(CellToSolve) if only one
+                   Cell supplies that value
+
+            return set(CellToSolve)
+        '''
+
+        # We do currently use cell_or_cells
+
+        # What we return
+        cells_to_solve = set()
+
+        # Rebuild our data struct
         self.unsolved_value_possibles = self.build_unsolved_value_possibles()
-        
-        # Any unsolved value have only one Cell that solve it?
-        for (value, cells) in self.unsolved_value_possibles.items() :
-            # Only one cell can supply this?
-            if len(cells) == 1 :
-                # Yes, cell can be solved with value.  Tell caller
-                [cell] = list(cells)     # only one cell in set
-                cells_to_solve.add( CellToSolve(cell, value) )
 
-        # Tell them solvable cells based on removing value
+        for value in self.unsolved_value_possibles :
+            num_cells_supplying_value = len( self.unsolved_value_possibles[value] )
+
+            # Any cells supply this value ?
+            # If not, it's a problem as this rcb can never be solved
+            assert num_cells_supplying_value != 0
+
+            # Only one cell supply this value?
+            if num_cells_supplying_value == 1 :
+                # Yes, it can be solved
+                cell_to_solve = list(self.unsolved_value_possibles[value])[0]
+                cells_to_solve.add( CellToSolve( cell_to_solve, value) )
+            
+        # Give 'um any cells we discovered to be solvable
         return cells_to_solve
+            
 
     def unsolved_values(self) :
         ''' returns a set of values to be solved
@@ -296,10 +377,11 @@ class RCB(list) :
         It works for match sizes other than 2 or 3, but probably
         not a lot of usefulness in the real world.
 
-        returns [] of tuples:
-            (common_unique_value, [] of cells)
+        returns {}:
+            key:   set(values uniquely in common) 
+            value: set(cells with those values as possible_values)
         '''
-        ret_list = []
+        ret_dict = {}
 
         # unsolved_value_possibles is a {} keyed by "cell value"
         # containing a set() of cells that have "cell value" in
@@ -307,13 +389,33 @@ class RCB(list) :
 
         # We iterate thru that looking for values where only
         # "match_size" cells have that value as a possible
+        # We put the matching cells as a key in our returned dictionary
+        # and add the value they share
         for (value, cells) in self.unsolved_value_possibles.items() :
-
             if len(cells) == match_size :
                 # We've got a winner
-                ret_list.append( (value, cells) )
+                try:
+                    ret_dict[cells].add(value)
+                except KeyError:
+                    # First time we've seen these cells
+                    ret_dict[cells] = set([value])
 
-        return ret_list
+        return ret_dict
+
+    def other_rcbs(self, cell) :
+        ''' Returns iterable of the RCBs of cell other
+        than us.
+
+        If cell doesn't have any rcbs, we return empty list.
+        This generally only happens in unittest code.
+
+        '''
+        returned_list = []
+        for rcb in [r for r in cell.rcbs if r != self ] :
+            if rcb is not None and rcb is not self :
+                returned_list.append(rcb)
+
+        return returned_list
 
     def is_solved(self) :
         ''' Returns True if all cells have solved, i.e. have values '''
@@ -518,6 +620,7 @@ class RCB(list) :
 
 # Test code
 import unittest
+import dinkum.sudoku.board
 
 class Test_rcb(unittest.TestCase):
 
@@ -717,6 +820,25 @@ class Test_rcb(unittest.TestCase):
                                                  cells_unsolved)
         unsolved_should_be = set([ solution_rcb[indx].value for indx in cells_unsolved])
         self.assertEqual ( rcb.unsolved_values(), unsolved_should_be )
+
+
+    def test_other_rcbs(self) :
+        board = dinkum.sudoku.board.Board() # empty board
+
+        # Try a row
+        rcb = board.rows[3]
+        cell = rcb[5]   # board[3][5]   blk 4
+        self.assertEqual (rcb.other_rcbs(cell), [ board.cols[5], board.blks[4] ] )
+
+        # Try a col
+        rcb = board.cols[3]
+        cell = rcb[2]   # board[2][3]   blk 1
+        self.assertEqual (rcb.other_rcbs(cell), [ board.rows[2], board.blks[1] ] )
+
+        # Try a blk
+        rcb = board.blks[8]
+        cell = rcb[2]   # board[6][8]   blk 8
+        self.assertEqual (rcb.other_rcbs(cell), [ board.rows[6], board.cols[8] ] )
 
 
     def test_sanity_check(self) :

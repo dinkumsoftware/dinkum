@@ -19,6 +19,10 @@ a value to set it to.
 #               Moved former __str__() to detailed_str()
 # 2019-12-11 tc Support for CellToSet
 # 2019-12-19 tc set as verb ==> solve
+# 2019-12-22 tc Major redesign #3 solve() just set values
+#               remove_from_possibles() accepts value or values
+#                                       adjust possibles only
+#                                       return true if they changed
 
 from dinkum.sudoku import *  # Get package wide constants from __init__.py
 
@@ -104,12 +108,6 @@ class Cell :
         Alters:
            value, possible_values
         
-        We remove ourself as a possibility from our RCBs
-        and our neighbor cells in those RCBs.
-        This is done via Board.a_cell_was_solved()
-
-        We return a set() of CellToSet's that could/should
-        be solved as a result of our being solved.
         '''
         # Error check value
         assert value in Cell.all_cell_values
@@ -123,58 +121,51 @@ class Cell :
         self.value = value
         self.possible_values = set() # empty possible_values
 
-        # Are we attached to a board?
-        if self.board :
-            # Yes, tell it we were solved
-            # This will notify all our neighbors
-            # Tell our caller what other cells to solve
-            return self.board.a_cell_was_solved(self)
-        else :
-            # No board attached, no other cells to solve
-            return set()
-        
-        assert False, "Impossible Place"
 
+    def remove_from_possibles(self, value_or_values) :
+        ''' Removes value_or_values as a possible solution for us.
 
-    def remove_from_possibles(self, value) :
-        ''' Removes value as a possible solution for us.
+        value_or_values can be a single value --or-- and iterable
+        of values.
 
-        value is removed possible_values[]
+        value_or_values is removed from possible_values[]
 
-        If after removal of value, there remains only
-        a single possible value that this cell can be,
-        It is returned in a set() of CellToSolve(self,value).
+        Returns True if the possible_values changed
+        and False otherwise.
 
-        Otherwise returns an empty set.
-
-        if value isn't one of our possible_values, we
-        silently return an empty set.
+        if value_or_values isn't one of our possible_values, we
+        silently return False
         '''
-        assert value in Cell.all_cell_values
 
-        # Anything to remove?
-        if value not in self.possible_values :
-            return set() # nope
+        # value?  or values?
+        values = value_or_values # Assume it's iterable, ie values
+        try:
+            iter(value_or_values)
+        except TypeError :
+            values = [value_or_values] # wrong assumption, it was a single value
+                                       # Make a single item iterable
 
-        # remove value
-        self.possible_values.remove(value)
+        # Check all the possibles to remove
+        possible_values_changed = False # What we return
+        for value in values :
+            assert value in Cell.all_cell_values
 
-        # Only one left?
-        if len( self.possible_values ) == 1 :
-            # Yep, extract the value and return it
-            # The funny [x] = list() extraction syntax is
-            # a way to get the value out of a set
-            # with only one value
-            [remaining_value] = list(self.possible_values)
-            return set( [ CellToSolve(self, remaining_value) ] )
+            # Anything to remove?
+            if value in self.possible_values :
+                # yes, remove value
+                self.possible_values.remove(value)
 
-        # We aren't solvable based on this
-        return set()
-        
+                # and remember we did so
+                possible_values_changed = True
+
+        return  possible_values_changed
+
 
     def common_rcbs( self, other_cells ) :
         ''' Returns a [] of rcb's the we have in
         common with ALL the cells in the "other_cells" iterable.
+
+        The returned [] is ordered: row, col, blk
         '''
         # Sanity check
         if not other_cells :
@@ -518,6 +509,52 @@ class Test_cell(unittest.TestCase):
         cell = Cell(None, 4)
         self.assertEqual( cell.name(), "Cell#4 ")
 
+    def test_rcbs(self) :
+        import dinkum.sudoku.board
+
+        # empty board
+        board = dinkum.sudoku.board.Board()
+
+        # Pick a random cell and check it's rcbs
+        row_num=7 ; col_num=1 ; blk_num=6
+        cell = board[row_num][col_num]
+        self.assertEqual( len(cell.rcbs), 3)
+        self.assertTrue ( board.rows[row_num] in cell.rcbs )
+        self.assertTrue ( board.cols[col_num] in cell.rcbs )
+        self.assertTrue ( board.blks[blk_num] in cell.rcbs )
+
+    def test_common_rcbs(self) :
+        import dinkum.sudoku.board
+        board = dinkum.sudoku.board.Board() # empty board
+
+        # Pick three cells with no RCBs in common
+        cell_a = board[3][0]
+        cell_b = board[5][3]
+        cell_c = board[8][8]
+        self.assertEqual( cell_a.common_rcbs([cell_b, cell_c]),  [])
+
+        # Pick three cells with where two have RCB in common
+        cell_a = board[3][0]
+        cell_b = board[3][6]
+        cell_c = board[8][8]
+        rcbs_in_common = [ board.rows[3] ]
+        self.assertEqual( cell_a.common_rcbs([cell_b, cell_c]), [] )
+
+        # Pick three cells with where three have RCB in common
+        cell_a = board[3][0]
+        cell_b = board[3][6]
+        cell_c = board[3][8]
+        rcbs_in_common = [ board.rows[3] ]
+        self.assertEqual( cell_a.common_rcbs([cell_b, cell_c]), rcbs_in_common )
+
+        # Pick three cells with where three have 2 RCBs in common        
+        cell_a = board[5][3]
+        cell_b = board[5][4]
+        cell_c = board[5][5]
+        rcbs_in_common = [board.rows[5], board.blks[4] ]
+        self.assertEqual( cell_a.common_rcbs([cell_b, cell_c]), rcbs_in_common )
+
+
     def test_str_value(self) :
         cell = Cell(None, 33)
 
@@ -574,40 +611,13 @@ class Test_cell(unittest.TestCase):
         cell = Cell(None, 29)
 
         # Set it's value to 2
-        # should return no cells to solve
-        self.assertSetEqual( cell.solve(2), set() )
+        self.assertEqual( cell.solve(2), None )
         self.assertEqual(cell.value, 2)
         self.assertSetEqual(cell.possible_values, set()) # No other possibles
 
         # Verify illegal values
         self.assertRaises(AssertionError, cell.solve, 18)
         self.assertRaises(AssertionError, cell.solve,  0)
-
-        # Make a dummy board class that has a member function
-        # That cell.solve() should call and data that cell.__init__()
-        # needs
-        class DummyBoard() :
-            def __init__(self) :
-                self.rows = [None] * RCB_SIZE
-                self.cols = [None] * RCB_SIZE
-                self.blks = [None] * RCB_SIZE
-
-            def a_cell_was_solved(self, cell) :
-                self.solve_cell = cell
-                return returned_cells_to_solve
-
-        # what DummyBoard.a_cell_to_solve() returns
-        returned_cells_to_solve = set ( [CellToSolve( Cell(None,  2), 3),
-                                         CellToSolve( Cell(None, 80), 9)])
-
-        dummy_board = DummyBoard()
-        cell = Cell(dummy_board, 22)
-        dummy_board.unsolved_cells = set([cell])
-        
-        cells_to_solve = cell.solve(2)
-        self.assertEqual( len(cells_to_solve), 2)
-        self.assertSetEqual( cells_to_solve,
-                             returned_cells_to_solve)
 
         # Make sure you can't solve a cell twice
         cell = Cell(None, 33)
@@ -624,20 +634,31 @@ class Test_cell(unittest.TestCase):
        
         self.assertEqual (len(cell.possible_values), 9)
 
-        # Remove values 1-7 (leaving 8&9)
-        for value in range(1,8) :
-            ret_set = cell.remove_from_possibles(value)
-            self.assertSetEqual(ret_set, set() )  # self can't be solve yet
+        # Test single value
+        # Remove values 1-9
+        for value in range(1,10) :
+            ret_val = cell.remove_from_possibles(value)
+            self.assertTrue(ret_val) 
             self.assertEqual (len(cell.possible_values), 9-value)  #8,7,...
         
-        # When we remove 8, cell.solve() should tell us to solve itself
-        ret_set = cell.remove_from_possibles(8)
-        self.assertEqual(len(ret_set), 1)
 
-        [cell_to_solve] = list(ret_set)
-        self.assertEqual(cell_to_solve.cell,  cell)
-        self.assertEqual(cell_to_solve.value,    9)        
+        # Try to remove values 1-9 again
+        for value in range(1,10) :
+            ret_val = cell.remove_from_possibles(value)
+            self.assertFalse(ret_val) 
 
+        # Repeat with iterable values
+        cell = Cell(None, 76)
+
+        # Remove values 1-9
+        ret_val = cell.remove_from_possibles(range(1,10))
+        self.assertTrue(ret_val) 
+        self.assertEqual (len(cell.possible_values), 0)
+        
+        # Try to remove a subset
+        ret_val = cell.remove_from_possibles(range(3,5))
+        self.assertFalse(ret_val) 
+        
 
     def test_CellToSolve(self) :
         # A test cell

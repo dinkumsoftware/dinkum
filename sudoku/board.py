@@ -20,6 +20,7 @@ sudoku board full of Cells with values.
 # 2019-12-16 tc Solved the saturday globe
 # 2019-12-19 tc set as verb ==> solve
 # 2019-12-19 tc Major redesign #3: __eq__ also tests cell.possible_values
+#                                  solve() stops when no board changes
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -233,11 +234,12 @@ class Board :
                                                                 value, "blk"))
 
                     # All looks good, solve it
-                    cell.solve(value)
+                    self.solve_a_cell(cell, value)
 
                 cell_num += 1
                 col_num += 1
             row_num += 1
+
 
 
         # Sanity check(s) A whole bunch of asserts
@@ -310,48 +312,37 @@ class Board :
         # fractional seconds
         self.solve_stats.solve_start_time_secs = time.perf_counter()
 
-        # What we return, assume the best
-        ret_value = self # overwritten if can't solve
-
         # We try all the solution techniques we know about
-        # Each is required to return True if they solve a cell
-        # We give up when no cell is solved in a pass
+        # We give up when the board isn't changed in a pass
         self.solve_stats.num_solve_passes = 0
-        while (not self.is_solved()) :
+        board_on_last_pass = None
+        while (not self.is_solved() and self != board_on_last_pass) :
+
+            # Snapshot the board state
+            board_on_last_pass = copy.deepcopy(self)
+
             # count the # of times thru the loop
             self.solve_stats.num_solve_passes += 1
 
-            board_was_modified = False
-
             # Solve cells with only 1 possible value
-            num_solved = self.solve_cells_with_single_possible_value()
-            board_was_modified |= (num_solved != 0)
+            self.solve_cells_with_single_possible_value()
 
             # Solve row/col/blks where an unsolved value can only be
             # satisfied by a single cell
-            num_solved = self.solve_rcbs_with_single_possible_value_solution()
-            board_was_modified |= (num_solved != 0)
+            self.solve_rcbs_with_single_possible_value_solution()
 
             # Remove some possibles by looking for matching cells with same possibles
             # and projecting that into other rcb's.  This doesn't actually solve any
             # cells, but may modifify the board
-            num_solved = self.solve_possibles_from_matching_cells()
-            board_was_modified |= (num_solved != 0)
-
-            # How did we do?
-            if not board_was_modified :
-                # Not well, sigh
-                ret_value = None
-                break
+            self.solve_possibles_from_matching_cells()
 
 
         # All done, Remember how long we ran
         self.solve_stats.solve_time_secs = (time.perf_counter() -
                                             self.solve_stats.solve_start_time_secs)
 
-        # Arrive here with ret_value set to either
-        # self or None depending on whether we successfully solved the puzzle
-        return ret_value
+        # Tell um how we did
+        return self if self.is_solved() else None
 
     
     def solve_cells_with_single_possible_value(self) :
@@ -419,7 +410,9 @@ class Board :
         that is unique to that rcb, i.e. no other cell in the rcb
         has that value as a possible.
 
-        It then removes their values from any common rcb in
+        Remove non-matching values from the pair/triple
+
+        Remove matching values from any common rcb in
         the pair.
 
         It solves any Cells that become solvable as a result
@@ -428,9 +421,6 @@ class Board :
         returns the number of solved cells
         '''
 
-        # What we return
-        removed_some_possibles = False # assume the worst
-
         for rcb in self.rcbs :
             # this looks for pairs and triples
             # Note: quads could happen, but they can't
@@ -438,56 +428,31 @@ class Board :
             #       and there are no other unsolved
             #       cells with their value
             cells_to_solve = set() # Where we accumulate what to solve
-            for match_size in [2,3] :
-                # returns [] of (common_unique_value, set() of cells)
-                value_and_cells = rcb.unsolved_cells_with_common_unique_values(match_size)
+            for match_size in [3, 2] :  # triples first, as they will include a pair
+                # returns {} keyed by set() of matching cells, value: values_uniquely_in_common
+                cells_and_values = rcb.unsolved_cells_with_common_unique_values(match_size)
 
-                # Go thru those and remove value as a possibility
-                # in all common rcbs
-                for (value, cells) in value_and_cells :
+                for (matching_cells, matching_values) in cells_and_values :
+                    # Remove non-matching values from the pair/triple
+                    # This is set of all other cells in the rcb that didn't
+                    # match.  We will exclude them from remove_from_possibles() which
+                    # makes remove_from_possibles() only operate on the pair/triple
+                    except_cells = set(self) - matching_cells 
+
+                    # Remove matching values from any common rcb in
+                    # the pair/triple
                     assert len(cells) == match_size
 
                     # Iterate thru a list of rcbs that the matching cells have in common
-                    first_cell = list(cells)[0]  # get a arbitary cell out of the set
+                    first_cell = list(matching_cells)[0]  # get an arbitary cell out of the set
 
-                    for common_rcb in first_cell.common_rcbs( cells ) :
-                        cells_to_solve|= common_rcb.remove_from_possibles(value, cells)
+                    for common_rcb in first_cell.common_rcbs( matching_cells ) :
+                        cells_to_solve |= common_rcb.remove_from_possibles(matching_values, matching_cells)
 
         # Now solve the Cells we found
         # and tell them how many we solved
         return self.solve_cells(cells_to_solve)
 
-    def a_cell_was_solved(self, solved_cell) :
-        ''' Should be called whenever a Cell is solved.
-        solved_cell is the Cell that was solved.
-
-        Returns a set of CellToSolve which can
-        be uniquely solved as a result of cell
-        being solved.
-
-        Currently called from Cell.solve()
-
-        Maintains Board internal data:
-            removes cell from unsolved_cells
-
-        iterates thru rcbs:
-            RCB.a_cell_was_solve(cell)
-            accumulates CellToSolve for return
-        '''
-
-        # What we return
-        cells_to_solve = set()
-
-        # remove cell from unsolved_cells
-        assert solved_cell in self.unsolved_cells
-        self.unsolved_cells.remove(solved_cell)
-
-        # Iterates thru rcbs:        
-        for rcb in solved_cell.rcbs :
-            cells_to_solve |= rcb.a_cell_was_solved(solved_cell)
-
-        # Tell them more cells to solve (if any)
-        return cells_to_solve
 
     def __getitem__(self, row) :
         ''' Returns our RCB at row
@@ -528,7 +493,6 @@ class Board :
         as they have been solved with passed in
         value in CellToSolve
         '''
-
         # What we return
         num_solved = 0
 
@@ -540,8 +504,8 @@ class Board :
                 # Already solved, make sure values match
                 assert cell.value == value
             else :
-                # cell not solve, solve it
-                additional_cells_to_solve |= cell.solve(value)
+                # cell not solved, put on list to solve
+                additional_cells_to_solve |= self.solve_a_cell(cell, value)
                 num_solved += 1
 
         # Any more to solve?
@@ -552,6 +516,39 @@ class Board :
         # All done
         return num_solved
         
+
+    def solve_a_cell(self, cell, value) :
+        ''' solves cell with value.
+
+        Returns a set(CellToSolve) that can be solved
+        as a result of solving cell
+
+        Specifically
+            cell.solve(value)
+            remove cell from unsolved
+            for rcb in cell.rcbs()
+                set(CellToSolve) |= RCB.a_cell_was_solved(cell)
+            return set(CellToSolve)
+        '''
+
+        # Actually solve the cell itself
+        cell.solve(value)
+
+        # remove cell from unsolved_cells
+        assert cell in self.unsolved_cells
+        self.unsolved_cells.remove(cell)
+
+        # What we return
+        cells_to_solve = set()
+
+        # Iterates thru rcbs:        
+        for rcb in cell.rcbs :
+            cells_to_solve |= rcb.a_cell_was_solved(cell)
+
+        # Tell them more cells to solve (if any)
+        return cells_to_solve
+
+
 
     def is_solved(self) :
         ''' returns true if board is solved '''
@@ -876,7 +873,7 @@ class Test_board(unittest.TestCase):
         self.assertTrue (some_board.is_subset_of(some_board))
 
         # Create a legal subset by zeroing some elements
-        subset_spec = some_board_spec.copy()
+        subset_spec = copy.deepcopy(some_board_spec)
         subset_spec[0][3] = 0
         subset_spec[5][0] = 0
         subset_spec[2][3] = 0
@@ -960,6 +957,7 @@ class Test_board(unittest.TestCase):
 
         
     def test_is_solved_and_cnt(self) :
+
         # empty board
         board = Board()
         self.assertFalse ( board.is_solved() )
@@ -1014,9 +1012,12 @@ class Test_board(unittest.TestCase):
 
     def test_common_cell_rcbs(self) :
 
-        # we are testing Cell.common_rcbs() which can't
-        # be testing in cell.py because it doesn't know
-        # about Boards to avoid a circular import loop
+        # Former note:
+        #     we are testing Cell.common_rcbs() which can't
+        #     be testing in cell.py because it doesn't know
+        #     about Boards to avoid a circular import loop
+        # Well... that isn't true any more.  It is now
+        # tested in Test_cell, but it doesn't hurt to test it again
 
         board=Board()
 
@@ -1198,10 +1199,9 @@ class Test_board(unittest.TestCase):
                       CellToSolve( board[4][7] , 4 )
                       ]
         # Make sure we got that right
-        self.assertEqual (len(solutions), len(board.unsolved_cells))
         for (cell,value) in solutions :
             self.assertTrue (cell in board.unsolved_cells)
-
+            self.assertTrue (value in cell.possible_values)
 
         # Solve each cell in turn and make sure they solve the right amt of others
         for cell_to_solve in solutions :
