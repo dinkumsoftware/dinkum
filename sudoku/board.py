@@ -21,6 +21,10 @@ sudoku board full of Cells with values.
 # 2019-12-19 tc set as verb ==> solve
 # 2019-12-19 tc Major redesign #3: __eq__ also tests cell.possible_values
 #                                  solve() stops when no board changes
+# 2019-12-23 tc redesign #3.a RCB.unsolved_cell_possibles removed
+#                             so don't maintain it incremental.
+#                             use RCB.build_unsolved_cell_possibles()
+#                             when needed.
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -84,10 +88,9 @@ class Board :
 
     Board()[row][col] can be used to get Cell at (row,col)
 
-    Some seful functions (there are others)
+    Some useful functions (there are others)
       solve()           Trys to solve the board
       solve_cells       solves(sets) a bunch of cells
-      a_cell_was_solved()  Should be called when any cell is solved
 
     A Board can be specified to Board() as a list of row, e.g
         [ [1,2,3,4,5,6,7,8,9],
@@ -380,12 +383,18 @@ class Board :
 
             # Build a set() of CellToSolve's that could provide "value"
             # We build the list and then Cell.solve() in a separate pass
-            # to prevent "dictionary changed size during iteration" as
-            # Cell.solve may modify rcb.unsolved_value_possibles
+            # to prevent "dictionary changed size during iteration"
             cells_to_solve = set()
-            for (value, possible_cells) in rcb.unsolved_value_possibles.items() :
+            unsolved_value_possibles = rcb.build_unsolved_value_possibles()
+            for (value, possible_cells) in unsolved_value_possibles.items() :
+                num_possibles = len(possible_cells)
+
+                # if there is a value with solving cells,
+                # something is broken as cell can't be solved
+                assert num_possibles != 0
+
                 # If there is only one such cell ....
-                if len(possible_cells) == 1 :
+                if num_possibles == 1 :
                     # We have a winner
                     # This is the only cell in the RCB what can provide "value"
                     # Extract the only element in the set, which is the providing cell
@@ -429,7 +438,8 @@ class Board :
             #       cells with their value
             cells_to_solve = set() # Where we accumulate what to solve
             for match_size in [3, 2] :  # triples first, as they will include a pair
-                # returns {} keyed by set() of matching cells, value: values_uniquely_in_common
+                # returns [] of tuples: (set() of matching cells
+                #                        set() of values_uniquely_in_common)
                 cells_and_values = rcb.unsolved_cells_with_common_unique_values(match_size)
 
                 for (matching_cells, matching_values) in cells_and_values :
@@ -437,11 +447,11 @@ class Board :
                     # This is set of all other cells in the rcb that didn't
                     # match.  We will exclude them from remove_from_possibles() which
                     # makes remove_from_possibles() only operate on the pair/triple
-                    except_cells = set(self) - matching_cells 
+                    except_cells = set(rcb) - matching_cells 
 
                     # Remove matching values from any common rcb in
                     # the pair/triple
-                    assert len(cells) == match_size
+                    assert len(matching_cells) == match_size
 
                     # Iterate thru a list of rcbs that the matching cells have in common
                     first_cell = list(matching_cells)[0]  # get an arbitary cell out of the set
