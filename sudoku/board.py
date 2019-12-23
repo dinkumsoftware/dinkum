@@ -316,29 +316,34 @@ class Board :
         self.solve_stats.solve_start_time_secs = time.perf_counter()
 
         # We try all the solution techniques we know about
-        # We give up when the board isn't changed in a pass
+        # until board is solved.
+        # We break out of the loop and give up when the
+        # a cell wasn't solved in pass and board isn't changed in a pass
         self.solve_stats.num_solve_passes = 0
-        board_on_last_pass = None
-        while (not self.is_solved() and self != board_on_last_pass) :
+        while not self.is_solved() :
 
             # Snapshot the board state
+            num_solved_this_pass = 0
             board_on_last_pass = copy.deepcopy(self)
 
             # count the # of times thru the loop
             self.solve_stats.num_solve_passes += 1
 
             # Solve cells with only 1 possible value
-            self.solve_cells_with_single_possible_value()
+            num_solved_this_pass += self.solve_cells_with_single_possible_value()
 
             # Solve row/col/blks where an unsolved value can only be
             # satisfied by a single cell
-            self.solve_rcbs_with_single_possible_value_solution()
+            num_solved_this_pass += self.solve_rcbs_with_single_possible_value_solution()
 
             # Remove some possibles by looking for matching cells with same possibles
             # and projecting that into other rcb's.  This doesn't actually solve any
             # cells, but may modifify the board
-            self.solve_possibles_from_matching_cells()
+            num_solved_this_pass += self.solve_possibles_from_matching_cells()
 
+            # Time to bail out?
+            if num_solved_this_pass == 0   and   self == board_on_last_pass :
+                break # too bad
 
         # All done, Remember how long we ran
         self.solve_stats.solve_time_secs = (time.perf_counter() -
