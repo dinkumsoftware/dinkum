@@ -227,7 +227,7 @@ all_known_solved_puzzles.append(puzzle)
 
 # ***
 name="kato_puzzle"
-desc="Unsure lineage, maybe kato"
+desc="Sample in https://www.codewars.com/kata/hard-sudoku-solver-1/train/python"
 puzzle_in = [[0, 0, 6, 1, 0, 0, 0, 0, 8], 
              [0, 8, 0, 0, 9, 0, 0, 3, 0], 
              [2, 0, 0, 0, 0, 5, 4, 0, 0], 
