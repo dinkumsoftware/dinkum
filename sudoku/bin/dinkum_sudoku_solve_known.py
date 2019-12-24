@@ -31,6 +31,7 @@ EXIT STATUS
 # 2019-12-10 tc added -n, --num_to_average
 # 2019-12-19 tc check for negative --num_to_average
 #               Print dot's as solve puzzles
+# 2019-12-24 tc Confirm partial solutions are valid
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -181,6 +182,7 @@ def main ():
         # we pass in any prior statistics to allow change in any statistics to
         # be computed
         (tokens, verbose_lines) = build_printed_output( solve_results_board,
+                                                        sp.solution_board,
                                                         prior_solve_stats_dict.get(puzzle_name))
 
         # record lines for later printing
@@ -273,7 +275,7 @@ def solve(input_board, num_to_average) :
     return (is_solved, solve_results_board)
 
 
-def build_printed_output( board, prior_stats=None) :
+def build_printed_output( board, solution_board, prior_stats=None) :
     '''We build the lines to be printed for the user, returning:
     (tokens, verbose_lines)
             tokens        [] of what is always printed to user about this puzzle
@@ -285,6 +287,7 @@ def build_printed_output( board, prior_stats=None) :
     verbose_lines content will change depending on whether the puzzle is solved
     or not.
 
+    solution_board is used to confirm that board is either partially or fully correct
     prior_stats is used to allow change in any statistic to be computed.
     '''
     # what we return
@@ -302,9 +305,24 @@ def build_printed_output( board, prior_stats=None) :
 
     # tokens is a single line that is always printed, whether unsolved or not
 
-    # Name and solution state
+    # Name
     tokens.append ( board.name )
-    tokens.append ("solved" if is_solved else "UNSOLVED!" )
+
+    # solution state (4 choices)
+    #   solved
+    #   solved INCORRECTLY
+    #   UNSOLVED!
+    #   UNSOLVED! WITH ERRORS
+    # Assemble one of the above in solve_str
+    if is_solved :
+        solve_str = "solved"
+        if solution_board and board != solution_board :
+            solve_str += " INCORRECTLY!"
+    else :
+        solve_str = "UNSOLVED!"
+        if solution_board and not board.is_subset_of(solution_board) :
+            solve_str += " WITH ERRORS!!"
+    tokens.append (solve_str)
 
     # Solution Time
     secs_to_usec_multiplier = 1000.0 * 1000.0
