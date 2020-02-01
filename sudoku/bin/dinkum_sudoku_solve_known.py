@@ -342,7 +342,7 @@ def build_printed_output( board, solution_board, prior_stats=None) :
     verbose_lines += '\n' # Space it nicely
     
     if not board.is_solved() :
-        verbose_lines += "Num   solved: %2d\n" % board.num_solved() 
+        verbose_lines += "Num solved: %2d    " % board.num_solved() 
         verbose_lines += "Num unsolved: %2d\n" % board.num_unsolved() 
 
         # Print all the stats

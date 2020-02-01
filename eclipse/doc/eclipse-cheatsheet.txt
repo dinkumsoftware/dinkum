@@ -4,6 +4,7 @@ Things I can't remember from eclipse.
 
 2019-11-22 tc Initial
 2019-12-14 tc reorder key mappings a bit
+2019-12-24 tc Added unit test selection
 
 
  ----------------------------------------------
@@ -35,5 +36,8 @@ Things I can't remember from eclipse.
  | Execute                Ctrl+U              |
  | Force Return           Shift-Alt-F         |
  | Coverage               Shift+Ctrl+F11      |
+ |                                            |
+ | Unit Test Selection    Ctrl+F9             |
+ |   select tests, then   Shift+Enter         |
  ----------------------------------------------
 
