@@ -19,7 +19,7 @@ The class SolvedPuzzle will contain:
     all_known_unsolved_puzzles is a [] of puzzles which can't be solved and/or
     do not solution recorded
 
-    all_known_names is a {} of all_known_puzzles.  Key:name Value:SolvedPuzzle
+    all_known_puzzles_names is a {} of all_known_puzzles.  Key:name Value:SolvedPuzzle
 
     Performs a couple of sanity checks which trigger a
     failed assertion on any errors.
