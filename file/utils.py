@@ -19,6 +19,7 @@ LICENSE
 # history:
 # 2019-05-06 tc Initial
 # 2020-02-02 tc Converted to python 3 print => print()
+#               Added full_dotted_modulename()
 
 import os
 from shutil    import copy2
@@ -30,9 +31,9 @@ def copytree(src_dir, des_dir, verbose=0, dry_run=0, ignore_func=None) :
     '''Recursively copies "src_dir" INTO "des_dir".
     i.e. src_dir=/a/b/c gets copied into des_dir/c/....
     "src_dir" and "des_dir" must exist. Exceptions raised if not the case
-    Symbolic links are copied "as is", i.e. not referenced
+    Symbolic links are copied "as is", i.e. not dereferenced
 
-    It does NOT copy over any files or directories.  It raises an exception
+    It does NOT overwrite any files or directories.  It raises an exception
     if this is the case.
 
     if verbose is non-zero, announces what is being done to stdout.
