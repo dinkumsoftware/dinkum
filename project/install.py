@@ -18,9 +18,10 @@ LICENSE
     Full license text at end of file.
 '''
 # history:
-# 2019-05-02 tc@DinkumSoftware.com Initial
-# 2019-05-06 tc@DinkumSoftware.com Added copyright/license
-#                                  Only install tracked git files
+# 2019-05-02 tc Initial
+# 2019-05-06 tc Added copyright/license
+#               Only install tracked git files
+# 2020-02-02 tc Converted to python3, print ==> print()
 
 import os
 from shutil            import rmtree
@@ -63,7 +64,7 @@ def install_from_git(git_root_dir, verbose=False, dry_run=False) :
     # Remove any existing prior installation
     if remove_install_from_git(verbose, dry_run) :
         # Tell caller what we did
-        print '''Removed an existing dinkum-install-from-git.'''
+        print ('''Removed an existing dinkum-install-from-git.''')
     
     # Everything is copied to dinkum_git_copy_root
     

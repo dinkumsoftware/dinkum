@@ -17,7 +17,8 @@ LICENSE
     Full license text at end of file.
 '''
 # history:
-# 2019-05-06 tc@DinkumSoftware.com Initial
+# 2019-05-06 tc Initial
+# 2020-02-02 tc Converted to python 3 print => print()
 
 import os
 from shutil    import copy2
@@ -291,7 +292,7 @@ File:     dinkum-root-rsync-push               =>    dinkum-root-rsync-push
         s += des
 
     # Show them
-    print s
+    print (s)
 
 
 # full-license:
