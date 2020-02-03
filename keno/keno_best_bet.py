@@ -1,7 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # keno_best_bet
 #
-# 2019-10-02 tc@DinkumSoftware.com  Initial
+# 2019-10-02 tc Initial
+# 2020-02-03 tc Convert to python3, print ==> print()
 #
 # Prints the expected value of all mass keno bets
 #
@@ -16,8 +17,8 @@ if __name__ == "__main__" :
     mk = MassKeno()
 
     ### Print what the expected bonus multiplier is
-    print "Expected bonus multiplier: %0.3f" % mk.expected_bonus_multiplier
-    print
+    print ("Expected bonus multiplier: %0.3f" % mk.expected_bonus_multiplier)
+    print ()
 
     ### Print all the expected values (both with and without bonus)
     # From best to worst
@@ -38,13 +39,13 @@ if __name__ == "__main__" :
 
     #      123456789.123456789.123456"
     #        ssssss     $-v.vvv      
-    print "# Spots/game Expected Value on $1.00 bet"
+    print ("# Spots/game Expected Value on $1.00 bet")
     for (evalue, spot) in evl :
-        print "%8s     $%5.3f %s" % (spot, evalue, '*' if mk.restricted_payout(spot) else ' ')
-    print "# * means winnings restricted by number of winners"
+        print ("%8s     $%5.3f %s" % (spot, evalue, '*') if mk.restricted_payout(spot) else ' ')
+    print ("# * means winnings restricted by number of winners")
 
     # Line break
-    print
+    print()
 
 
     ### Print all probabilities of winning, best to worst
@@ -56,7 +57,7 @@ if __name__ == "__main__" :
 
     #      123456789.123456789.123456"
     #        ssssss     v.vvv      
-    print "# Spots/game Probability of winning"
+    print ("# Spots/game Probability of winning")
     for (prob,spot) in pl :
-        print "%8d      %5.3f" % (spot, prob)
+        print ("%8d      %5.3f" % (spot, prob))
 

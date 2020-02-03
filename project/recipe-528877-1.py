@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # From http://code.activestate.com/recipes/528877-skeleton-script-hello-world/
 """
 SYNOPSIS
@@ -41,7 +41,7 @@ def main ():
 
     global options, args
     # TODO: Do something more interesting here...
-    print 'Hello world!'
+    print ('Hello world!')
 
 if __name__ == '__main__':
     try:
@@ -51,18 +51,18 @@ if __name__ == '__main__':
         (options, args) = parser.parse_args()
         #if len(args) < 1:
         #    parser.error ('missing argument')
-        if options.verbose: print time.asctime()
+        if options.verbose: print (time.asctime())
         main()
-        if options.verbose: print time.asctime()
-        if options.verbose: print 'TOTAL TIME IN MINUTES:',
-        if options.verbose: print (time.time() - start_time) / 60.0
+        if options.verbose: print (time.asctime())
+        if options.verbose: print ('TOTAL TIME IN MINUTES:',)
+        if options.verbose: print ((time.time() - start_time) / 60.0)
         sys.exit(0)
-    except KeyboardInterrupt, e: # Ctrl-C
+    except KeyboardInterrupt as e: # Ctrl-C
         raise e
-    except SystemExit, e: # sys.exit()
+    except SystemExit as e: # sys.exit()
         raise e
-    except Exception, e:
-        print 'ERROR, UNEXPECTED EXCEPTION'
-        print str(e)
+    except Exception as e:
+        print ('ERROR, UNEXPECTED EXCEPTION')
+        print (str(e))
         traceback.print_exc()
         os._exit(1)

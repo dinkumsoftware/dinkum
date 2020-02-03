@@ -67,9 +67,10 @@ program_version = 0.0
 __doc__=__doc__.format(program_version=program_version)
 
 # history:
-# 2019-04-30 tc@DinkumSoftware.com Initial
-# 2019-04-30 tc@DinkumSoftware.com Switched to shutil.copytree()
-# 2019-05-05 tc@DinkumSoftware.com refactoring
+# 2019-04-30 tc Initial
+# 2019-04-30 tc Switched to shutil.copytree()
+# 2019-05-05 tc refactoring
+# 2020-02-03 tc Convert to python3, print ==> print()
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -226,11 +227,11 @@ directory ~/.dinkum.
     install_from_git(git_root_dir, verbose, dry_run)
 
     # Life is good
-    print "Successfully installed DinkumSoftware's software from a git clone."
+    print ("Successfully installed DinkumSoftware's software from a git clone.")
 
     # Warn them if we didn't do anything
     if dry_run :
-        print "** This was a DRY-RUN.  Nothing was written or removed. **"
+        print ("** This was a DRY-RUN.  Nothing was written or removed. **")
 
 
     return None
@@ -243,16 +244,16 @@ if __name__ == '__main__':
         main_return = main()
 
         if main_return :
-            print main_return # ERROR: print whatever it returns
+            print (main_return) # ERROR: print whatever it returns
         # Pass back to the OS the proper exit code. 0 is good
         sys.exit( 1 if main_return else 0)
 
-    except KeyboardInterrupt, e: # Ctrl-C
+    except KeyboardInterrupt as e: # Ctrl-C
         raise e
-    except SystemExit, e: # sys.exit()
+    except SystemExit as e: # sys.exit()
         raise e
-    except Exception, e:         
-        print 'ERROR: uncaught EXCEPTION. Msg after traceback.'
+    except Exception as e:         
+        print ('ERROR: uncaught EXCEPTION. Msg after traceback.')
         traceback.print_exc()    # stack dump (which prints err msg)
         os._exit(2)
 
