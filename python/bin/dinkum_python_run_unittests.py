@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #filename: dinkum_python_run_unittests.py
-#path: sudoku/bin/
+#path: dinkum/python/bin
 #repo: http://github.com/dinkumsoftware/dinkum.git
 """
 Locates and runs all python unittests in all python
@@ -13,13 +13,14 @@ EXIT STATUS
 """
 
 # 2020-02-02 tc Initial
+# 2020-02-04 tc moved from dinkum/bin to dinkum/python/bin
+
 import sys, os, traceback, argparse
 import textwrap    # dedent
 import unittest
 from   dinkum.python.modnames    import full_dotted_modulename
 from   dinkum.mas_unittest.utils import tests_from_TestSuite, prune_dups_from_TestSuite
-
-
+import dinkum.project.dirs
 
 
 # What main() can return
@@ -45,7 +46,6 @@ def main ():
     args = parser.parse_args()
 
     # The default directory where we start looking for test code
-    import dinkum.project.dirs #############################################################################
     top_level_dir = dinkum.project.dirs.top_level_dir()  # /what/ever/dinkum i.e. where "import dinkum" starts
 
     # Accumulate test_XXX() cases
