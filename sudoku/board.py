@@ -25,6 +25,7 @@ sudoku board full of Cells with values.
 #                             so don't maintain it incremental.
 #                             use RCB.build_unsolved_cell_possibles()
 #                             when needed.
+# 2020-02-01 tc Went to exhaustive trials
 
 from dinkum.sudoku.rcb   import *
 from dinkum.sudoku.cell  import *
@@ -89,8 +90,9 @@ class Board :
     Board()[row][col] can be used to get Cell at (row,col)
 
     Some useful functions (there are others)
-      solve()           Trys to solve the board
-      solve_cells       solves(sets) a bunch of cells
+      solve()              Trys to solve the board with guessing
+      solve_by_deduction() Trys to solve the board without guessing
+      solve_cells          solves(sets) a bunch of cells
 
     A Board can be specified to Board() as a list of row, e.g
         [ [1,2,3,4,5,6,7,8,9],
@@ -308,6 +310,76 @@ class Board :
         Returns a Board that solve us.
         Return None if unsolvable
         raise Exception on multiple solutions 
+
+        If we can't solve the board via solve_by_deduction()
+        We try all possibles combinations.
+
+        We change our values in the process
+        Sets various statistics in solve_stats
+
+        Our algorithm:
+
+        solve()
+            solve_by_deduction(), return on success
+
+            cell_num = most_constrained_cell_num()
+                     # pick unsolved cell with fewest possibles
+                     # if more than one
+                     #     break tie with lowest total unsolved in RCB
+                     # if still more than one
+                     #     pick the first
+
+           # Try all possibles
+           solve_results = []
+           for v in cell.possible_values
+               b=Board(self) # copy
+               b.cells[cell_num].set(v)
+               solve_results.append( b.solve() )  # recurse
+
+           if all unsolved
+              return unsolvable
+           if 1 solved
+              self = b
+              return solved
+           if >1 solved
+              return/raise multiple solutions
+        '''
+        
+        return self.solve_by_deduction() ######################################
+
+        # Try to solve using logic
+        bd = self.solve_by_deduction()
+        if bd :
+            # We did
+            return bd
+
+        # We are currently unsolved
+        # Pick the cell with fewest choices
+        mc_cell_num = self.most_constrained_cell_num()
+
+        # and try all possibles values for that cell
+        # We have to try all values to detect multiple solutions
+        solve_results = []
+        for value in self.cells[mc_cell_num].possible_values :
+            bd = Board(self) # Make a copy
+            bd.cells[mc_cell_num].solve(value)  # Put in value we are trying
+            
+            # Recurse and remember results
+#           solve_results.append( (bd, bd.solve() ) )
+
+        ######################################
+
+        # Unsolvable
+        # <todo> may not get here
+        return None
+
+
+    def solve_by_deduction(self) :
+        '''
+        Returns a Board that solve us.
+        Return None if unsolvable
+        raise Exception on multiple solutions 
+        Solution attempt involves no guessing.
         We change our values in the process
         Sets various statistics in solve_stats
         '''
@@ -324,6 +396,7 @@ class Board :
 
             # Snapshot the board state
             num_solved_this_pass = 0
+#################################            board_on_last_pass = Board(self)
             board_on_last_pass = copy.deepcopy(self)
 
             # count the # of times thru the loop
@@ -468,6 +541,72 @@ class Board :
         # and tell them how many we solved
         return self.solve_cells(cells_to_solve)
 
+    def most_constrained_cell_num(self) :
+        ''' Returns the unsolved cell_num with the fewest choices.
+        The algorithm:
+            pick unsolved cell with fewest possibles
+            if more than one
+                break tie with lowest total unsolved in RCB
+                if still more than one
+                     pick the first
+        '''
+        
+        default_answer = 0 # cell# 0
+
+        # sanity check
+        if self.is_solved() :
+            return default_answer
+
+        # pick unsolved cell with fewest possibles
+        unsolved_cells = list(self.unsolved_cells)  # set ==> list
+
+        # sorting functions
+        def by_cell_num(cell) :
+            return cell.cell_num
+        def by_num_possibles(cell) :
+            return len(cell.possible_values)
+        
+        # Put fewest possibles at head of the list
+        unsolved_cells.sort( key=by_cell_num)        # put in cell num order
+        unsolved_cells.sort( key=by_num_possibles)   # now sort by # possibles
+
+        # Eliminate all but those with fewest possible values
+        min_num_possibles = len( unsolved_cells[0].possible_values)
+        for (indx, cell) in enumerate( unsolved_cells ) :
+            if indx == 0 :
+                continue  # skip the first one
+
+            if len(unsolved_cells[indx].possible_values) > min_num_possibles :
+                # Remove this cell and all following
+                unsolved_cells = unsolved_cells[:indx]
+                break
+
+
+        # unsolved_cells has all the cells with minimum number of possible values
+        if len(unsolved_cells) == 1 :
+            # only one choice, we are done
+            return unsolved_cells[0].cell_num
+
+
+        # We have multiple cells with same number of possible_values
+        # First tie breaker.. The minimum sum of unsolved cells RCB
+        # Build a list of (cell, sum_of_rcb_unsolved)
+        unsolved_rcb_cnt = []
+        for c in unsolved_cells :
+            urc = 0  # count of unsolveds
+            for rcb in c.rcbs :
+                urc += len(rcb.unsolved_cells)
+            unsolved_rcb_cnt.append( (c, urc) )
+
+        # Find put minimum at head of the list
+        def by_rcb( t ) : return t[1]
+        unsolved_rcb_cnt.sort (key=by_rcb)
+
+
+        # If there is only one cell left we return it
+        # If there are multiple cells left, we return the first
+        # Both are the same
+        return unsolved_rcb_cnt[0][0].cell_num
 
     def __getitem__(self, row) :
         ''' Returns our RCB at row
@@ -1310,7 +1449,39 @@ class Test_board(unittest.TestCase):
         self.assertTrue  ( board.cols[7] in ones_in_common )
 
         
+    def test_most_constrained_cell_num(self) :
+        # None solved, should return cell#0
+        bd = Board()
+        self.assertEqual(0, bd.most_constrained_cell_num() )
+
+        # All solved,  should return cell#0
+        bd = Board(Test_board.full_spec_lrl)
+        self.assertEqual(0, bd.most_constrained_cell_num() )
     
+
+        # One unsolved cell.  It should be returned
+        lrl = copy.deepcopy(Test_board.full_spec_lrl)
+        lrl[4][8] = 0
+        bd = Board(lrl)
+        self.assertEqual(4*9 + 8, bd.most_constrained_cell_num() )
+
+        # Two unsolved cells with same rcb unsolved count
+        # Should pick the first (by cell #)
+        lrl = copy.deepcopy(Test_board.full_spec_lrl)
+        lrl[3][7] = 0
+        lrl[6][2] = 0
+        bd = Board(lrl)
+        self.assertEqual(3*9 + 7, bd.most_constrained_cell_num() )
+        
+
+        # Three unsolved cells with different rcb unsolved count
+        lrl = copy.deepcopy(Test_board.full_spec_lrl)
+        lrl[4][2] = 0 # same blk
+        lrl[5][1] = 0 # same blk
+        lrl[2][4] = 0 # should pick this one
+        bd = Board(lrl)
+        self.assertEqual(2*9 + 4, bd.most_constrained_cell_num() )
+        
 
 if __name__ == "__main__" :
     # Run the unittests

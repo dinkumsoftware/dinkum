@@ -1,3 +1,4 @@
+# /usr/bin/env python3
 # keno.py
 #
 # Support data for keno probabilities
@@ -278,15 +279,15 @@ class KenoTest(unittest.TestCase) :
         # Compare the odds of all the bets we have answers for
         num_places_reqd_for_equality = 10
         for num_hits in prob_of_n_matches :
-            self.assertAlmostEqual( mk.odds( (num_spots, num_hits)),  prob_of_n_matches[num_hits],
+            self.assertAlmostEqual( mk.odds( Bet(num_spots, num_hits)),  prob_of_n_matches[num_hits],
                                     num_places_reqd_for_equality)
 
 
         # answers from https://www.masslottery.com/games/keno.html
         num_places_reqd_for_equality = 4  # The lottery odds calculations aren't very good
-        self.assertAlmostEqual (mk.odds(( 1,1)), 1.0/  4.00, num_places_reqd_for_equality)
-        self.assertAlmostEqual (mk.odds(( 2,2)), 1.0/ 16.63, num_places_reqd_for_equality)
-        self.assertAlmostEqual (mk.odds((12,8)), 1.0/980.78, num_places_reqd_for_equality)
+        self.assertAlmostEqual (mk.odds(Bet(1, 1)), 1.0/  4.00, num_places_reqd_for_equality)
+        self.assertAlmostEqual (mk.odds(Bet(2, 2)), 1.0/ 16.63, num_places_reqd_for_equality)
+        self.assertAlmostEqual (mk.odds(Bet(10,5)), 1.0/ 19.44, num_places_reqd_for_equality)
 
 
 

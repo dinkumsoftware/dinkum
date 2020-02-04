@@ -3,12 +3,14 @@
 #
 # 2019-10-02 tc Initial
 # 2020-02-03 tc Convert to python3, print ==> print()
+#               fix up imports
 #
 # Prints the expected value of all mass keno bets
 #
 # State of massachusetts keno payouts
 
-from keno import *
+from dinkum.keno.keno import *
+import re
 
 
 if __name__ == "__main__" :
@@ -41,7 +43,11 @@ if __name__ == "__main__" :
     #        ssssss     $-v.vvv      
     print ("# Spots/game Expected Value on $1.00 bet")
     for (evalue, spot) in evl :
-        print ("%8s     $%5.3f %s" % (spot, evalue, '*') if mk.restricted_payout(spot) else ' ')
+        # convert "12" or "12B" to 12
+        num_spots = int ( re.sub('[^0-9]',"", spot ))
+
+        print ("%8s     $%5.3f %s" % (spot, evalue, '*' if mk.restricted_payout(num_spots) else ' '))
+
     print ("# * means winnings restricted by number of winners")
 
     # Line break
