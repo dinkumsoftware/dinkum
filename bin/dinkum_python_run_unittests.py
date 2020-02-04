@@ -16,8 +16,8 @@ EXIT STATUS
 import sys, os, traceback, argparse
 import textwrap    # dedent
 import unittest
-import dinkum.project.dirs  # top_level_dir(), full_dotted_modulename()
-from   dinkum.unittest.utils import tests_from_TestSuite, prune_dups_from_TestSuite
+from   dinkum.python.modnames    import full_dotted_modulename
+from   dinkum.mas_unittest.utils import tests_from_TestSuite, prune_dups_from_TestSuite
 
 
 
@@ -45,6 +45,7 @@ def main ():
     args = parser.parse_args()
 
     # The default directory where we start looking for test code
+    import dinkum.project.dirs #############################################################################
     top_level_dir = dinkum.project.dirs.top_level_dir()  # /what/ever/dinkum i.e. where "import dinkum" starts
 
     # Accumulate test_XXX() cases
@@ -61,7 +62,7 @@ def main ():
             # Extract all unittests
 
             # Get "dinkum.what.ever.modulename"
-            module_name = dinkum.project.dirs.full_dotted_modulename( os.path.join(dirpath, filename) )
+            module_name = full_dotted_modulename( os.path.join(dirpath, filename) )
             if not module_name :
                 # Not a python file (doesn't end in *.py)
                 continue

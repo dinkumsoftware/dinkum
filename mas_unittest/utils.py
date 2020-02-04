@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# dinkum/unittest/utils.py
+# dinkum/mas_unittest/utils.py
 ''' A number of support functions for python unittest
 '''
 
@@ -52,7 +52,7 @@ class Test_utils(unittest.TestCase):
     # In all these tests, we use ourselves as input
 
     # Class variables
-    our_module_name="dinkum.unittest.utils"
+    our_module_name="dinkum.mas_unittest.utils"
 
     # List of tests in THIS file
     expected_tests_as_str= ["test_empty_testsuite (%s.Test_utils)"           % our_module_name,
