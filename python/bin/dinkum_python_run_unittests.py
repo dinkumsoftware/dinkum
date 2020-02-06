@@ -60,6 +60,10 @@ def main ():
                         help="TestRunner verbosity. Bigger=>More Verbose",
                         type=int, choices=[0,1,2], default=1 )
 
+    parser.add_argument("--ignore_NO_PYTHON_UNITTESTS",
+                        help="Process directories even though they have a file named NO_PYTHON_UNITTESTS in them",
+                        action="store_true")
+
     parser.parse_args()
     args = parser.parse_args()
 
@@ -82,7 +86,7 @@ def main ():
     for dirpath, dirnames, filenames in os.walk(top_level_dir) :
         # Is this directory excluded from having unittests?
         # i.e. is there a file named "NO_PYTHON_UNITTESTS" in it
-        if "NO_PYTHON_UNITTESTS" in filenames :
+        if "NO_PYTHON_UNITTESTS" in filenames and not args.ignore_NO_PYTHON_UNITTESTS :
             # Stop looking at this directory and any of it's subdirectories
             dirnames.clear()
             continue ;
