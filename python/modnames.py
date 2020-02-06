@@ -8,12 +8,13 @@ and forth to dotted python module/package paths
 '''
 
 # 2020-02-04 tc Initial
-# 2020-02-06 tc Added is_importable
+# 2020-02-06 tc Added is_importable and is_findable_for_import
 
 import os.path
 import importlib.util
+import traceback
 
-def is_importable(module_name) :
+def is_findable_for_import(module_name) :
     ''' Returns True if module_name can be located for import.
     It doesn't necessary imply that module_name imports without
     error.
@@ -27,6 +28,29 @@ def is_importable(module_name) :
 
     assert False, "Impossible Place"
 
+
+def has_import_errors(module_name) :
+    ''' Normally returns None.
+
+    If there is any kind of problem importing module_name,
+    a human-readable error message will be returned.
+    It is typically a stack trace with associated error message.
+    '''
+    try:
+        # Do the import
+        importlib.__import__(module_name)
+
+        # It must have worked
+        return None
+
+    except Exception as e :
+        # Got some kind of error doing the import
+
+        # Retrieve the error message
+        returned_err_msg = traceback.format_exc(limit=0)
+
+        return returned_err_msg
+        
 
 def full_dotted_modulename(filename) :
     ''' returns the module path of filename. e.g.
@@ -106,17 +130,18 @@ import tempfile
 
 class Test_modnames(unittest.TestCase) :
     def test_is_importable(self) :
-        self.assertFalse( is_importable(None))
-        self.assertFalse( is_importable(""))
-        self.assertFalse( is_importable("no.such.damn.package.or.module") )
-        self.assertFalse( is_importable("no_such_damn____________module") )
+        self.assertFalse( is_findable_for_import(None))
+        self.assertFalse( is_findable_for_import(""))
+        self.assertFalse( is_findable_for_import("no.such.damn.package.or.module") )
+        self.assertFalse( is_findable_for_import("no_such_damn____________module") )
 
+        # Library stuff is importable
+        self.assertTrue( is_findable_for_import("os.path"       ))
+        self.assertTrue( is_findable_for_import("importlib.util"))
 
-        self.assertTrue( "os.path" )
-        self.assertTrue( "importlib.util")
-        self.assertTrue( __name__ )
-                          
-        
+        # This file should be importable
+        my_modulename = full_dotted_modulename(__file__)
+        self.assertTrue( is_findable_for_import( my_modulename ))
 
 
     def test_full_dotted_modulename(self) :

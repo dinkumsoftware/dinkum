@@ -19,15 +19,15 @@ EXIT STATUS
 
 # 2020-02-02 tc Initial
 # 2020-02-04 tc moved from dinkum/bin to dinkum/python/bin
+# 2020-02-06 tc Generally works.  Added --verbose, --failfast
+#               --nowarnings
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
 import unittest
-from   dinkum.python.modnames    import full_dotted_modulename, is_importable
+from   dinkum.python.modnames    import *
 import dinkum.project.dirs
 from   dinkum.mas_unittest.utils import * 
-
-
 
 # What main() can return
 ret_val_good             = 0
@@ -50,9 +50,15 @@ def main ():
                         action="store_true")
 
 
+    # Don't print WARNING! lines
     parser.add_argument("-n", "--no_warnings",
                         help="suppress all warnings",
                         action="store_true")
+
+    # Set verbosity of test run
+    parser.add_argument("-v", "--verbose",
+                        help="TestRunner verbosity. Bigger=>More Verbose",
+                        type=int, choices=[0,1,2], default=1 )
 
     parser.parse_args()
     args = parser.parse_args()
@@ -77,6 +83,8 @@ def main ():
         # Is this directory excluded from having unittests?
         # i.e. is there a file named "NO_PYTHON_UNITTESTS" in it
         if "NO_PYTHON_UNITTESTS" in filenames :
+            # Stop looking at this directory and any of it's subdirectories
+            dirnames.clear()
             continue ;
 
         # Extract all unittests from *.py files in this directory
@@ -89,21 +97,12 @@ def main ():
                 # Not a python file (doesn't end in *.py)
                 continue
 
-            # Make sure the module is importable --or-- in
-            # a *bin directory. I.E. if it's in a bin directory
-            # it is suppose to be an executable script which
-            # doesn't have unittest code and is typically not
-            # importable as *bin probably doesn't have an __init__.py
-            if not is_importable(module_name) :
-                # In a *bin directory?
-                if dirpath.endswith("bin") :
-                    # yes, skip it
-                    continue
-
-                # Import Error
-                # Warn and pass it along, it will be trapped as an error later
-                if not args.no_warnings :
-                    issue_warning("Is Not importable", module_name, pathname )
+            # Make sure the module is findable for import --and--
+            # the module will import sucessfully
+            # Note: this may issue a variety of errors/warnings
+            if should_skip_module_for_importability_problems(module_name, pathname) :
+                continue
+            
 
             # Find the unittest code in the module
             # Note the returned TestSuite has tests listed multiple times
@@ -112,7 +111,7 @@ def main ():
             # Check for no unit tests for warning
             # <todo>
 
-            # Add the surviving module tests to the final test_suite
+            # Add any surviving module tests to the final test_suite
             test_suite.addTest(module_test_suite)
 
 
@@ -129,19 +128,103 @@ def main ():
 
 
     # They want to run the tests
-    runner = unittest.TextTestRunner(verbosity=3)
+    runner = unittest.TextTestRunner(verbosity=args.verbose)
     result = runner.run(test_suite)
 
     # tell um how it went
     return ret_val_good
 
 
-def issue_warning(warning_msg, module_name, filename) :
-    ''' Sends warning message to sys:stdout of the form:
-    WARNING:<warning_msg> module_name:<module_name> filename:<filename>
+def should_skip_module_for_importability_problems(module_name, pathname) :
+    ''' Returns True if "import module_name" generates some kind of error
+    that requires that module_name NOT be searched for unittests.
+
+    The Error could be:
+        the module_name can't be found --or--
+        there might be be a syntax error in the module itself
+
+    Both are announced to sys.stderr.  Only the later (syntax error) results
+    in a True return to force the module to be skipped, otherwise it will
+    will "crash" the unittest.TestLoader and this program.
+
+    pathname should correspond to the absolute path to module_name.py
+    It is only used for error printout
     '''
 
-    print ("WARNING:%s module_name:%s filename:%s" %(warning_msg, module_name, filename) )
+        # Can the module be found for import?
+    if is_findable_for_import(module_name) :
+        # import module_name will find the file
+        # 
+        # Detect if any errors arise during the import of the module
+        # If there are any such errors.... then the loader.loadTestsFromName()
+        # will "crash".  i.e. it will print the stack trace/error from
+        # the import and punt.  We don't want that.  We'll precatch any import errors ;
+        # announce them as a warning ; and skip the test so loader won't crash
+        #     NOTE: To test this... run with --ignore_NO_PYTHON_UNITTESTS switch
+        #           and see dinkum/python/test_data/*
+        import_err_msg = has_import_errors( module_name ) 
+        if import_err_msg :
+            # Some kind of problem importing the module
+            issue_error("ErrorDuringImport", module_name, pathname,
+                        import_err_msg )
+            return True # Throw this file away
+                        # otherwise will crash the whole program
+
+
+    else :
+        # The module_name CANNOT be found for import
+        # This is normally an error, where if we just
+        # carry on with the process the error will be
+        # flagged and reported.
+        # 
+        # there is an exception where we want to NOT process the module
+        # and suppress it's error messages:
+        #     the file is in a *bin directory.
+        # I.E. if it's in a bin directory it is suppose to be an executable
+        # script which doesn't have unittest code and is typically not
+        # importable as *bin probably doesn't have an __init__.py
+        #
+        #     NOTE: To test this... run with --ignore_NO_PYTHON_UNITTESTS switch
+        #           and see dinkum/python/test_data/*
+
+        # In a *bin directory?
+        if os.path.dirname(pathname).endswith("bin") :
+            # yes, skip the file
+            return True
+
+        # Import Error, i.e. not on PYTHONPATH
+        # Warn and pass it along, it will be trapped as an error later
+        issue_error("Not_Findable_for_Import", module_name, pathname )
+
+        # do Not Skip this file, the error will be reported twice
+        # once by us (just now) and once when test is run
+
+    # do Not Skip this file
+    return False 
+
+    
+
+
+def issue_error(error_msg, module_name, filename, trailing_error_msg=None) :
+    ''' See _error_or_warning()
+    '''
+    return _error_or_warning( "ERROR", error_msg, module_name, filename, trailing_error_msg)
+
+def issue_warning(warning_msg, module_name, filename, trailing_warning_msg=None) :
+    ''' See _error_or_warning()
+    '''
+    return _error_or_warning( "WARNING", warning_msg, module_name, filename, trailing_warning_msg)
+
+def _error_or_warning(error_or_warning, main_msg, module_name, filename, trailing_msg=None) :
+    ''' Sends warning message to sys:stderr of the form:
+
+            <error_or_warning>:<main_msg> module_name:<module_name> filename:<filename>
+            <trailing_error_msg>
+    '''
+    print ("%s:%s module_name:%s filename:%s" %(error_or_warning, main_msg, module_name, filename),
+           file=sys.stderr)
+    if trailing_msg :
+        print (trailing_msg, file = sys.stderr)
 
 
 if __name__ == '__main__':
