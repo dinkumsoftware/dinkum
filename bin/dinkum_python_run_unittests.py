@@ -7,11 +7,6 @@ Locates and runs all python unittests in all python
 modules in a specified filetree.  Defaults to running
 all dinkum python unittests.
 
-All *.py files in the filetree are REQUIRED to have unittest except:
-    Those in a *bin directory --or--
-    Their enclosing directory has a file named "NO_PYTHON_UNITTESTS"
-
-
 EXIT STATUS
     0  No errors or warnings
     1  Some unknown exception raised
@@ -23,10 +18,9 @@ EXIT STATUS
 import sys, os, traceback, argparse
 import textwrap    # dedent
 import unittest
-from   dinkum.python.modnames    import full_dotted_modulename, is_importable
+from   dinkum.python.modnames    import full_dotted_modulename
+from   dinkum.mas_unittest.utils import tests_from_TestSuite, prune_dups_from_TestSuite
 import dinkum.project.dirs
-from   dinkum.mas_unittest.utils import * 
-
 
 
 # What main() can return
@@ -48,12 +42,6 @@ def main ():
     parser.add_argument("-l", "--list",
                         help="list (but don't run) all tests",
                         action="store_true")
-
-
-    parser.add_argument("-n", "--no_warnings",
-                        help="suppress all warnings",
-                        action="store_true")
-
     parser.parse_args()
     args = parser.parse_args()
 
@@ -61,63 +49,42 @@ def main ():
     top_level_dir = dinkum.project.dirs.top_level_dir()  # /what/ever/dinkum i.e. where "import dinkum" starts
 
     # Accumulate test_XXX() cases
-    #    Note:I tried to use unittest.TestLoader.discover() but
-    #         it was inserting duplicate copies of tests.
-    #         So... I wrote my own.  It has duplicate copies as well.
-    #         Because when a module imports another module, the imported
-    #         module TestCase gets defined and loaded.  I prune
-    #         duplicates from the test.  I left my code in so could filter
-    #         and check stuff.
+    #       Note: I tried to use unittest.TestLoader.discover() but
+    #       for reasons neither I (or google) could ascertain,
+    #       it listed a bunch of tests multiple times
+    #       So... I wrote my own
     test_suite = unittest.TestSuite() # Where we build tests to run
 
     # Walk the filetree at top_level_dir looking for *.py files
     loader = unittest.TestLoader()
-
     for dirpath, dirnames, filenames in os.walk(top_level_dir) :
-        # Is this directory excluded from having unittests?
-        # i.e. is there a file named "NO_PYTHON_UNITTESTS" in it
-        if "NO_PYTHON_UNITTESTS" in filenames :
-            continue ;
-
-        # Extract all unittests from *.py files in this directory
+        # Look for python files
         for filename in filenames :
+            # Extract all unittests
 
             # Get "dinkum.what.ever.modulename"
-            pathname = os.path.join(dirpath, filename)       # /a/b/c/foo.py
-            module_name = full_dotted_modulename( pathname ) # a.b.c.foo
+            module_name = full_dotted_modulename( os.path.join(dirpath, filename) )
             if not module_name :
                 # Not a python file (doesn't end in *.py)
                 continue
-
-            # Make sure the module is importable --or-- in
-            # a *bin directory. I.E. if it's in a bin directory
-            # it is suppose to be an executable script which
-            # doesn't have unittest code and is typically not
-            # importable as *bin probably doesn't have an __init__.py
-            if not is_importable(module_name) :
-                # In a *bin directory?
-                if dirpath.endswith("bin") :
-                    # yes, skip it
-                    continue
-
-                # Import Error
-                # Warn and pass it along, it will be trapped as an error later
-                if not args.no_warnings :
-                    issue_warning("Is Not importable", module_name, pathname )
 
             # Find the unittest code in the module
             # Note the returned TestSuite has tests listed multiple times
             module_test_suite = loader.loadTestsFromName( module_name )
 
-            # Check for no unit tests for warning
+            # Check for no unit tests
             # <todo>
 
-            # Add the surviving module tests to the final test_suite
+            # Add to the test_suite
             test_suite.addTest(module_test_suite)
 
 
     # Remove duplicate tests
     test_suite = prune_dups_from_TestSuite(test_suite)
+
+    print ("####################")
+    print (loader.errors)
+    print ("####################")
 
     # They just want a listing?
     if args.list :
@@ -135,13 +102,6 @@ def main ():
     # tell um how it went
     return ret_val_good
 
-
-def issue_warning(warning_msg, module_name, filename) :
-    ''' Sends warning message to sys:stdout of the form:
-    WARNING:<warning_msg> module_name:<module_name> filename:<filename>
-    '''
-
-    print ("WARNING:%s module_name:%s filename:%s" %(warning_msg, module_name, filename) )
 
 
 if __name__ == '__main__':

@@ -8,13 +8,31 @@ and forth to dotted python module/package paths
 '''
 
 # 2020-02-04 tc Initial
+# 2020-02-06 tc Added is_importable
 
 import os.path
+import importlib.util
+
+def is_importable(module_name) :
+    ''' Returns True if module_name can be located for import.
+    It doesn't necessary imply that module_name imports without
+    error.
+    '''
+    try :
+        return importlib.util.find_spec(module_name) != None
+    except :
+        # Some kind of error
+        # likely to be "module_name" isn't a string
+        return False
+
+    assert False, "Impossible Place"
+
 
 def full_dotted_modulename(filename) :
     ''' returns the module path of filename. e.g.
-           filename= a/b/c/dinkum/what/ever/foo.py
-           return  = dinkum.what.ever.foo
+           filename= "a/b/c/dinkum/what/ever/foo.py"
+           return  = "dinkum.what.ever.foo"
+        where dinkum is top level directory in project
     
     Returns None if filename isn't a python file, ie
     doesn't end in *.py
@@ -31,28 +49,20 @@ def full_dotted_modulename(filename) :
     # strip off the module/filename
     path = os.path.dirname( filename )
     
-    # Make sure file is in the filetree of our
-    # top level directory, i.e. /a/b/c/dinkum/what/ever/module
-    from dinkum.project.dirs import top_level_dir ####################
-    proj_root = top_level_dir()
-    if os.path.commonprefix([proj_root, path]) != proj_root :
-        return None # path of filename doesn't fall in dinkum subtree
+    # What we return
+    # Always has the module name.  We'll insert req'd package names below
+    returned_dotted_modulename = module_name
 
-    # Ok, ready to generate the dotted pathname
-    # Make a list of directories, this does not include module name
-    packages = path.split(os.sep)
-
-    # Remove everything to left of  dinkum/...
-    # i.e proj_root    = "/a/b/c/dinkum"
-    #     packages     = ["a","b","c","dinkum", "what", "ever",  "module"]
-    # we want packages = [            "dinkum", "what", "ever" , "module"]
-    packages = packages[len(proj_root.split(os.sep))-1 : ]
-
-    # Tack on the module
-    packages.append( module_name )
+    # Walk up the directory path until we find a non-package
+    # directory (i.e. has no __init__.py in it)
+    while is_package_dir (path) :
+        # Put the end path component at head of what we return
+        # and strip it off of path
+        (path, pkg) = os.path.split(path)   
+        returned_dotted_modulename = pkg + "." + returned_dotted_modulename
 
     # give them a single dotted string
-    return ".".join(packages)
+    return returned_dotted_modulename
 
 def modulename(filename) :
     ''' turns filename (with or without a path) into
@@ -76,11 +86,38 @@ def modulename(filename) :
     return os.path.basename(root)
 
 
+def is_package_dir (directory) :
+    ''' Returns true if directory is a python package directory,
+    i.e. it has a __init__.py in it
+    '''
+
+    # It must exist
+    if not os.path.isdir(directory) :
+        return False
+
+    # It must have an __init__.py in it
+    reqd_pkg_file = os.path.join(directory, "__init__.py" )
+    return os.path.isfile  ( reqd_pkg_file )
+
+
 # Test code
 import unittest
 import tempfile
 
 class Test_modnames(unittest.TestCase) :
+    def test_is_importable(self) :
+        self.assertFalse( is_importable(None))
+        self.assertFalse( is_importable(""))
+        self.assertFalse( is_importable("no.such.damn.package.or.module") )
+        self.assertFalse( is_importable("no_such_damn____________module") )
+
+
+        self.assertTrue( "os.path" )
+        self.assertTrue( "importlib.util")
+        self.assertTrue( __name__ )
+                          
+        
+
 
     def test_full_dotted_modulename(self) :
         # Test ourself
@@ -89,9 +126,13 @@ class Test_modnames(unittest.TestCase) :
         # Test non-python file
         self.assertIsNone (full_dotted_modulename( "not/a/python/file"))
 
-        # A python file not in dinkum subtree
-        f = tempfile.NamedTemporaryFile(suffix=".py")
-        self.assertIsNone ( full_dotted_modulename(f.name) )
+        # A python file not in package
+        # Should just return the modulename
+        f = tempfile.NamedTemporaryFile(suffix=".py") # /tmp/foo.py
+        (path,ext)        = os.path.splitext(f.name)  # /tmp/foo
+        should_be_modname = os.path.basename(path)    # foo
+
+        self.assertEqual ( should_be_modname, full_dotted_modulename(f.name) )
 
 
 
