@@ -12,26 +12,38 @@ All *.py files in the filetree are REQUIRED to have unittest except:
     Their enclosing directory has a file named "NO_PYTHON_UNITTESTS"
 
 
+Per unittest vocabulary....
+
+A Failure is something broken in trying to run the unittest.
+This is probably some kind of import error.
+
+An Error is the unittest being run did not pass, i.e
+it had some kind of self.assert..() that wasn't True.
+
 EXIT STATUS
-    0  No errors or warnings
+    0  No failures, errors or warnings
     1  Some unknown exception raised
+    2  Some kind of command line problem (handled by argparse)
+    3  Failures occurred
+    4  Errors occurred (but no Failures)
+    5  Warnings occurred (but no Failures/Errors and NOT ignoring_warnings)
 """
 
 # 2020-02-02 tc Initial
 # 2020-02-04 tc moved from dinkum/bin to dinkum/python/bin
 # 2020-02-06 tc Generally works.  Added --verbose, --failfast
 #               --nowarnings
+# 2020-02-08 tc move code into ./support.py
+#               Added class EFW
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
 import unittest
-from   dinkum.python.modnames    import *
+
 import dinkum.project.dirs
 from   dinkum.mas_unittest.utils import * 
 
-# What main() can return
-ret_val_good             = 0
-ret_val_exception_raised = 1
+from   support                   import * # From same dir as this script
 
 
 def main ():
@@ -60,8 +72,12 @@ def main ():
                         help="TestRunner verbosity. Bigger=>More Verbose",
                         type=int, choices=[0,1,2], default=1 )
 
-    parser.add_argument("--ignore_NO_PYTHON_UNITTESTS",
+    parser.add_argument("-ign", "--ignore_NO_PYTHON_UNITTESTS",
                         help="Process directories even though they have a file named NO_PYTHON_UNITTESTS in them",
+                        action="store_true")
+
+    parser.add_argument("-ff", "--failfast",
+                        help="Stop running unittests on first failure",
                         action="store_true")
 
     parser.parse_args()
@@ -78,11 +94,11 @@ def main ():
     #         module TestCase gets defined and loaded.  I prune
     #         duplicates from the test.  I left my code in so could filter
     #         and check stuff.
+    loader = unittest.TestLoader()  # What we use to accumulate unittests
     test_suite = unittest.TestSuite() # Where we build tests to run
+    efw = EFW(args.failfast, args.no_warnings, args.list) # What we handle Failures/Errors/Warnings with
 
     # Walk the filetree at top_level_dir looking for *.py files
-    loader = unittest.TestLoader()
-
     for dirpath, dirnames, filenames in os.walk(top_level_dir) :
         # Is this directory excluded from having unittests?
         # i.e. is there a file named "NO_PYTHON_UNITTESTS" in it
@@ -104,10 +120,13 @@ def main ():
             # Make sure the module is findable for import --and--
             # the module will import sucessfully
             # Note: this may issue a variety of errors/warnings
-            if should_skip_module_for_importability_problems(module_name, pathname) :
-                continue
+            (should_skip, should_exit) = should_skip_module_for_importability_problems(module_name, pathname, efw)
+            if should_exit :
+                # A Failure/Error/Warning, failfast, and Not list
+                return should_exit 
+            if should_skip :
+                continue    # don't process this module
             
-
             # Find the unittest code in the module
             # Note the returned TestSuite has tests listed multiple times
             module_test_suite = loader.loadTestsFromName( module_name )
@@ -132,103 +151,18 @@ def main ():
 
 
     # They want to run the tests
-    runner = unittest.TextTestRunner(verbosity=args.verbose)
-    result = runner.run(test_suite)
+    runner = unittest.TextTestRunner(verbosity=args.verbose,
+                                     failfast=args.failfast)
+    test_result = runner.run(test_suite)
+
+    # From test_result, combine the Failures/Errors
+    # (no Warnings as run() doesn't any) into
+    # few (our Failures/Errors/Warning class
+    efw.update_from_TestResult( test_result )
 
     # tell um how it went
-    return ret_val_good
-
-
-def should_skip_module_for_importability_problems(module_name, pathname) :
-    ''' Returns True if "import module_name" generates some kind of error
-    that requires that module_name NOT be searched for unittests.
-
-    The Error could be:
-        the module_name can't be found --or--
-        there might be be a syntax error in the module itself
-
-    Both are announced to sys.stderr.  Only the later (syntax error) results
-    in a True return to force the module to be skipped, otherwise it will
-    will "crash" the unittest.TestLoader and this program.
-
-    pathname should correspond to the absolute path to module_name.py
-    It is only used for error printout
-    '''
-
-        # Can the module be found for import?
-    if is_findable_for_import(module_name) :
-        # import module_name will find the file
-        # 
-        # Detect if any errors arise during the import of the module
-        # If there are any such errors.... then the loader.loadTestsFromName()
-        # will "crash".  i.e. it will print the stack trace/error from
-        # the import and punt.  We don't want that.  We'll precatch any import errors ;
-        # announce them as a warning ; and skip the test so loader won't crash
-        #     NOTE: To test this... run with --ignore_NO_PYTHON_UNITTESTS switch
-        #           and see dinkum/python/test_data/*
-        import_err_msg = has_import_errors( module_name ) 
-        if import_err_msg :
-            # Some kind of problem importing the module
-            issue_error("ErrorDuringImport", module_name, pathname,
-                        import_err_msg )
-            return True # Throw this file away
-                        # otherwise will crash the whole program
-
-
-    else :
-        # The module_name CANNOT be found for import
-        # This is normally an error, where if we just
-        # carry on with the process the error will be
-        # flagged and reported.
-        # 
-        # there is an exception where we want to NOT process the module
-        # and suppress it's error messages:
-        #     the file is in a *bin directory.
-        # I.E. if it's in a bin directory it is suppose to be an executable
-        # script which doesn't have unittest code and is typically not
-        # importable as *bin probably doesn't have an __init__.py
-        #
-        #     NOTE: To test this... run with --ignore_NO_PYTHON_UNITTESTS switch
-        #           and see dinkum/python/test_data/*
-
-        # In a *bin directory?
-        if os.path.dirname(pathname).endswith("bin") :
-            # yes, skip the file
-            return True
-
-        # Import Error, i.e. not on PYTHONPATH
-        # Warn and pass it along, it will be trapped as an error later
-        issue_error("Not_Findable_for_Import", module_name, pathname )
-
-        # do Not Skip this file, the error will be reported twice
-        # once by us (just now) and once when test is run
-
-    # do Not Skip this file
-    return False 
-
-    
-
-
-def issue_error(error_msg, module_name, filename, trailing_error_msg=None) :
-    ''' See _error_or_warning()
-    '''
-    return _error_or_warning( "ERROR", error_msg, module_name, filename, trailing_error_msg)
-
-def issue_warning(warning_msg, module_name, filename, trailing_warning_msg=None) :
-    ''' See _error_or_warning()
-    '''
-    return _error_or_warning( "WARNING", warning_msg, module_name, filename, trailing_warning_msg)
-
-def _error_or_warning(error_or_warning, main_msg, module_name, filename, trailing_msg=None) :
-    ''' Sends warning message to sys:stderr of the form:
-
-            <error_or_warning>:<main_msg> module_name:<module_name> filename:<filename>
-            <trailing_error_msg>
-    '''
-    print ("%s:%s module_name:%s filename:%s" %(error_or_warning, main_msg, module_name, filename),
-           file=sys.stderr)
-    if trailing_msg :
-        print (trailing_msg, file = sys.stderr)
+    efw.announce_results()
+    return efw.os_return_code()
 
 
 if __name__ == '__main__':
@@ -247,7 +181,7 @@ if __name__ == '__main__':
     except Exception as e:         
         print ('ERROR: uncaught EXCEPTION. Msg after traceback.')
         traceback.print_exc()    # stack dump (which prints err msg)
-        os._exit(ret_val_exception_raised)
+        os._exit(os_ret_val_exception_raised)
 
 # full-license:
 '''

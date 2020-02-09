@@ -1,4 +1,18 @@
 
+mas_unittest/utils.py,444
+def tests_from_TestSuite(12,192
+def prune_dups_from_TestSuite(33,847
+def is_TestLoader_error(48,1304
+def TestLoader_error_msg(60,1623
+def parse_test_name(102,3035
+class Test_utils(136,4020
+    def test_empty_testsuite(154,4832
+    def test_our_testsuite(158,4960
+    def test_prune_dups_from_TestSuite(169,5353
+    def test_is_TestLoader_error(189,6118
+    def test_TestLoader_err_msg(197,6396
+    def test_parse_test_name(231,8052
+
 keno/keno.py,285
 def ncr(11,157
 class Bet(23,407
@@ -11,6 +25,42 @@ class MassKeno(36,760
 class KenoTest(257,8699
     def test_ncr(258,8735
     def test_odds(268,9050
+
+python/bin/support.py,424
+class EFW 53,1610
+    def __init__(73,2239
+    def need_immediate_os_return(89,2794
+    def os_return_code(95,2982
+    def issue_error(116,3535
+    def issue_failure(122,3825
+    def issue_warning(128,4124
+    def _issue_workhorse(134,4431
+def should_skip_module_for_importability_problems(146,4959
+class Test_support(237,8896
+    def test_os_return_code(238,8936
+    def test_need_immediate_os_return(287,10510
+
+python/bin/dinkum_python_run_unittests.py,18
+def main 49,1451
+
+python/modnames.py,301
+def is_findable_for_import(17,408
+def has_import_errors(32,822
+def full_dotted_modulename(55,1419
+def modulename(91,2726
+def is_package_dir 113,3259
+class Test_modnames(131,3674
+    def test_is_importable(132,3715
+    def test_full_dotted_modulename(147,4370
+    def test_modulename(164,4991
+
+python/test_data/module_with_test_failures.py,160
+class Test_module_with_test_failures(14,248
+    def test_1(15,306
+    def test_2(18,360
+    def test_3(21,425
+    def test_4(24,479
+    def test_5(27,544
 
 git/utils.py,25
 def is_a_gitfile(24,482
@@ -200,14 +250,8 @@ class Test_cell(381,12375
     def test_remove_from_possibles(628,21401
     def test_CellToSolve(663,22524
 
-unittest/utils.py,126
-def tests_from_TestSuite(9,135
-class Test_utils(59,1792
-    def test_empty_testsuite(62,1882
-    def test_ourself(66,2016
-
 bin/dinkum_python_run_unittests.py,17
-def main 30,680
+def main 31,793
 
 utils/state_space.py,678
 class ExcAttemptToChangeStateRootToNonExistantDir(67,2464
@@ -238,15 +282,11 @@ class TestStrUtils(149,4952
     def test_replace_substr_at(150,4991
     def test_fixed_width_columns(199,6818
 
-project/dirs.py,258
+project/dirs.py,116
 def top_level_dirname(6,122
 def top_level_dir(12,253
-def full_dotted_modulename(39,1178
-def modulename(81,2699
-class Test_dirs(109,3303
-    def test_top_level_dir(111,3340
-    def test_full_dotted_modulename(126,3854
-    def test_modulename(139,4277
+class Test_dirs(44,1233
+    def test_top_level_dir(46,1270
 
 project/bin/dinkum-install-from-git.py,194
 def find_dinkum_git_root_dir(83,2523
@@ -287,6 +327,20 @@ sudoku/bin/dinkum_sudoku_print_worksheet.py,0
 
 git/__init__.py,0
 
+python/test_data/import_syntax_error.py,0
+
+python/test_data/not_a_package/module.py,0
+
+python/test_data/__init__.py,0
+
+python/bin/__init__.py,0
+
+python/__init__.py,0
+
 keno/keno_best_bet.py,0
+
+keno/__init__.py,0
+
+mas_unittest/__init__.py,0
 
 __init__.py,0
