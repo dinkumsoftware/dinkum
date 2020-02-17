@@ -198,8 +198,8 @@ def join_dotted_pkg_path_and_module_name(pkg_path, module_name) :
 
     # Avoid double dots
     dot = '.'
-    if ret_str.endswith(dot) :
-        # Strip trailing dot
+    while ret_str.endswith(dot) :
+        # Strip trailing dot(s)
         ret_str = ret_str[:-1]
 
     # Tack on a dot separated module

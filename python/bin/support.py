@@ -276,8 +276,7 @@ def should_skip_module_for_importability_problems(module_name, pathname, efw) :
         # and suppress it's error messages:
         #     the file is in a *bin directory.
         # I.E. if it's in a bin directory it is suppose to be an executable
-        # script which doesn't have unittest code and is typically not
-        # importable as *bin probably doesn't have an __init__.py
+        # script which doesn't have unittest code
         #
         #     NOTE: To test this... run with --ignore_NO_PYTHON_UNITTESTS switch
         #           and see dinkum/python/test_data/*

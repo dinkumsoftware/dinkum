@@ -50,28 +50,13 @@ def prune_dups_from_TestSuite(test_suite) :
         
         # dig out names of the test
         (dotted_module_name, test_case, test_name) = parse_test_name(test)
-        ####### curr_dotted_module_name_length = dotted_module_name_length(dotted_module_name)
 
         # Form the filename
         abs_filename=filename_from_dotted_module_name( dotted_module_name )
-        print ("##", dotted_module_name, abs_filename)
 
         # Remember it
         key = (abs_filename,test_case,test_name)
-        if key not in ordered_dict :
-            # First time we've seen this test
-            ordered_dict[key] = test
-        else :
-            # duplicate test
-            # Put the test with longest package path in
-            # (prior_dotted_module_name, ignored, ignored) = parse_test_name( ordered_dict[key] )
-            # if curr_dotted_module_name_length > dotted_module_name_length(prior_dotted_module_name) :
-            #      ordered_dict[key]=test
-            pass
-        
-
-    for x in ordered_dict :
-        print (x)
+        ordered_dict[key] = test
 
     # Now reinsert the unique tests
     ret_ts = unittest.TestSuite()
