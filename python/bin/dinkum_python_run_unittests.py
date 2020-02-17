@@ -89,11 +89,8 @@ def main ():
     # Accumulate test_XXX() cases
     #    Note:I tried to use unittest.TestLoader.discover() but
     #         it was inserting duplicate copies of tests.
-    #         So... I wrote my own.  It has duplicate copies as well.
-    #         Because when a module imports another module, the imported
-    #         module TestCase gets defined and loaded.  I prune
-    #         duplicates from the test.  I left my code in so could filter
-    #         and check stuff.
+    #         Not sure why. So... I wrote my own. It had duplicate copies as well.... sigh
+    #         I left my code in so could filter and check stuff.
     loader = unittest.TestLoader()  # What we use to accumulate unittests
     test_suite = unittest.TestSuite() # Where we build tests to run
     efw = EFW(args.failfast, args.no_warnings, args.list) # What we handle Failures/Errors/Warnings with
@@ -112,15 +109,17 @@ def main ():
 
             # Get "dinkum.what.ever.modulename"
             pathname = os.path.join(dirpath, filename)       # /a/b/c/foo.py
-            module_name = full_dotted_modulename( pathname ) # a.b.c.foo
-            if not module_name :
+            dotted_module_name = dotted_module_name_from_filename( pathname ) # a.b.c.foo
+            if not dotted_module_name :
                 # Not a python file (doesn't end in *.py)
                 continue
+
 
             # Make sure the module is findable for import --and--
             # the module will import sucessfully
             # Note: this may issue a variety of errors/warnings
-            (should_skip, should_exit) = should_skip_module_for_importability_problems(module_name, pathname, efw)
+            (should_skip, should_exit) = should_skip_module_for_importability_problems(dotted_module_name,
+                                                                                       pathname, efw)
             if should_exit :
                 # A Failure/Error/Warning, failfast, and Not list
                 return should_exit 
@@ -129,7 +128,7 @@ def main ():
             
             # Find the unittest code in the module
             # Note the returned TestSuite has tests listed multiple times
-            module_test_suite = loader.loadTestsFromName( module_name )
+            module_test_suite = loader.loadTestsFromName( dotted_module_name )
 
             # Check for no unit tests for warning
             # <todo>
@@ -147,7 +146,7 @@ def main ():
             print (test.id())
             
         # tell um how it went
-        return ret_val_good
+        return os_ret_val_good
 
 
     # They want to run the tests

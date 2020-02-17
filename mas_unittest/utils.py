@@ -4,9 +4,11 @@
 '''
 
 # 2020-02-03 tc Initial
+# 2020-02-16 tc bug fix in prune_dups_from_TestSuite
 
 import unittest
 from collections import OrderedDict
+from dinkum.python.modnames import filename_from_dotted_module_name
 
 
 def tests_from_TestSuite(test_suite) :
@@ -37,12 +39,46 @@ def prune_dups_from_TestSuite(test_suite) :
     Preserves the order of the tests.
     '''
 
-    # See https://stackoverflow.com/questions/7961363/removing-duplicates-in-lists
-    test_list = tests_from_TestSuite(test_suite)
-    ordered_dict = OrderedDict.fromkeys(test_list)
+    # We build a dictionary with
+    #    key:   (abs_filename, test_case, test_name)
+    #    value: TestCase
+    # We make it an OrderedDictionary to preserve the test order
+    # We use this tuple as key in order to do this remove duplicate with a different import path.
+    # i.e a.b.c.module and module could refer to same or different module
+    ordered_dict = OrderedDict()
+    for test in tests_from_TestSuite(test_suite) :
+        
+        # dig out names of the test
+        (dotted_module_name, test_case, test_name) = parse_test_name(test)
+        ####### curr_dotted_module_name_length = dotted_module_name_length(dotted_module_name)
 
-    # Insert them in new TestSuite and return it
-    return unittest.TestSuite( ordered_dict )
+        # Form the filename
+        abs_filename=filename_from_dotted_module_name( dotted_module_name )
+        print ("##", dotted_module_name, abs_filename)
+
+        # Remember it
+        key = (abs_filename,test_case,test_name)
+        if key not in ordered_dict :
+            # First time we've seen this test
+            ordered_dict[key] = test
+        else :
+            # duplicate test
+            # Put the test with longest package path in
+            # (prior_dotted_module_name, ignored, ignored) = parse_test_name( ordered_dict[key] )
+            # if curr_dotted_module_name_length > dotted_module_name_length(prior_dotted_module_name) :
+            #      ordered_dict[key]=test
+            pass
+        
+
+    for x in ordered_dict :
+        print (x)
+
+    # Now reinsert the unique tests
+    ret_ts = unittest.TestSuite()
+    for test in ordered_dict.values() :
+        ret_ts.addTest(test)
+
+    return ret_ts
 
 
 def is_TestLoader_error(test) :
@@ -101,12 +137,12 @@ def TestLoader_error_msg(loader, n=-1) :
     
 def parse_test_name(test) :
     ''' Returns a tuple from test:
-        (dotted_pkg_names, module_name, test_case, test_name)
+        (dotted_module_namename, test_case, test_name)
 
     e.g. if the test is:
         a.b.c.mod.Test_mod.test_name
     Returns
-        ("a.b.c", "mod", "Test_mod", "test_name")
+        ("a.b.c.mod", "Test_mod", "test_name")
 
     All of this is retrieved from test.id()
     '''
@@ -123,13 +159,12 @@ def parse_test_name(test) :
     # Turn id() output into a []
     tokens= test.id().split(".")
 
-    test_name        = tokens[ -1]
-    test_case        = tokens[ -2]
-    module_name      = tokens[ -3]
-    dotted_pkg_names = '.'.join( tokens[:-3])
+    test_name          = tokens[ -1]
+    test_case          = tokens[ -2]
+    dotted_module_name = '.'.join( tokens[:-2])
 
     # Give um the answer
-    return (dotted_pkg_names, module_name, test_case, test_name)
+    return (dotted_module_name, test_case, test_name)
 
 
 # Test code
@@ -231,8 +266,7 @@ class Test_utils(unittest.TestCase):
     def test_parse_test_name(self) :
 
         # What we are looking for
-        expected_dotted_path = "dinkum.mas_unittest"
-        expected_module      = "utils"
+        expected_dotted_module_name = "dinkum.mas_unittest.utils"
         expected_testcase    = "Test_utils"
 
         # The expected tests are the first token in
@@ -240,16 +274,15 @@ class Test_utils(unittest.TestCase):
 
         # Load ourself
         loader = unittest.TestLoader()
-        ts = loader.loadTestsFromModule(expected_dotted_path + "." + expected_module)
+        ts = loader.loadTestsFromModule(expected_dotted_module_name)
 
         # Examine all the tests
         for test in tests_from_TestSuite(ts) :
-            (dotted_path, module, testcase, testname) = parse_test_name(test)
+            (dotted_module_name, testcase, testname) = parse_test_name(test)
 
             # These are same for all tests
-            self.assertEqual( dotted_path, expected_dotted_path)
-            self.assertEqual( module     , expected_module     )
-            self.assertEqual( testcase   , expected_testcase   )
+            self.assertEqual( dotted_module_name, expected_dotted_modulename)
+            self.assertEqual( testcase,           expected_testcase   )
 
             # Make sure testname is at the beginning of some line in
             # Test_utils.expected_tests_as_str[]
