@@ -122,7 +122,7 @@ def TestLoader_error_msg(loader, n=-1) :
     
 def parse_test_name(test) :
     ''' Returns a tuple from test:
-        (dotted_module_namename, test_case, test_name)
+        (dotted_module_name, test_case, test_name)
 
     e.g. if the test is:
         a.b.c.mod.Test_mod.test_name

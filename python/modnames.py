@@ -74,7 +74,6 @@ def dotted_module_name_from_filename(filename) :
     '''
 
     # Get the absolute pathname of filename
-    filename = os.path.expanduser(filename) # ~ expansion
     filename = os.path.abspath(filename)
 
     # Get the modulename (by stripping *.py) from last component

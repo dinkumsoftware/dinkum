@@ -25,6 +25,9 @@ Has a class EFW
         standards.
     Errors only come from actually running the unittests
 
+Has a class FilterTests:
+    Used to manage which unittests are run, i.e
+    filters away some of the tests.
 
 Has a some functions:
     should_skip_module_for_importability_problems()
@@ -213,6 +216,298 @@ class EFW :
         print ("FAILED (failures=%d, errors=%d, warnings=%d) # prior from unittest.run(), additions from dinkum" % (self.num_failures, self.num_errors, self.num_warnings),
                file=stream)
 
+class FilterTests :
+    ''' Manages a variety of filters for determining
+    which unittests to run.  There are multiple filter
+    types which are each specified by a string (typically
+    from the command line:
+
+    python filename     *.py
+    dir_path            Has a / in it -or- "." -or- ".."
+                        dir_path must be somewhere in the
+                        full pathname of .py file
+    Test_Case           Test_*  
+    test_function       test_*
+    module_name         [p0.p1.p2.]module_name
+
+    A list of filter strings are passed in at construction time.
+    '''
+
+    # Class functions
+
+    # These test for the type of filter
+    # The testing order is important
+    # See order_of_is_xxx_funcs
+    def is_python_filename (spec) :
+        ''' Must end in .py '''
+        return spec.endswith(".py")
+        
+    def is_dir_path(spec) :
+        ''' Must have a / in it 
+        or be standalone . or ..
+        '''
+        return os.sep in spec   or \
+               spec == "."      or \
+               spec == ".."
+
+    def is_test_case(spec) :
+        ''' Must start with Test_'''
+        return spec.startswith("Test_")
+
+    def is_test_function(spec) :
+        ''' Must start with test_'''
+        return spec.startswith("test_")
+
+    def is_module_name(spec) :
+        ''' Anything can be a module name '''
+        return spec is not None and spec != ""
+
+
+    # The order to parse a string filter is important
+    order_of_is_xxx_funcs=[ is_python_filename,
+                            is_dir_path,
+                            is_test_case,
+                            is_test_function,
+                            is_module_name,
+                            ]
+
+    def is_legal_filter_spec(spec) :
+        ''' Returns True if spec is a
+        legal filter specifier and False
+        otherwise.
+
+        '''
+
+        # The order is in general important
+        # is_xxx_order is [] of the is_* functions
+        # in the order to run them
+        for is_xxx in FilterTests.order_of_is_xxx_funcs :
+            if is_xxx(spec) :
+                return True
+
+        # Not a filter we recognize
+        return False
+
+
+    def __init__(self, filter_spec_list) :
+        ''' Parse and sorts filter_spec_list into
+        self.filters dictionary where
+            key: is name of entity, e.g python_filename
+            value: is list of filter_specs of that type
+
+        If ANY filters exist, have_filters will be True
+        '''
+
+        def strip_is_(func) :
+            ''' func should be one of the is_XXX functions.
+            strips "is_" from the front of func name
+            and returns it as string.
+            '''
+            to_strip = "is_"  # what we remove from the front
+
+            # Get the function name as a string
+            ret_str = func.__name__
+            if ret_str.startswith(to_strip) :
+                ret_str = ret_str[len(to_strip):]
+            return ret_str
+
+        # Init filters to empty lists
+        self.filters={}
+        for is_xxx_func in FilterTests.order_of_is_xxx_funcs :
+            # Extract the name of the function and strip of leading is_
+            key = strip_is_(is_xxx_func)
+            self.filters[ key ] = []
+
+        # Assume we have no filters
+        self.have_filters = False
+
+        # Go thru all the supplied filter specs
+        # and put them in right list in self.filters
+        if filter_spec_list :
+            for filter_spec in filter_spec_list :
+                for is_xxx_func in FilterTests.order_of_is_xxx_funcs :
+                    # Match ?
+                    if is_xxx_func(filter_spec) :
+                        # Yep, stuff it in appropriate list
+                        self.filters[ strip_is_(is_xxx_func) ].append( filter_spec)
+
+                        # remember we have a filter
+                        self.have_filters = True
+
+                        # On to next filter spec
+                        break ;
+
+        # We have to diddle some of the filters a bit
+        self._diddle_filters()
+
+
+    def _diddle_filters(self) :
+        ''' 
+        Alters self.filters:
+
+        python_filename:
+        Has a python filename with an optional path prepended.
+        If the pathname has a . or .. in it, we must expand
+        to the abspathname
+
+        dir_path:
+        The filters as entered have a / in them or
+        are . or ..
+
+        We change those filters to insure:
+            2. Any filter with . or .. in it is expanded to
+               the full pathname.
+
+            1. They all begin AND end with a /
+               This ensures that entered pathcomponent must match in full
+               a entered foo gets turned into /foo/ and which makes
+               a/b/foo/c match, but NOT a/b/foobar/c
+        '''
+
+        # work function to test for . or .. in a pathname
+        def has_dot_or_dotdot(pathname) :
+            ''' returns True if pathname contains . or .. 
+            '''
+
+            if "."           == pathname   : return True
+            if "."+os.sep    in pathname   : return True
+                                           # os.sep+'dot' makes no sense
+                                   
+            if ".."          == pathname   : return True
+            if ".." + os.sep in pathname   : return True
+            if os.sep + ".." in pathname   : return True
+
+            # No . or ..
+            return False
+            
+
+
+        ### python_filename changes
+        key="python_filename"
+        filters = self.filters[key]
+        new_filters = []
+        # Scan all the dir_path filters.
+        # diddle each one and stuff in new_filters
+        for pf in filters :
+            # expand path (not filename) if has /./ or /../
+            if has_dot_or_dotdot(os.path.dirname(pf)) :
+                # Convert to absolute path
+                pf = os.path.abspath(pf)
+
+            # Insert revised filter
+            new_filters.append(pf)
+
+        # Substitute diddled filters
+        self.filters[key] = new_filters
+
+
+        ### dir_path changes
+        key="dir_path"
+        filters = self.filters[key]
+        new_filters = []
+        # Scan all the dir_path filters.
+        # diddle each one and stuff in new_filters
+        for dp in filters :
+            # expand if has /./ or /../
+            if has_dot_or_dotdot(dp) :
+                # Convert to absolute path
+                dp = os.path.abspath(dp)
+
+            # Surround with single /
+            if not dp.startswith(os.sep) :
+                dp = os.sep + dp
+            if not dp.endswith(os.sep) :
+                dp = dp + os.sep
+
+            # Insert revised filter
+            new_filters.append(dp)
+
+        # Substitute diddled filters
+        self.filters[key] = new_filters
+
+
+    def passes_filter(self, test) :
+        ''' Searches all non-empty filters using test (and it's
+        derived pathname and modulename) and returns
+        True if test should be run and False otherwise.
+
+        test  A unittest.TestCase
+        '''
+        # Any filters to test against?
+        if not self.have_filters :
+            return True  # It must pass
+        
+        # Get location of where test came from
+        (dotted_module_name, our_test_case, our_test_function) = parse_test_name(test)
+        pathname = filename_from_dotted_module_name(dotted_module_name)
+
+        # Test against each filter, returning
+        # if we get a match
+
+        # python_filename
+        filters = self.filters["python_filename"]
+        if filters :
+            # test must come from a file in filters []
+            for filename in filters :
+                if pathname.endswith ( filename ) :
+                    return True # We matched, test passes
+
+        # dir_path
+        filters = self.filters["dir_path"]
+        if filters :
+            # test must come from a dir/subdir in filters []
+            for dirname in filters :
+                if dirname in pathname :
+                    return True # We matched, test passes
+
+        # test_case
+        filters = self.filters["test_case"]
+        if filters :
+            # TestCase name must match
+            for test_case in filters :
+                if our_test_case == test_case :
+                    return True # We matched, test passes
+        
+        # test_function
+        filters = self.filters["test_function"]
+        if filters :
+            # test_function name must match
+            for test_function in filters :
+                if our_test_function == test_function :
+                    return True # We matched, test passes
+
+        # module_name
+        filters = self.filters["module_name"]
+        if filters :
+            # test must come from a module in filters []
+            for modname in filters :
+                if modname in dotted_module_name :
+                    return True # We matched, test passes
+
+        # Filters exist and test matched None of them
+        return False
+
+    def filter_TestSuite(self, input_test_suite, output_test_suite=None) :
+        ''' Applies filters to all the tests in input_test_suite.
+        Surviving tests are put into output_test_suite (if non-None)
+        or into a newly created TestSuite.
+
+        In either event, resulting TestSuite is returned.
+
+        '''
+        # Need to make new output_test_suite
+        if not output_test_suite :
+            # Yes
+            output_test_suite = unittest.TestSuite()
+
+        for test in tests_from_TestSuite(input_test_suite) :
+            if self.passes_filter(test) :
+                output_test_suite.addTest(test)
+
+        return output_test_suite
+
+
+### Standalone functions
 def should_skip_module_for_importability_problems(module_name, pathname, efw) :
     ''' Examines python "module_name" whose *.py file is pathname
     for importability problems.
@@ -301,7 +596,9 @@ def should_skip_module_for_importability_problems(module_name, pathname, efw) :
 
 # Test code
 import unittest
+from   dinkum.mas_unittest.utils import *
 import itertools
+
 
 class Test_support(unittest.TestCase) :
     def test_os_return_code(self) :
@@ -419,6 +716,222 @@ class Test_support(unittest.TestCase) :
         self.assertEqual( efw.num_errors  , efw_cnts[0] + tr_cnts[0] )
         self.assertEqual( efw.num_failures, efw_cnts[1] + tr_cnts[1] )
         self.assertEqual( efw.num_warnings, efw_cnts[2]              )
+
+
+    def test_FilterTests_is_python_filename(self) :
+        self.assertTrue( FilterTests.is_python_filename("foo.py"))
+        self.assertTrue( FilterTests.is_python_filename("/a/b/foo.py"))
+        self.assertTrue( FilterTests.is_python_filename("c/foo.py"))        
+
+        self.assertFalse( FilterTests.is_python_filename("foo.pyx"))
+        self.assertFalse( FilterTests.is_python_filename("/a/b/foopy"))
+        self.assertFalse( FilterTests.is_python_filename("c/foo.ext"))        
+        self.assertFalse( FilterTests.is_python_filename(""))        
+        
+    def test_FilterTests_is_dir_path(self) :
+        self.assertTrue( FilterTests.is_dir_path("/foo"))
+        self.assertTrue( FilterTests.is_dir_path("/a/b/foo"))
+        self.assertTrue( FilterTests.is_dir_path("foo/"))        
+
+        self.assertFalse( FilterTests.is_dir_path("foo.pyx"))
+        self.assertFalse( FilterTests.is_dir_path("b foopy x "))
+        self.assertFalse( FilterTests.is_dir_path(""))
+
+        self.assertTrue(  FilterTests.is_dir_path("."))
+        self.assertTrue(  FilterTests.is_dir_path(".."))        
+
+    def test_FilterTests_is_test_case(self) :
+        self.assertTrue( FilterTests.is_test_case("Test_abc"))
+        self.assertTrue( FilterTests.is_test_case("Test_a_b"))
+
+        self.assertFalse( FilterTests.is_test_case("test_whatever"))
+        self.assertFalse( FilterTests.is_test_case("xyzzy"))
+        self.assertFalse( FilterTests.is_test_case(""))
+        
+    def test_FilterTests_is_test_function(self) :
+        self.assertTrue( FilterTests.is_test_function("test_abc"))
+        self.assertTrue( FilterTests.is_test_function("test_a_b"))
+
+        self.assertFalse( FilterTests.is_test_function("Test_whatever"))
+        self.assertFalse( FilterTests.is_test_function("xyzzy"))
+        self.assertFalse( FilterTests.is_test_function(""))
+
+    def test_FilterTests_is_module_name(self) :
+        # As currently written, almost anything can be a module_name
+        self.assertTrue( FilterTests.is_module_name("test_abc"))
+        self.assertTrue( FilterTests.is_module_name("Test_whatever"))
+
+        self.assertFalse( FilterTests.is_module_name(""))
+        self.assertFalse( FilterTests.is_module_name(None))
+
+
+    def test_FilterTests_is_legal_filter_spec(self) :
+        # Basically anything is a legal spec, but we just want to make
+        # sure it runs
+        self.assertTrue( FilterTests.is_legal_filter_spec("a/b/c/bar.py"))        
+        self.assertTrue( FilterTests.is_legal_filter_spec("x/y"))        
+        self.assertTrue( FilterTests.is_legal_filter_spec("test_whatever"))        
+        self.assertTrue( FilterTests.is_legal_filter_spec("Test_whatever"))        
+        self.assertTrue( FilterTests.is_legal_filter_spec("a.b.c.e.f.xyzzy"))        
+
+    def test_FilterTests_construction(self) :
+
+        # No specs
+        ft = FilterTests( [] )
+        # Make sure ft.filters has all the right entries
+        self.assertTrue ( "python_filename" in ft.filters )
+        self.assertTrue ( "dir_path"        in ft.filters)
+        self.assertTrue ( "test_case"       in ft.filters)
+        self.assertTrue ( "test_function"   in ft.filters)
+        self.assertTrue ( "module_name"     in ft.filters)
+
+        # And all of the value lists are empty
+        for key in ft.filters :
+            self.assertEqual( ft.filters[key], [] )
+
+        # Put one of each type of filter spec in
+        ft = FilterTests ( [ "xyzzy-mod-name",
+                             "a/b/c/foo.py",
+                             "test_whatever",
+                             "Test_even_more",
+                             "a/b/c/dir-path",
+                             ] )
+
+        self.assertEqual( ft.filters["python_filename"], ["a/b/c/foo.py"     ])
+        self.assertEqual( ft.filters["dir_path"],        ["/a/b/c/dir-path/" ])
+        self.assertEqual( ft.filters["test_case"],       ["Test_even_more"   ])
+        self.assertEqual( ft.filters["test_function"],   ["test_whatever"    ])
+        self.assertEqual( ft.filters["module_name"],     ["xyzzy-mod-name"   ])
+        
+        # Multiple specs of same type
+        ft = FilterTests( ["a.py", "b.py", "c.py", "mod_name_0", "mod_name_1"])
+
+        for key in ft.filters :
+            if key == "python_filename" :
+                self.assertEqual( len(ft.filters[key]), 3 )
+                for fn in ["a.py", "b.py", "c.py" ] :
+                    self.assertTrue ( fn in ft.filters[key] )
+            elif key == "module_name" :
+                self.assertEqual( len(ft.filters[key]), 2 )
+                for mod in ["mod_name_0", "mod_name_1"] :
+                    self.assertTrue ( mod in ft.filters[key] )
+            else:
+                self.assertEqual( 0, len(ft.filters[key]))
+
+    def test_FilterTests_passes_filter(self) :
+        # These describe this file
+        our_modulename = "dinkum.python.bin.support"
+        our_pathname   = filename_from_dotted_module_name(our_modulename)
+
+        # Construct a TestSuite of all the unittests in This module
+        # Note this includes a bunch of tests from modules we import
+        loader = unittest.TestLoader()
+        ts = loader.loadTestsFromName(our_modulename)
+
+        # These are the unittests from this file
+        # 1   support.Test_support.test_FilterTests_construction
+        # 2   support.Test_support.test_FilterTests_is_dir_path
+        # 3   support.Test_support.test_FilterTests_is_legal_filter_spec
+        # 4   support.Test_support.test_FilterTests_is_module_name
+        # 5   support.Test_support.test_FilterTests_is_python_filename
+        # 6   support.Test_support.test_FilterTests_is_test_case
+        # 7   support.Test_support.test_FilterTests_is_test_function
+        # 8   support.Test_support.test_FilterTests_passes_filter
+        # 9   support.Test_support.test_need_immediate_os_return
+        #10   support.Test_support.test_os_return_code
+        #11   support.Test_support.test_update_from_TestResult
+        num_tests_in_ts = ts.countTestCases()
+        num_tests_in_this_file = 11
+
+        # Don't filter anything
+        filter = FilterTests(None)
+        for test in tests_from_TestSuite(ts) :
+            self.assertTrue ( filter.passes_filter(test) )
+
+        filter = FilterTests([])
+        for test in tests_from_TestSuite(ts) :
+            self.assertTrue ( filter.passes_filter(test) )
+
+        # Filter by python_filename
+        filter = FilterTests( [ "support.py" ] )  # Just ours
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        # temp change current directory to directory of this file
+        prior_cwd = os.getcwd()   
+        os.chdir( os.path.dirname(os.path.abspath( __file__ )))
+
+        filter = FilterTests( [ "./support.py" ] )  # Just ours
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "../bin/support.py" ] )  # Just ours
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        os.chdir(prior_cwd) # leave things as we found them
+
+        filter = FilterTests( [ "a/support.py" ] )  # None should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), 0 )
+
+        filter = FilterTests( [ "foo.py" ] )  # None should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), 0 )
+
+        # Filter by dirname
+        filter = FilterTests( [ "/bin/" ] )  # Our tests should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "/bin" ] )  # Our tests should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "bin/" ] )  # Our tests should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "/bi" ] )  # None should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), 0 )
+
+        # temp change current directory to directory of this file
+        prior_cwd = os.getcwd()   
+        os.chdir( os.path.dirname(os.path.abspath( __file__ )))
+
+        filter = FilterTests( [ "." ] )  # Our tests should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "./" ] )  # Our tests should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "../bin/" ] )  # Our tests should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        os.chdir(prior_cwd) # leave things as we found them
+
+        filter = FilterTests( [ "no/such/dir" ] )  # None should pass
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), 0 )
+
+        # Filter by TestCase
+        filter = FilterTests( [ "Test_support" ] )  # Just ours
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+
+        filter = FilterTests( [ "Test_doesnt_exist" ] )  # None
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), 0 )
+
+
+        # Filter by TestCase
+        filter = FilterTests( [ "test_some_bogus_name" ] )  # None
+        filtered_ts = filter.filter_TestSuite(ts)
+        self.assertEqual( filtered_ts.countTestCases(), 0 )
 
 
 if __name__ == "__main__" :

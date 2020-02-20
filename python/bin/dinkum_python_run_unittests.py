@@ -4,15 +4,38 @@
 #repo: http://github.com/dinkumsoftware/dinkum.git
 """
 Locates and runs all python unittests in all python
-modules in a specified filetree.  Defaults to running
-all dinkum python unittests.
+modules in a specified filetree which defaults to the
+current directory, but can be specified by --start_dir
+switch.
 
-All *.py files in the filetree are REQUIRED to have unittest except:
-    Those in a *bin directory --or--
-    Their enclosing directory has a file named "NO_PYTHON_UNITTESTS"
+**** How unittests are discovered....
+Normally all unittests in or below the --start_dir are run.
 
+Any directory which has a file named "NO_PYTHON_UNITTESTS"
+causes that directory and all of it's subdirectories to
+be skipped.  This can be disabled with the --ignore_NO_PYTHON_UNITTESTS
+switch.
 
-Per unittest vocabulary....
+The unittests to run can be filtered by additional cmd line
+arguments which may be a:
+    python filename     *.py
+    dir_path            Has a / in it
+                        dir_path must be somewhere in the
+                        full pathname of .py file
+    Test_Case           Test_*  
+    test_function       test_*
+    module_name         [p0.p1.p2.]module_name
+
+Only unittests which match one or more of the above will be run.
+
+**** PYTHONPATH/sys.path ......
+
+Normally PYTHONPATH/sys.path should be set that all of the
+discovered unittests import properly.  If this is NOT the case,
+an --import_dir <directory>...<directory) will insert all the directories
+into sys.path starting at index 1.
+
+**** Per unittest vocabulary....
 
 A Failure is something broken in trying to run the unittest.
 This is probably some kind of import error.
@@ -20,13 +43,26 @@ This is probably some kind of import error.
 An Error is the unittest being run did not pass, i.e
 it had some kind of self.assert..() that wasn't True.
 
+A Warning is python code that does NOT comply with
+dinkumsoftware coding standards listed below.
+All Warnings can be suppressed with the --nowarnings switch.
+
+The following are required:
+    ######################
+    All *.py files in the filetree are REQUIRED to have unittest except:
+        Those in a "*bin" directory                          --or--
+        Those in child directory of a "test_data" directory  --or--
+    ######################
+
+
 EXIT STATUS
     0  No failures, errors or warnings
     1  Some unknown exception raised
-    2  Some kind of command line problem (handled by argparse)
+    2  Some kind of command line problem
     3  Failures occurred
     4  Errors occurred (but no Failures)
     5  Warnings occurred (but no Failures/Errors and NOT ignoring_warnings)
+
 """
 
 # 2020-02-02 tc Initial
@@ -35,6 +71,7 @@ EXIT STATUS
 #               --nowarnings
 # 2020-02-08 tc move code into ./support.py
 #               Added class EFW
+# 2020-02-18 tc Added --start_dir and cmd line filters
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -62,29 +99,74 @@ def main ():
                         action="store_true")
 
 
-    # Don't print WARNING! lines
-    parser.add_argument("-n", "--no_warnings",
-                        help="suppress all warnings",
-                        action="store_true")
+    # Where to start looking for unittests
+    # Func to insure argument is a directory
+    def is_a_directory(dirname) :
+        if os.path.isdir(dirname) :
+            return dirname
+        raise argparse.ArgumentTypeError(f"Not a directory: {dirname}")
+            
+    parser.add_argument( "-sd", "--start_dir",
+                         type=is_a_directory,
+                         help="Directory to start looking for unittests in. Default: current directory",
+                         default=os.getcwd() )
 
     # Set verbosity of test run
     parser.add_argument("-v", "--verbose",
                         help="TestRunner verbosity. Bigger=>More Verbose",
                         type=int, choices=[0,1,2], default=1 )
 
-    parser.add_argument("-ign", "--ignore_NO_PYTHON_UNITTESTS",
-                        help="Process directories even though they have a file named NO_PYTHON_UNITTESTS in them",
-                        action="store_true")
 
     parser.add_argument("-ff", "--failfast",
                         help="Stop running unittests on first failure",
                         action="store_true")
 
+
+    # Don't print WARNING! lines
+    parser.add_argument("-n", "--no_warnings",
+                        help="suppress all warnings",
+                        action="store_true")
+
+    parser.add_argument("-ign", "--ignore_NO_PYTHON_UNITTESTS",
+                        help="Process directories even though they have a file named NO_PYTHON_UNITTESTS in them",
+                        action="store_true")
+
+    parser.add_argument("-id", "--import_dir",
+                        help="Path(s) to add to sys.path(PYTHONPATH)",
+                        nargs='+',
+                        type=is_a_directory )
+
+    # Anything else on command is used to filter tests
+    # file, dir, Test_*, test_*, mod
+    # function to make sure argument is one of the above
+    def fdTtm(arg) :
+        if support.FilterTests(arg) :
+            return arg
+        raise argparse.ArgumentTypeError(f"Not a legal specifier for FilterTest: {arg}")
+
+    parser.add_argument("file_dir_Test_test_mod",
+                        nargs="*",
+                        help="tests to run: file -or- dir -or- Test_* -or- test_* -or- module",
+                        )
+
     parser.parse_args()
     args = parser.parse_args()
 
     # The default directory where we start looking for test code
-    top_level_dir = dinkum.project.dirs.top_level_dir()  # /what/ever/dinkum i.e. where "import dinkum" starts
+    top_level_dir = args.start_dir
+
+    # Do we need to diddle sys.path ?
+    if args.import_dir :
+        # Yes, insert all the supplied directories
+        # after sys.path[0] (script dir)
+        # [::-1] We scan back to front to get them in
+
+        # same order they were entered
+        for import_path in args.import_dir[::-1] :
+            sys.path.insert(1,import_path)
+             
+    # Build the unittests filter from cmd line arguments
+    filter = FilterTests( args.file_dir_Test_test_mod )
 
     # Accumulate test_XXX() cases
     #    Note:I tried to use unittest.TestLoader.discover() but
@@ -114,7 +196,6 @@ def main ():
                 # Not a python file (doesn't end in *.py)
                 continue
 
-
             # Make sure the module is findable for import --and--
             # the module will import sucessfully
             # Note: this may issue a variety of errors/warnings
@@ -127,14 +208,17 @@ def main ():
                 continue    # don't process this module
             
             # Find the unittest code in the module
-            # Note the returned TestSuite has tests listed multiple times
+            # Note the returned TestSuite has testCases listed multiple times
+            # Each testCase may also have multiple test_functions.
             module_test_suite = loader.loadTestsFromName( dotted_module_name )
 
-            # Check for no unit tests for warning
+            # Check for no unit tests for warning etc
+            # Have to remember results and print it out
+            # after the filtering ???
             # <todo>
 
-            # Add any surviving module tests to the final test_suite
-            test_suite.addTest(module_test_suite)
+            # Copy all the approved (non-filtered) tests into final test_suite
+            test_suite = filter.filter_TestSuite(module_test_suite, test_suite)
 
 
     # Remove duplicate tests
@@ -145,6 +229,9 @@ def main ():
         for test in test_suite :
             print (test.id())
             
+        # Give them a count
+        print ("%d tests would be run." % test_suite.countTestCases() )
+
         # tell um how it went
         return os_ret_val_good
 

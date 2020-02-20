@@ -1,17 +1,17 @@
 
 mas_unittest/utils.py,444
-def tests_from_TestSuite(14,305
-def prune_dups_from_TestSuite(35,960
-def is_TestLoader_error(84,2713
-def TestLoader_error_msg(96,3032
-def parse_test_name(138,4444
-class Test_utils(171,5379
-    def test_empty_testsuite(189,6191
-    def test_our_testsuite(193,6319
-    def test_prune_dups_from_TestSuite(204,6712
-    def test_is_TestLoader_error(224,7477
-    def test_TestLoader_err_msg(232,7755
-    def test_parse_test_name(266,9411
+def tests_from_TestSuite(14,313
+def prune_dups_from_TestSuite(35,968
+def is_TestLoader_error(69,2067
+def TestLoader_error_msg(81,2386
+def parse_test_name(123,3798
+class Test_utils(156,4733
+    def test_empty_testsuite(174,5545
+    def test_our_testsuite(178,5673
+    def test_prune_dups_from_TestSuite(189,6066
+    def test_is_TestLoader_error(209,6831
+    def test_TestLoader_err_msg(217,7109
+    def test_parse_test_name(251,8765
 
 keno/keno.py,285
 def ncr(11,157
@@ -26,39 +26,60 @@ class KenoTest(257,8699
     def test_ncr(258,8735
     def test_odds(268,9050
 
-python/bin/support.py,550
-class EFW 53,1610
-    def __init__(73,2239
-    def update_from_TestResult(89,2794
-    def need_immediate_os_return(112,3771
-    def os_return_code(140,4744
-    def issue_error(161,5297
-    def issue_failure(167,5587
-    def issue_warning(173,5886
-    def _issue_workhorse(179,6193
-    def announce_results(191,6721
-def should_skip_module_for_importability_problems(216,7607
-class Test_support(307,11537
-    def test_os_return_code(308,11577
-    def test_need_immediate_os_return(357,13151
-    def test_update_from_TestResult(408,15231
+python/bin/support.py,1289
+class EFW 56,1719
+    def __init__(76,2348
+    def update_from_TestResult(92,2903
+    def need_immediate_os_return(115,3880
+    def os_return_code(143,4853
+    def issue_error(164,5406
+    def issue_failure(170,5696
+    def issue_warning(176,5995
+    def _issue_workhorse(182,6302
+    def announce_results(194,6830
+class FilterTests 219,7716
+    def is_python_filename 241,8423
+    def is_dir_path(245,8536
+    def is_test_case(249,8636
+    def is_test_function(253,8743
+    def is_module_name(257,8854
+    def is_legal_filter_spec(270,9286
+    def __init__(291,9752
+        def strip_is_(300,10065
+    def passes_filter(340,11542
+def should_skip_module_for_importability_problems(369,12420
+class Test_support(461,16306
+    def test_os_return_code(462,16346
+    def test_need_immediate_os_return(511,17920
+    def test_update_from_TestResult(562,20000
+    def test_FilterTests_is_python_filename(579,20619
+    def test_FilterTests_is_dir_path(589,21187
+    def test_FilterTests_is_test_case(598,21602
+    def test_FilterTests_is_test_function(606,21970
+    def test_FilterTests_is_module_name(614,22354
+    def test_FilterTests_is_legal_filter_spec(623,22727
+    def test_FilterTests_construction(632,23287
+    def test_FilterTests_passes_filter(676,25252
 
-python/bin/dinkum_python_run_unittests.py,18
-def main 49,1477
+python/bin/dinkum_python_run_unittests.py,75
+def main 86,2825
+    def is_a_directory(104,3375
+    def fdTtm(142,4936
 
-python/modnames.py,490
+python/modnames.py,593
 def is_findable_for_import(23,672
 def has_import_errors(38,1107
 def dotted_module_name_from_filename(61,1725
-def module_name_from_filename(122,3980
-def filename_from_dotted_module_name(144,4528
-def join_dotted_pkg_path_and_module_name(182,5742
-class Test_modnames(217,6437
-    def test_is_importable(218,6478
-    def test_has_import_errors(235,7277
-    def test_dotted_modulename(255,8001
-    def test_module_name(295,9553
-    def test_filename_from_dotted_module_name(306,9887
+def module_name_from_filename(122,4009
+def filename_from_dotted_module_name(144,4557
+def join_dotted_pkg_path_and_module_name(182,5771
+class Test_modnames(217,6472
+    def test_is_findable_for_importable(218,6513
+    def test_has_import_errors(235,7339
+    def test_dotted_module_name_from_filename(251,7931
+    def test_module_name_from_filename(291,9591
+    def test_filename_from_dotted_module_name(302,9982
+    def test_join_dotted_pkg_path_and_module_name(313,10417
 
 python/test_data/module_with_test_failures.py,160
 class Test_module_with_test_failures(14,248
@@ -256,9 +277,6 @@ class Test_cell(381,12375
     def test_remove_from_possibles(628,21401
     def test_CellToSolve(663,22524
 
-bin/dinkum_python_run_unittests.py,17
-def main 31,793
-
 utils/state_space.py,678
 class ExcAttemptToChangeStateRootToNonExistantDir(67,2464
     def __init__(71,2646
@@ -334,8 +352,6 @@ sudoku/bin/dinkum_sudoku_print_worksheet.py,0
 git/__init__.py,0
 
 python/test_data/import_syntax_error.py,0
-
-python/test_data/not_a_package/module.py,0
 
 python/test_data/__init__.py,0
 
