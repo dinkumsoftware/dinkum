@@ -72,6 +72,9 @@ EXIT STATUS
 # 2020-02-08 tc move code into ./support.py
 #               Added class EFW
 # 2020-02-18 tc Added --start_dir and cmd line filters
+# 2020-02-20 tc Added cmd line test selection
+#               Fixed bug not reporting longest module path
+#               moved python/bin/support.py ==> python/rut_support
 
 import sys, os, traceback, argparse
 import textwrap    # dedent
@@ -80,7 +83,7 @@ import unittest
 import dinkum.project.dirs
 from   dinkum.mas_unittest.utils import * 
 
-from   support                   import * # From same dir as this script
+from   dinkum.python.rut_support import *  # Our support code
 
 
 def main ():

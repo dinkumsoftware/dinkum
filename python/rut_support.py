@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-# dinkum/project/bin/support.py
+# dinkum/project/bin/rut_support.py
 ''' 
+rut ==> Run Unit Tests
+
 Has support classes and functions for executable script:
     dinkum_python_run_unittests
 which is probably in the same directory we are.
@@ -600,7 +602,7 @@ from   dinkum.mas_unittest.utils import *
 import itertools
 
 
-class Test_support(unittest.TestCase) :
+class Test_rut_support(unittest.TestCase) :
     def test_os_return_code(self) :
         # Enforce assumptions
         self.assertEqual(0, os_ret_val_good)
@@ -820,7 +822,7 @@ class Test_support(unittest.TestCase) :
 
     def test_FilterTests_passes_filter(self) :
         # These describe this file
-        our_modulename = "dinkum.python.bin.support"
+        our_modulename = "dinkum.python.rut_support"
         our_pathname   = filename_from_dotted_module_name(our_modulename)
 
         # Construct a TestSuite of all the unittests in This module
@@ -829,19 +831,27 @@ class Test_support(unittest.TestCase) :
         ts = loader.loadTestsFromName(our_modulename)
 
         # These are the unittests from this file
-        # 1   support.Test_support.test_FilterTests_construction
-        # 2   support.Test_support.test_FilterTests_is_dir_path
-        # 3   support.Test_support.test_FilterTests_is_legal_filter_spec
-        # 4   support.Test_support.test_FilterTests_is_module_name
-        # 5   support.Test_support.test_FilterTests_is_python_filename
-        # 6   support.Test_support.test_FilterTests_is_test_case
-        # 7   support.Test_support.test_FilterTests_is_test_function
-        # 8   support.Test_support.test_FilterTests_passes_filter
-        # 9   support.Test_support.test_need_immediate_os_return
-        #10   support.Test_support.test_os_return_code
-        #11   support.Test_support.test_update_from_TestResult
+        # 1   rut_support.Test_rut_support.test_FilterTests_construction
+        # 2   rut_support.Test_rut_support.test_FilterTests_is_dir_path
+        # 3   rut_support.Test_rut_support.test_FilterTests_is_legal_filter_spec
+        # 4   rut_support.Test_rut_support.test_FilterTests_is_module_name
+        # 5   rut_support.Test_rut_support.test_FilterTests_is_python_filename
+        # 6   rut_support.Test_rut_support.test_FilterTests_is_test_case
+        # 7   rut_support.Test_rut_support.test_FilterTests_is_test_function
+        # 8   rut_support.Test_rut_support.test_FilterTests_passes_filter
+        # 9   rut_support.Test_rut_support.test_need_immediate_os_return
+        #10   rut_support.Test_rut_support.test_os_return_code
+        #11   rut_support.Test_rut_support.test_update_from_TestResult
         num_tests_in_ts = ts.countTestCases()
         num_tests_in_this_file = 11
+
+        # We (along with other *.py files) are in the .../python dir
+        # Count how many tests there are
+        num_tests_in_python_dir = 0
+        for test in tests_from_TestSuite(ts) :
+            (dotted_module_name, test_case, ignored) = parse_test_name(test)
+            if ".python." in dotted_module_name :
+                num_tests_in_python_dir += 1
 
         # Don't filter anything
         filter = FilterTests(None)
@@ -853,7 +863,7 @@ class Test_support(unittest.TestCase) :
             self.assertTrue ( filter.passes_filter(test) )
 
         # Filter by python_filename
-        filter = FilterTests( [ "support.py" ] )  # Just ours
+        filter = FilterTests( [ "rut_support.py" ] )  # Just ours
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
 
@@ -861,17 +871,17 @@ class Test_support(unittest.TestCase) :
         prior_cwd = os.getcwd()   
         os.chdir( os.path.dirname(os.path.abspath( __file__ )))
 
-        filter = FilterTests( [ "./support.py" ] )  # Just ours
+        filter = FilterTests( [ "./rut_support.py" ] )  # Just ours
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
 
-        filter = FilterTests( [ "../bin/support.py" ] )  # Just ours
+        filter = FilterTests( [ "../python/rut_support.py" ] )  # Just ours
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
 
         os.chdir(prior_cwd) # leave things as we found them
 
-        filter = FilterTests( [ "a/support.py" ] )  # None should pass
+        filter = FilterTests( [ "a/rut_support.py" ] )  # None should pass
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), 0 )
 
@@ -880,19 +890,19 @@ class Test_support(unittest.TestCase) :
         self.assertEqual( filtered_ts.countTestCases(), 0 )
 
         # Filter by dirname
-        filter = FilterTests( [ "/bin/" ] )  # Our tests should pass
+        filter = FilterTests( [ "/python/" ] )  # All tests
         filtered_ts = filter.filter_TestSuite(ts)
-        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_python_dir )
 
-        filter = FilterTests( [ "/bin" ] )  # Our tests should pass
+        filter = FilterTests( [ "/python" ] )  # Our tests should pass
         filtered_ts = filter.filter_TestSuite(ts)
-        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_python_dir )
 
-        filter = FilterTests( [ "bin/" ] )  # Our tests should pass
+        filter = FilterTests( [ "python/" ] )  # Our tests should pass
         filtered_ts = filter.filter_TestSuite(ts)
-        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_python_dir )
 
-        filter = FilterTests( [ "/bi" ] )  # None should pass
+        filter = FilterTests( [ "/pytho" ] )  # None should pass
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), 0 )
 
@@ -902,15 +912,15 @@ class Test_support(unittest.TestCase) :
 
         filter = FilterTests( [ "." ] )  # Our tests should pass
         filtered_ts = filter.filter_TestSuite(ts)
-        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_python_dir )
 
         filter = FilterTests( [ "./" ] )  # Our tests should pass
         filtered_ts = filter.filter_TestSuite(ts)
-        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_python_dir )
 
-        filter = FilterTests( [ "../bin/" ] )  # Our tests should pass
+        filter = FilterTests( [ "../python/" ] )  # Our tests should pass
         filtered_ts = filter.filter_TestSuite(ts)
-        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
+        self.assertEqual( filtered_ts.countTestCases(), num_tests_in_python_dir )
 
         os.chdir(prior_cwd) # leave things as we found them
 
@@ -919,7 +929,7 @@ class Test_support(unittest.TestCase) :
         self.assertEqual( filtered_ts.countTestCases(), 0 )
 
         # Filter by TestCase
-        filter = FilterTests( [ "Test_support" ] )  # Just ours
+        filter = FilterTests( [ "Test_rut_support" ] )  # Just ours
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), num_tests_in_this_file )
 
