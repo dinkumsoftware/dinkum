@@ -55,8 +55,25 @@ def prune_dups_from_TestSuite(test_suite) :
         abs_filename=filename_from_dotted_module_name( dotted_module_name )
 
         # Remember it
+        # If there are dups, remember one with longest dotted_module_name
         key = (abs_filename,test_case,test_name)
-        ordered_dict[key] = test
+        if key not in ordered_dict :
+            # First time we've seen it
+            ordered_dict[key] = test
+        else:
+            # This is a duplicate, Use the one with longest dotted_module_name
+            our_dmn_length = len(dotted_module_name)
+
+            # Get length of current entry in the dictionary
+            dict_test = ordered_dict[key]
+            (dict_dotted_module_name, ignored, ignored) = parse_test_name(test)
+            dict_dmn_length = len(dict_dotted_module_name)
+
+            # Are we longer?
+            if our_dmn_length > dict_dmn_length :
+                # Yes, overwrite what's there
+                ordered_dict[key] = test
+            
 
     # Now reinsert the unique tests
     ret_ts = unittest.TestSuite()

@@ -220,7 +220,6 @@ def main ():
             # Copy all the approved (non-filtered) tests into final test_suite
             test_suite = filter.filter_TestSuite(module_test_suite, test_suite)
 
-
     # Remove duplicate tests
     test_suite = prune_dups_from_TestSuite(test_suite)
 
