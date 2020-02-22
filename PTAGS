@@ -1,17 +1,49 @@
 
-mas_unittest/utils.py,444
-def tests_from_TestSuite(14,313
-def prune_dups_from_TestSuite(35,968
-def is_TestLoader_error(69,2067
-def TestLoader_error_msg(81,2386
-def parse_test_name(123,3798
-class Test_utils(156,4733
-    def test_empty_testsuite(174,5545
-    def test_our_testsuite(178,5673
-    def test_prune_dups_from_TestSuite(189,6066
-    def test_is_TestLoader_error(209,6831
-    def test_TestLoader_err_msg(217,7109
-    def test_parse_test_name(251,8765
+mas_unittest/utils.py,483
+def tests_from_TestSuite(17,326
+def loadTestsFromFile(38,981
+def prune_dups_from_TestSuite(82,2379
+def is_TestLoader_error(133,4200
+def TestLoader_error_msg(145,4519
+def parse_test_name(187,5931
+class Test_utils(220,6862
+    def test_empty_testsuite(238,7674
+    def test_prune_dups_from_TestSuite(242,7802
+    def test_is_TestLoader_error(260,8496
+    def test_TestLoader_err_msg(268,8774
+    def test_parse_test_name(302,10430
+    def test_loadTestsFromFile(334,11637
+
+mas_unittest/coding_standards.py,455
+def check_TestSuite_for_ut_coding_standard_violations(40,1374
+def check_file_for_ut_coding_standard_violations(71,2490
+class Test_coding_standards(96,3122
+    def cffucsv(108,3718
+    def test_cffucsv_is_ok(122,4298
+    def test_cffucsv_doesnt_exist(132,4638
+    def test_cffucsv_not_executable(135,4694
+    def test_cffucsv_no_unittests(138,4752
+    def test_cffucsv_TestCase_misnamed(141,4808
+    def test_cffucsv_doesnt_run_unittest(144,4869
+
+mas_unittest/test_data/not_executable.py,82
+def foo(9,175
+class Test_not_executable(13,213
+    def test_first_thing(14,260
+
+mas_unittest/test_data/testcase_misnamed.py,87
+def foo(9,188
+class Test_not_correctly_named(13,226
+    def test_first_thing(14,278
+
+mas_unittest/test_data/no_violations.py,81
+def foo(9,192
+class Test_no_violations(13,230
+    def test_first_thing(14,276
+
+mas_unittest/test_data/no_unittest_code.py,51
+def foo(9,180
+class Test_no_unittest_code(13,218
 
 keno/keno.py,285
 def ncr(11,157
@@ -26,60 +58,63 @@ class KenoTest(257,8699
     def test_ncr(258,8735
     def test_odds(268,9050
 
-python/bin/support.py,1289
-class EFW 56,1719
-    def __init__(76,2348
-    def update_from_TestResult(92,2903
-    def need_immediate_os_return(115,3880
-    def os_return_code(143,4853
-    def issue_error(164,5406
-    def issue_failure(170,5696
-    def issue_warning(176,5995
-    def _issue_workhorse(182,6302
-    def announce_results(194,6830
-class FilterTests 219,7716
-    def is_python_filename 241,8423
-    def is_dir_path(245,8536
-    def is_test_case(249,8636
-    def is_test_function(253,8743
-    def is_module_name(257,8854
-    def is_legal_filter_spec(270,9286
-    def __init__(291,9752
-        def strip_is_(300,10065
-    def passes_filter(340,11542
-def should_skip_module_for_importability_problems(369,12420
-class Test_support(461,16306
-    def test_os_return_code(462,16346
-    def test_need_immediate_os_return(511,17920
-    def test_update_from_TestResult(562,20000
-    def test_FilterTests_is_python_filename(579,20619
-    def test_FilterTests_is_dir_path(589,21187
-    def test_FilterTests_is_test_case(598,21602
-    def test_FilterTests_is_test_function(606,21970
-    def test_FilterTests_is_module_name(614,22354
-    def test_FilterTests_is_legal_filter_spec(623,22727
-    def test_FilterTests_construction(632,23287
-    def test_FilterTests_passes_filter(676,25252
-
 python/bin/dinkum_python_run_unittests.py,75
-def main 86,2825
-    def is_a_directory(104,3375
-    def fdTtm(142,4936
+def main 83,2805
+    def is_a_directory(101,3355
+    def fdTtm(139,4916
 
 python/modnames.py,593
 def is_findable_for_import(23,672
 def has_import_errors(38,1107
 def dotted_module_name_from_filename(61,1725
-def module_name_from_filename(122,4009
-def filename_from_dotted_module_name(144,4557
-def join_dotted_pkg_path_and_module_name(182,5771
-class Test_modnames(217,6472
-    def test_is_findable_for_importable(218,6513
-    def test_has_import_errors(235,7339
-    def test_dotted_module_name_from_filename(251,7931
-    def test_module_name_from_filename(291,9591
-    def test_filename_from_dotted_module_name(302,9982
-    def test_join_dotted_pkg_path_and_module_name(313,10417
+def module_name_from_filename(121,3951
+def filename_from_dotted_module_name(143,4499
+def join_dotted_pkg_path_and_module_name(181,5713
+class Test_modnames(216,6414
+    def test_is_findable_for_importable(217,6455
+    def test_has_import_errors(234,7281
+    def test_dotted_module_name_from_filename(250,7873
+    def test_module_name_from_filename(290,9533
+    def test_filename_from_dotted_module_name(301,9924
+    def test_join_dotted_pkg_path_and_module_name(312,10359
+
+python/rut_support.py,1405
+class EFW 58,1742
+    def __init__(78,2371
+    def update_from_TestResult(94,2926
+    def need_immediate_os_return(117,3903
+    def os_return_code(145,4876
+    def issue_error(166,5429
+    def issue_failure(172,5719
+    def issue_warning(178,6018
+    def _issue_workhorse(184,6325
+    def announce_results(196,6853
+class FilterTests 221,7739
+    def is_python_filename 243,8465
+    def is_dir_path(247,8578
+    def is_test_case(255,8787
+    def is_test_function(259,8894
+    def is_module_name(263,9005
+    def is_legal_filter_spec(276,9437
+    def __init__(294,9892
+        def strip_is_(303,10205
+    def _diddle_filters(346,11768
+        def has_dot_or_dotdot(370,12560
+    def passes_filter(431,14473
+    def filter_TestSuite(492,16658
+def should_skip_module_for_importability_problems(513,17347
+class Test_rut_support(605,21233
+    def test_os_return_code(606,21277
+    def test_need_immediate_os_return(655,22851
+    def test_update_from_TestResult(706,24931
+    def test_FilterTests_is_python_filename(723,25550
+    def test_FilterTests_is_dir_path(733,26118
+    def test_FilterTests_is_test_case(745,26655
+    def test_FilterTests_is_test_function(753,27023
+    def test_FilterTests_is_module_name(761,27407
+    def test_FilterTests_is_legal_filter_spec(770,27780
+    def test_FilterTests_construction(779,28340
+    def test_FilterTests_passes_filter(823,30315
 
 python/test_data/module_with_test_failures.py,160
 class Test_module_with_test_failures(14,248

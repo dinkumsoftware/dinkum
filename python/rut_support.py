@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# dinkum/project/bin/rut_support.py
+# dinkum/python/rut_support.py
 ''' 
 rut ==> Run Unit Tests
 

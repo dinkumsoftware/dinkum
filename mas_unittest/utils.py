@@ -5,10 +5,13 @@
 
 # 2020-02-03 tc Initial
 # 2020-02-16 tc bug fix in prune_dups_from_TestSuite
+# 2020-02-21 tc Added loadTestsFromFile()
+
 
 import unittest
 from collections import OrderedDict
-from dinkum.python.modnames import filename_from_dotted_module_name
+
+from dinkum.python.modnames import *
 
 
 def tests_from_TestSuite(test_suite) :
@@ -31,6 +34,50 @@ def tests_from_TestSuite(test_suite) :
 
     # All done
     return returned_list
+
+def loadTestsFromFile( filename, limit_to_tests_in_file=False) :
+    ''' Retrieves unittests from filename and all other modules
+    it imports.  Builds and returns a TestSuite.
+
+    if limit_to_tests_in_file is True, only unittest tests defined
+    in filename are returned. I.e. not any unittests from imported
+    modules.
+
+    Bad filenames (like non-existent) result in a return of None
+    '''
+
+    # Convert the filename to a dotted_module_name
+    dotted_module_name = dotted_module_name_from_filename(filename)
+
+    # Protect against bad filenames
+    if not dotted_module_name :
+        # Bad filename
+        return None
+
+    # Gather all the unittests
+    loader = unittest.TestLoader()
+    ts = loader.loadTestsFromName(dotted_module_name)
+
+    # Need to prune it?
+    if not limit_to_tests_in_file :
+        return ts # nope, give um what we got
+
+    # Limit returns TestSuite to ones from filename
+    ret_ts = unittest.TestSuite()
+    for test in tests_from_TestSuite(ts) :
+        # Figure out the file associated with test
+        (dotted_module_name, ignored, ignored) = parse_test_name(test)
+        test_filename = filename_from_dotted_module_name(dotted_module_name)
+        
+        # Come from filename?
+        if test_filename == filename :
+            # Yes add the test in
+            ret_ts.addTest(test)
+
+    # Give them back the pruned TestSuite
+    return ret_ts
+
+
 
 def prune_dups_from_TestSuite(test_suite) :
     ''' Removes duplicate tests from test_suite
@@ -178,11 +225,11 @@ class Test_utils(unittest.TestCase):
 
     # List of tests in THIS file
     expected_tests_as_str= ["test_empty_testsuite (%s.Test_utils)"           % our_module_name,
-                            "test_our_testsuite (%s.Test_utils)"             % our_module_name,
                             "test_prune_dups_from_TestSuite (%s.Test_utils)" % our_module_name,
                             "test_is_TestLoader_error (%s.Test_utils)"       % our_module_name,
                             "test_TestLoader_err_msg (%s.Test_utils)"        % our_module_name,
                             "test_parse_test_name (%s.Test_utils)"           % our_module_name,
+                            "test_loadTestsFromFile (%s.Test_utils)"         % our_module_name,
     ]
     expected_tests_as_str.sort()
 
@@ -192,17 +239,6 @@ class Test_utils(unittest.TestCase):
         ts = unittest.TestSuite()
         self.assertEqual( [], tests_from_TestSuite(ts))
 
-    def test_our_testsuite(self) :
-        # Put our tests in a TestSuite
-        loader = unittest.TestLoader()
-        ts = loader.loadTestsFromName( Test_utils.our_module_name)
-
-        # Build a list of tests id()'s
-        test_strs = [ test.__str__() for test in tests_from_TestSuite(ts) ]
-
-        test_strs.sort()
-        self.assertEqual(test_strs, Test_utils.expected_tests_as_str)
-
     def test_prune_dups_from_TestSuite(self) :
         # Load ourselves twice
         loader = unittest.TestLoader()
@@ -210,17 +246,15 @@ class Test_utils(unittest.TestCase):
         dup_ts = unittest.TestSuite([ts,ts])
 
         # Confirm duplicated entries
-        self.assertEqual( 2 * len( Test_utils.expected_tests_as_str),
-                              len( tests_from_TestSuite(dup_ts)    )
+        self.assertEqual( 2 * len( tests_from_TestSuite(ts    ) ),
+                              len( tests_from_TestSuite(dup_ts) ),
                           )
 
-        # Remove dups and build list of id() strings
+        # Remove dups and verify length
         pruned_ts = prune_dups_from_TestSuite(dup_ts)
-        test_strs = [ test.__str__() for test in tests_from_TestSuite(pruned_ts) ]
-
-        # Verify they are correct
-        test_strs.sort()
-        self.assertEqual(test_strs, Test_utils.expected_tests_as_str)
+        self.assertEqual( len( tests_from_TestSuite(ts       ) ),
+                          len( tests_from_TestSuite(pruned_ts) ),
+                          )
         
 
     def test_is_TestLoader_error(self) :
@@ -296,6 +330,28 @@ class Test_utils(unittest.TestCase):
                 # testname didn't match anything
                 self.assertTrue ( False, "testname doesn't match anything")
 
+
+    def test_loadTestsFromFile(self) :
+        ### Bogus filename should return None
+        self.assertIsNone ( loadTestsFromFile("aint/no/such/file/my/friend"))
+
+        ### Accumulate unittests from just this file
+        our_ts = loadTestsFromFile(__file__, limit_to_tests_in_file=True)
+
+        # Build a list of their names for comparision with expected results
+        our_test_strs = [ test.__str__() for test in tests_from_TestSuite(our_ts) ]
+        our_test_strs.sort()
+
+        # Verify they are correct
+        self.assertListEqual(our_test_strs, Test_utils.expected_tests_as_str)
+
+        ### Verify pruning
+        # We'll build the TestSuite again, not limiting it to just this file
+        # We should get more tests
+        all_ts=loadTestsFromFile(__file__, limit_to_tests_in_file=False)
+        self.assertGreater( all_ts.countTestCases(),
+                            our_ts.countTestCases())
+        
 
 if __name__ == "__main__" :
     # Run the unittests

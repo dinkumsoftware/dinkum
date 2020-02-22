@@ -1,0 +1,13 @@
+#!/usr/bin/env python3
+# dinkum_mas_unittest/test_data/non_python_file
+'''
+This is test program input to unittests for coding_standards.py.
+
+It isn't a python (filename doesn't end in *.py)
+'''
+
+def foo() :
+    pass
+
+    
+

@@ -19,7 +19,7 @@ switch.
 The unittests to run can be filtered by additional cmd line
 arguments which may be a:
     python filename     *.py
-    dir_path            Has a / in it
+    dir_path            Has a / in it or is . or is ..
                         dir_path must be somewhere in the
                         full pathname of .py file
     Test_Case           Test_*  
@@ -44,16 +44,9 @@ An Error is the unittest being run did not pass, i.e
 it had some kind of self.assert..() that wasn't True.
 
 A Warning is python code that does NOT comply with
-dinkumsoftware coding standards listed below.
+dinkumsoftware coding standards.
+See dinkum.mas_unittest.coding_standards.
 All Warnings can be suppressed with the --nowarnings switch.
-
-The following are required:
-    ######################
-    All *.py files in the filetree are REQUIRED to have unittest except:
-        Those in a "*bin" directory                          --or--
-        Those in child directory of a "test_data" directory  --or--
-    ######################
-
 
 EXIT STATUS
     0  No failures, errors or warnings
@@ -81,7 +74,8 @@ import textwrap    # dedent
 import unittest
 
 import dinkum.project.dirs
-from   dinkum.mas_unittest.utils import * 
+from   dinkum.mas_unittest.utils            import * 
+from   dinkum.mas_unittest.coding_standards import * 
 
 from   dinkum.python.rut_support import *  # Our support code
 
@@ -215,11 +209,6 @@ def main ():
             # Each testCase may also have multiple test_functions.
             module_test_suite = loader.loadTestsFromName( dotted_module_name )
 
-            # Check for no unit tests for warning etc
-            # Have to remember results and print it out
-            # after the filtering ???
-            # <todo>
-
             # Copy all the approved (non-filtered) tests into final test_suite
             test_suite = filter.filter_TestSuite(module_test_suite, test_suite)
 
@@ -239,6 +228,16 @@ def main ():
 
 
     # They want to run the tests
+    # Check for warnings
+    if not args.no_warnings :
+        # Returns a list of tuples for each warning
+        warnings = check_TestSuite_for_ut_coding_standard_violations(test_suite)
+        for (filename, msg) in warnings :
+            module_name = dotted_module_name_from_filename(filename)
+            efw.issue_warning(msg, module_name, filename)
+        
+
+    # Run the tests
     runner = unittest.TextTestRunner(verbosity=args.verbose,
                                      failfast=args.failfast)
     test_result = runner.run(test_suite)
