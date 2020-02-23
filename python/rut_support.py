@@ -42,6 +42,12 @@ Has a some functions:
             there might be be a syntax error in the module itself
 '''
 
+# 2020-02-?? tc refactored from in line in exe:
+#               dinkum_python_run_unittests.py
+# 2020-02-23 tc should_skip_module_for_importability_problems()
+#               removed exception of ignored problems in /bin dir
+
+
 import sys
 from   dinkum.python.modnames    import *
 
@@ -297,6 +303,12 @@ class FilterTests :
             key: is name of entity, e.g python_filename
             value: is list of filter_specs of that type
 
+        If ANY dir/filename filters exist, have_pathname_filters
+        will be True.
+
+        If ANY test_Case/function filters exist,
+        have_testname_filters will be True.
+
         If ANY filters exist, have_filters will be True
         '''
 
@@ -320,9 +332,6 @@ class FilterTests :
             key = strip_is_(is_xxx_func)
             self.filters[ key ] = []
 
-        # Assume we have no filters
-        self.have_filters = False
-
         # Go thru all the supplied filter specs
         # and put them in right list in self.filters
         if filter_spec_list :
@@ -333,14 +342,36 @@ class FilterTests :
                         # Yep, stuff it in appropriate list
                         self.filters[ strip_is_(is_xxx_func) ].append( filter_spec)
 
-                        # remember we have a filter
-                        self.have_filters = True
-
                         # On to next filter spec
                         break ;
 
         # We have to diddle some of the filters a bit
         self._diddle_filters()
+
+        # Figure out what kind of filters we have
+
+        self.have_pathname_filters = False
+        # Will be true if any of these filters exist
+        for filter_name in [ "python_filename",
+                             "dir_path",
+                             "module_name" ] :
+            if len(self.filters[filter_name]) > 0 :
+                self.have_pathname_filters = True
+                break
+
+        # Ditto for tests base on TestCase or test_function
+        self.have_testname_filters = False
+        for filter_name in [ "test_case",
+                             "test_function" ] :
+            if len(self.filters[filter_name]) > 0 :
+                self.have_testname_filters = True
+                break
+
+        # Will be true if ANY are set
+        self.have_filters = self.have_pathname_filters or \
+                            self.have_testname_filters
+
+
 
 
     def _diddle_filters(self) :
@@ -445,49 +476,91 @@ class FilterTests :
 
         # Test against each filter, returning
         # if we get a match
+        if self.matches_python_filename(pathname) :
+            return True
 
-        # python_filename
+        if self.matches_dir_path(pathname) :
+            return True
+
+        if self.matches_test_case(our_test_case) :
+            return True
+
+        if self.matches_test_function(our_test_function) :
+            return True
+
+        if self.matches_module_name( dotted_module_name ) :
+            return True
+
+        # Filters exist and test matched None of them
+        return False
+
+
+    def matches_python_filename(self, filename) :
+        ''' Returns True if there is a corresponding
+        filter and argument matches it.
+        '''
         filters = self.filters["python_filename"]
         if filters :
             # test must come from a file in filters []
-            for filename in filters :
-                if pathname.endswith ( filename ) :
+            for filter in filters :
+                if filename.endswith ( filter ) :
                     return True # We matched, test passes
+        # Nothing matched --or-- no filter
+        return False
 
-        # dir_path
+    def matches_dir_path(self,pathname) :
+        ''' Returns True if there is a corresponding
+        filter and argument matches it.
+        '''
         filters = self.filters["dir_path"]
         if filters :
             # test must come from a dir/subdir in filters []
             for dirname in filters :
                 if dirname in pathname :
                     return True # We matched, test passes
+        # Nothing matched --or-- no filter
+        return False
 
-        # test_case
+
+    def matches_test_case(self,our_test_case) :
+        ''' Returns True if there is a corresponding
+        filter and argument matches it.
+        '''
         filters = self.filters["test_case"]
         if filters :
             # TestCase name must match
             for test_case in filters :
                 if our_test_case == test_case :
                     return True # We matched, test passes
-        
-        # test_function
+        # Nothing matched --or-- no filter
+        return False
+
+
+    def matches_test_function(self, our_test_function) :
+        ''' Returns True if there is corresponding filter
+                    and argument matches it. '''
         filters = self.filters["test_function"]
         if filters :
             # test_function name must match
             for test_function in filters :
                 if our_test_function == test_function :
                     return True # We matched, test passes
+        # Nothing matched --or-- no filter
+        return False
 
-        # module_name
+    def matches_module_name(self,dotted_module_name) :
+        ''' Returns True if there is corresponding filter
+        and argument matches it.
+        '''
         filters = self.filters["module_name"]
         if filters :
             # test must come from a module in filters []
             for modname in filters :
                 if modname in dotted_module_name :
                     return True # We matched, test passes
-
-        # Filters exist and test matched None of them
+        # Nothing matched --or-- no filter
         return False
+
 
     def filter_TestSuite(self, input_test_suite, output_test_suite=None) :
         ''' Applies filters to all the tests in input_test_suite.
@@ -507,6 +580,46 @@ class FilterTests :
                 output_test_suite.addTest(test)
 
         return output_test_suite
+
+
+    def is_filtered_by_pathname (self, pathname) :
+        ''' returns TRUE is pathname should NOT be processed, i.e.
+        it is filtered away.
+        return False if pathanme SHOULD be processed.
+
+        Unlike filter_TestSuite(), The filtering decision
+        is based solely on pathname.  If it can't decide,
+        it returns False to postpone the decision.
+        '''
+        # The algorithm
+        # 4 cases:
+        #    NO file_filters, NO test_filters return False
+        #    NO file_filters,    test_filters return False
+        #       file_filters,    test_filters return False
+        #       file_filters, No test_filters return results of filtering
+
+        # Detect the last case
+        need_file_filtering = self.have_pathname_filters and not self.have_testname_filters
+        if not need_file_filtering :
+            return False
+
+        # We have to actually filter the pathname
+
+        # Test against each filter, returning
+        # if we get a match
+        if self.matches_python_filename(pathname) :
+            return False
+
+        if self.matches_dir_path(pathname) :
+            return False
+
+        dotted_module_name = dotted_module_name_from_filename(pathname)
+        if self.matches_module_name( dotted_module_name ) :
+            return False
+
+        # Filters exist and pathname matched None of them
+        return True
+
 
 
 ### Standalone functions
@@ -569,19 +682,6 @@ def should_skip_module_for_importability_problems(module_name, pathname, efw) :
         # carry on with the process the error will be
         # flagged and reported.
         # 
-        # there is an exception where we want to NOT process the module
-        # and suppress it's error messages:
-        #     the file is in a *bin directory.
-        # I.E. if it's in a bin directory it is suppose to be an executable
-        # script which doesn't have unittest code
-        #
-        #     NOTE: To test this... run with --ignore_NO_PYTHON_UNITTESTS switch
-        #           and see dinkum/python/test_data/*
-
-        # In a *bin directory?
-        if os.path.dirname(pathname).endswith("bin") :
-            # yes, skip the file
-            return (True, efw.need_immediate_os_return() )
 
         # Import Error, i.e. not on PYTHONPATH
         # Warn and pass it along, it will be trapped as an error later
@@ -820,6 +920,39 @@ class Test_rut_support(unittest.TestCase) :
             else:
                 self.assertEqual( 0, len(ft.filters[key]))
 
+        # Make sure we catagorize what filters are present
+        ft = FilterTests([])
+        self.assertFalse ( ft.have_filters )
+        self.assertFalse ( ft.have_pathname_filters )
+        self.assertFalse ( ft.have_testname_filters )
+        
+        ft = FilterTests(["foo.py"])
+        self.assertTrue  ( ft.have_filters )
+        self.assertTrue  ( ft.have_pathname_filters )
+        self.assertFalse ( ft.have_testname_filters )
+
+        ft = FilterTests(["dir/"])
+        self.assertTrue  ( ft.have_filters )
+        self.assertTrue  ( ft.have_pathname_filters )
+        self.assertFalse ( ft.have_testname_filters )
+
+        ft = FilterTests(["a.b.c"])
+        self.assertTrue  ( ft.have_filters )
+        self.assertTrue  ( ft.have_pathname_filters )
+        self.assertFalse ( ft.have_testname_filters )
+
+        ft = FilterTests(["Test_case"])
+        self.assertTrue  ( ft.have_filters )
+        self.assertFalse ( ft.have_pathname_filters )
+        self.assertTrue  ( ft.have_testname_filters )
+
+        ft = FilterTests(["Test_function"])
+        self.assertTrue  ( ft.have_filters )
+        self.assertFalse ( ft.have_pathname_filters )
+        self.assertTrue  ( ft.have_testname_filters )
+        
+
+
     def test_FilterTests_passes_filter(self) :
         # These describe this file
         our_modulename = "dinkum.python.rut_support"
@@ -842,8 +975,10 @@ class Test_rut_support(unittest.TestCase) :
         # 9   rut_support.Test_rut_support.test_need_immediate_os_return
         #10   rut_support.Test_rut_support.test_os_return_code
         #11   rut_support.Test_rut_support.test_update_from_TestResult
+        #12   rut_support.Test_rut_support.test_is_filtered_by_pathname
+        num_tests_in_this_file = 12
         num_tests_in_ts = ts.countTestCases()
-        num_tests_in_this_file = 11
+
 
         # We (along with other *.py files) are in the .../python dir
         # Count how many tests there are
@@ -942,6 +1077,37 @@ class Test_rut_support(unittest.TestCase) :
         filter = FilterTests( [ "test_some_bogus_name" ] )  # None
         filtered_ts = filter.filter_TestSuite(ts)
         self.assertEqual( filtered_ts.countTestCases(), 0 )
+
+
+    def test_is_filtered_by_pathname (self) :
+        # No filters
+        filter = FilterTests( [] )
+        self.assertFalse( filter.is_filtered_by_pathname ("any/file/should/pass"))
+
+        # Test filters/functions shouldn't change this
+        filter = FilterTests( ["Test_whatever", "test_whatever"] )
+        self.assertFalse( filter.is_filtered_by_pathname ("any/file/should/pass"))
+
+        # A python_filename filter
+        filter = FilterTests( ["foo.py"] )
+        self.assertFalse( filter.is_filtered_by_pathname ("foo.py"))
+        self.assertTrue ( filter.is_filtered_by_pathname ("bar.py"))
+
+        # Now add a test Case should change that
+        # All should not be filtered
+        filter = FilterTests( ["foo.py", "Test_whatever"] )
+        self.assertFalse( filter.is_filtered_by_pathname ("foo.py"))
+        self.assertFalse( filter.is_filtered_by_pathname ("bar.py"))
+
+        # A dir_pathname filter
+        filter = FilterTests( ["/should/match"] )
+        self.assertFalse( filter.is_filtered_by_pathname ("any/file/should/match/"))
+        self.assertTrue ( filter.is_filtered_by_pathname ("any/file/should_not/match/"))
+
+        # Now add a test Case should change that
+        filter = FilterTests( ["/should/match", "Test_whatever"] )
+        self.assertFalse( filter.is_filtered_by_pathname ("any/file/should/match/"))
+        self.assertFalse( filter.is_filtered_by_pathname ("any/file/should_not/match/"))
 
 
 if __name__ == "__main__" :

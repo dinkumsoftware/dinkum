@@ -166,18 +166,31 @@ def main ():
     filter = FilterTests( args.file_dir_Test_test_mod )
 
     # Accumulate test_XXX() cases
-    #    Note:I tried to use unittest.TestLoader.discover() but
-    #         it was inserting duplicate copies of tests.
-    #         Not sure why. So... I wrote my own. It had duplicate copies as well.... sigh
-    #         I left my code in so could filter and check stuff.
+    # Note: I don't use unittest.discover() because I want to filter which tests
+    #       are included.
+    # Here is general algorithm
+    # os.walk all the files from --start_directory
+    #    skip dirs with file: NO_PYTHON_UNITTESTS
+    #    iterate over files
+    #        skip non *.py files
+    #        skip filenames filter by cmd line arguments
+    #        test for importability, possibly skipping
+    #        collect test_functions defined in the file
+    #        skip tests based on cmd line arguments
+    #        check tests for Warnings and print them (honors --no_warnings)
+    #    remove duplicate tests (probably not needed, but doesn't hurt)
+    #    print test names if --list
+    #    otherwise, run the tests
+
+
     loader = unittest.TestLoader()  # What we use to accumulate unittests
     test_suite = unittest.TestSuite() # Where we build tests to run
     efw = EFW(args.failfast, args.no_warnings, args.list) # What we handle Failures/Errors/Warnings with
 
-    # Walk the filetree at top_level_dir looking for *.py files
+    # Walk the filetree at --start_directory looking for *.py files
     for dirpath, dirnames, filenames in os.walk(top_level_dir) :
+        # skip dirs with file: NO_PYTHON_UNITTESTS
         # Is this directory excluded from having unittests?
-        # i.e. is there a file named "NO_PYTHON_UNITTESTS" in it
         if "NO_PYTHON_UNITTESTS" in filenames and not args.ignore_NO_PYTHON_UNITTESTS :
             # Stop looking at this directory and any of it's subdirectories
             dirnames.clear()
@@ -187,12 +200,17 @@ def main ():
         for filename in filenames :
 
             # Get "dinkum.what.ever.modulename"
+            # skip non *.py files
             pathname = os.path.join(dirpath, filename)       # /a/b/c/foo.py
             dotted_module_name = dotted_module_name_from_filename( pathname ) # a.b.c.foo
             if not dotted_module_name :
                 # Not a python file (doesn't end in *.py)
                 continue
 
+            # skip filenames filter by cmd line arguments
+            if filter.is_filtered_by_pathname( pathname ) :
+                continue  # Yes, look at it no further
+            
             # Make sure the module is findable for import --and--
             # the module will import sucessfully
             # Note: this may issue a variety of errors/warnings
@@ -204,15 +222,38 @@ def main ():
             if should_skip :
                 continue    # don't process this module
             
-            # Find the unittest code in the module
-            # Note the returned TestSuite has testCases listed multiple times
-            # Each testCase may also have multiple test_functions.
-            module_test_suite = loader.loadTestsFromName( dotted_module_name )
+            # Find the unittest code defined in this FILE
+            # Normal unittest.loader.loadTestsFromXXX() load test_cases/functions from
+            # the module AND any modules it imports.  This why the code as
+            # originally written/and or unittest.discover() have duplicate tests in them.
+            module_test_suite = loadTestsFromFile( pathname, limit_to_tests_in_file=True )
+
+            # skip tests based on cmd line arguments
+            # We previouly just checked based on pathname (as there were no unittests yet)
+            # We do it again and filter based on pathname and TestCase/test_function name
+            module_test_suite = filter.filter_TestSuite(module_test_suite)
+
+            # Check for Warnings
+            if not args.no_warnings :
+                # Returns a list of tuples for each warning
+                warnings = check_TestSuite_for_ut_coding_standard_violations(module_test_suite)
+                for (filename, msg) in warnings :
+                    module_name = dotted_module_name_from_filename(filename)
+                    efw.issue_warning(msg, module_name, filename)
+
 
             # Copy all the approved (non-filtered) tests into final test_suite
-            test_suite = filter.filter_TestSuite(module_test_suite, test_suite)
+            test_suite.addTest(module_test_suite)
+
+
+    # os.walk is complete
+    # We have iterated thru all the directories and files
 
     # Remove duplicate tests
+    # Note: this probably isn't necessary any more, but it doesn't hurt
+    #       It used to be necessary where each file looked at generated
+    #       tests defined in that file PLUS tests in any files it
+    #       imported.  loadTestFromFile() fixed that.
     test_suite = prune_dups_from_TestSuite(test_suite)
 
     # They just want a listing?
@@ -227,17 +268,7 @@ def main ():
         return os_ret_val_good
 
 
-    # They want to run the tests
-    # Check for warnings
-    if not args.no_warnings :
-        # Returns a list of tuples for each warning
-        warnings = check_TestSuite_for_ut_coding_standard_violations(test_suite)
-        for (filename, msg) in warnings :
-            module_name = dotted_module_name_from_filename(filename)
-            efw.issue_warning(msg, module_name, filename)
-        
-
-    # Run the tests
+    # They want to run the tests, do so
     runner = unittest.TextTestRunner(verbosity=args.verbose,
                                      failfast=args.failfast)
     test_result = runner.run(test_suite)
