@@ -9,7 +9,8 @@ strings
 #               fixed bugs
 # 2019-12-09 tc Added fixed_width_columns()
 # 2020-02-24 tc Bug fix, fixed_width_columns()
-#               Protect against None tokens, treat as ""
+#                 Protect against None tokens, treat as ""
+#               Made comply with dinkum_python_run_unittests
 
 def replace_substr_at(s, substr, offset_into_s, num_substr_chars=None) :
     ''' Replaces num_substr_chars at s[offset_into_s] with
@@ -153,7 +154,7 @@ def fixed_width_columns(lines, column_padding=' ',
 # test code
 import unittest
 
-class TestStrUtils(unittest.TestCase):
+class Test_str_utils(unittest.TestCase):
     def test_replace_substr_at(self) :
         # vanilla change
         self.assertEqual( replace_substr_at( '12345', 'x', 2, 1 ),

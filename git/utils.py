@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #filename: utils.py
 #path: dinkum/git
 #repo: http://github.com/dinkumsoftware/dinkum.git
@@ -16,8 +17,11 @@ LICENSE
     http://www.apache.org/licenses/
     Full license text at end of file.
 '''
+
 # history:
-#   2019-05-06 tc@DinkumSoftware.com Initial
+#   2019-05-06 tc Initial
+#   2020-02-24 tc Added no-op unittest to make
+#                 comply with dinkum_python_run_unittests
 
 from subprocess import call 
 
@@ -32,6 +36,22 @@ def is_a_gitfile(file) :
     '''
     return_code = call(['dinkum-is-git-file', file])
     return return_code==0  # Tell um how it went
+
+
+# Test code
+# No-op, i.e. doesn't do anything
+import unittest
+class Test_utils(unittest.TestCase) :
+    def test_noop(self) :
+        pass
+
+
+if __name__ == "__main__" :
+    # Run the unittests
+    unittest.main()
+
+
+
 
 # full-license:
 '''

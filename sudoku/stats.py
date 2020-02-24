@@ -5,6 +5,7 @@ statistics about solving a sudoku Board.
 '''
 
 # 2019-12-09 tc Initial
+# 2020-02-24 tc Made comply with dinkum_python_run_unittests
 
 class Stats :
     ''' Holds statistics about solving a
@@ -71,7 +72,7 @@ class Stats :
 # Test code
 import unittest
 
-class Test_board(unittest.TestCase):
+class Test_stats(unittest.TestCase):
 
     def test_construction(self) :
         s = Stats()

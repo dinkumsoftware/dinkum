@@ -6,6 +6,10 @@
 from __future__ import division   # makes 2/3 return floating point
 
 
+# ????-??-?? tc Initina
+# 2020-02-24 tc Renamed unittest TestCase to comply
+#               with coding standards
+
 import math
 
 def ncr(n, k):
@@ -254,7 +258,7 @@ class MassKeno() :
 # Test code
 import unittest
 
-class KenoTest(unittest.TestCase) :
+class Test_keno(unittest.TestCase) :
     def test_ncr(self):
         self.assertEqual(ncr( 1, 1),   1.0)
         self.assertEqual(ncr( 3, 1),   3.0)

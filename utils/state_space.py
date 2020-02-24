@@ -59,6 +59,7 @@ Function summary,
 
 # 2019-12-04 tc  Initial
 # 2019-12-06 tc  Changed all func names from dinkum_XX() to XX()
+# 2020-02-24 tc Made comply with dinkum_python_run_unittests
 
 import os.path
 
@@ -269,7 +270,7 @@ import unittest
 import sys
 import shutil
 
-class Test_test_state_space(unittest.TestCase) :
+class Test_state_space(unittest.TestCase) :
     # Various tests need a place to read/write files for test
     # This is that place.  It gets created in setUp() and
     # removed in tearDown().

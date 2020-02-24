@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #filename: utils.py
 #path: dinkum/file
 #repo: http://github.com/dinkumsoftware/dinkum.git
@@ -19,7 +20,8 @@ LICENSE
 # history:
 # 2019-05-06 tc Initial
 # 2020-02-02 tc Converted to python 3 print => print()
-#               Added full_dotted_modulename()
+# 2020-02-24 tc Comply with dinkum_python_run_unittests
+#               Added stub unittest code
 
 import os
 from shutil    import copy2
@@ -294,6 +296,20 @@ File:     dinkum-root-rsync-push               =>    dinkum-root-rsync-push
 
     # Show them
     print (s)
+
+
+# Test code
+# No-op, i.e. doesn't do anything
+import unittest
+class Test_utils(unittest.TestCase) :
+    def test_noop(self) :
+        pass
+
+
+if __name__ == "__main__" :
+    # Run the unittests
+    unittest.main()
+
 
 
 # full-license:

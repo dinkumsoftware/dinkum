@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #filename: install.py
 #path: project/
 #repo: http://github.com/dinkumsoftware/dinkum.git
@@ -22,6 +23,8 @@ LICENSE
 # 2019-05-06 tc Added copyright/license
 #               Only install tracked git files
 # 2020-02-02 tc Converted to python3, print ==> print()
+# 2020-02-24 tc Made comply with dinkum_python_run_unittests
+#               By putting in stub unittest code
 
 import os
 from shutil            import rmtree
@@ -134,6 +137,19 @@ def remove_install_from_git(verbose=False, dry_run=False) :
 
     # Did NOT remove anything
     return False
+
+# Test code
+# No-op, i.e. doesn't do anything
+import unittest
+class Test_install(unittest.TestCase) :
+    def test_noop(self) :
+        pass
+
+
+if __name__ == "__main__" :
+    # Run the unittests
+    unittest.main()
+
 
     
 # full-license:
