@@ -311,7 +311,6 @@ class FilterTests :
         otherwise.
 
         '''
-
         # The order is in general important
         # is_xxx_order is [] of the is_* functions
         # in the order to run them

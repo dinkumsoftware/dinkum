@@ -52,9 +52,9 @@ EXIT STATUS
     0  No failures, errors or warnings
     1  Some unknown exception raised
     2  Some kind of command line problem
-    3  Failures occurred
-    4  Errors occurred (but no Failures)
-    5  Warnings occurred (but no Failures/Errors and NOT ignoring_warnings)
+    3  Errors occurred 
+    4  Failures occurred (but no Errors)
+    5  Warnings occurred (but no Errors/Failures and NOT ignoring_warnings)
 
 """
 
@@ -120,7 +120,7 @@ def main ():
 
 
     # Don't print WARNING! lines
-    parser.add_argument("-n", "--no_warnings",
+    parser.add_argument("-nw", "--nowarnings",
                         help="suppress all warnings",
                         action="store_true")
 
@@ -137,13 +137,14 @@ def main ():
     # file, dir, Test_*, test_*, mod
     # function to make sure argument is one of the above
     def fdTtm(arg) :
-        if support.FilterTests(arg) :
+        if FilterTests.is_legal_filter_spec(arg) :
             return arg
         raise argparse.ArgumentTypeError(f"Not a legal specifier for FilterTest: {arg}")
 
     parser.add_argument("file_dir_Test_test_mod",
                         nargs="*",
                         help="tests to run: file -or- dir -or- Test_* -or- test_* -or- module",
+                        type = fdTtm
                         )
 
     parser.parse_args()
@@ -177,7 +178,7 @@ def main ():
     #        test for importability, possibly skipping
     #        collect test_functions defined in the file
     #        skip tests based on cmd line arguments
-    #        check tests for Warnings and print them (honors --no_warnings)
+    #        check tests for Warnings and print them (honors --nowarnings)
     #    remove duplicate tests (probably not needed, but doesn't hurt)
     #    print test names if --list
     #    otherwise, run the tests
@@ -185,7 +186,7 @@ def main ():
 
     loader = unittest.TestLoader()  # What we use to accumulate unittests
     test_suite = unittest.TestSuite() # Where we build tests to run
-    efw = EFW(args.failfast, args.no_warnings, args.list) # What we handle Failures/Errors/Warnings with
+    efw = EFW(args.failfast, args.nowarnings, args.list) # What we handle Failures/Errors/Warnings with
 
     # Walk the filetree at --start_directory looking for *.py files
     for dirpath, dirnames, filenames in os.walk(top_level_dir) :
@@ -224,7 +225,7 @@ def main ():
                 continue    # don't process this module
             
             # Look for warnings
-            if not args.no_warnings :
+            if not args.nowarnings :
                 # Returns a list of tuples for each warning
                 warnings = check_file_for_ut_coding_standard_violations(pathname)
                 for (filename, msg) in warnings :
@@ -249,7 +250,9 @@ def main ():
     # We have iterated thru all the directories and files
 
     # Print all errors/failures/warning we have accumulated to date
-    efw.print()
+    # unless we are just listing
+    if not args.list :
+        efw.print()
 
     # Remove duplicate tests
     # Note: this probably isn't necessary any more, but it doesn't hurt
