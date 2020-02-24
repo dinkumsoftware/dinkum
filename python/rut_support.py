@@ -46,10 +46,13 @@ Has a some functions:
 #               dinkum_python_run_unittests.py
 # 2020-02-23 tc should_skip_module_for_importability_problems()
 #               removed exception of ignored problems in /bin dir
+# 2020-02-24 tc Made EFW print() errors/failures/warnings in
+#               fixed width columns for better human readability
 
 
 import sys
 from   dinkum.python.modnames    import *
+from   dinkum.utils.str_utils    import fixed_width_columns
 
 
 # What main() can return to the operating system
@@ -66,7 +69,8 @@ class EFW :
 
     Keeps a count of each.  Use issue_XXX
     to increment the error/failure/warning count
-    and report it to stderr.
+    and report store it for later reporting to
+    stderr by print()
 
     failfast         stop on first failure/error/warning
     ignore_warnings  
@@ -96,6 +100,9 @@ class EFW :
         self.ignore_warnings = ignore_warnings
         self.are_listing     = are_listing
 
+        # Error/Failure/Warning messages stored here
+        # by issue_xxx() and output by print()
+        self.lines_of_tokens_to_print = []
 
     def update_from_TestResult( self, test_result ) :
         ''' Adds the errors and failures from test_result
@@ -169,34 +176,53 @@ class EFW :
         assert False, "Impossible Place"
         
 
-    def issue_error(self, error_msg, module_name, filename, trailing_error_msg=None, file=sys.stderr) :
+    def issue_error(self, error_msg, module_name, filename, trailing_error_msg=None) :
         ''' See _issue_workhorse()
         '''
         self.num_errors   += 1
-        return self._issue_workhorse( "ERROR", error_msg, module_name, filename, trailing_error_msg, file)
+        return self._issue_workhorse( "ERROR", error_msg, module_name, filename, trailing_error_msg)
 
-    def issue_failure(self, error_msg, module_name, filename, trailing_error_msg=None, file=sys.stderr) :
+    def issue_failure(self, error_msg, module_name, filename, trailing_error_msg=None) :
         ''' See self._issue_workhorse()
         '''
         self.num_failures += 1
-        return self._issue_workhorse( "FAILURE", error_msg, module_name, filename, trailing_error_msg, file)
+        return self._issue_workhorse( "FAILURE", error_msg, module_name, filename, trailing_error_msg)
 
-    def issue_warning(self, warning_msg, module_name, filename, trailing_warning_msg=None, file=sys.stderr) :
+    def issue_warning(self, warning_msg, module_name, filename, trailing_warning_msg=None) :
         ''' See self._issue_workhorse()
         '''
         self.num_warnings += 1
-        return self._issue_workhorse( "WARNING", warning_msg, module_name, filename, trailing_warning_msg, file)
+        return self._issue_workhorse( "WARNING", warning_msg, module_name, filename, trailing_warning_msg)
 
-    def _issue_workhorse(self, error_failure_warning_msg, main_msg, module_name, filename, trailing_msg, file) :
-        ''' Sends error/failure/warning message to file of the form:
+    def _issue_workhorse(self, error_failure_warning_msg, main_msg, module_name, filename, trailing_msg) :
+        ''' Record error/failure/warning message in self.lines_of_tokens_to_print[]
+        of the form:
 
-        <error_failure_warning_msg>:<main_msg> module_name:<module_name> filename:<filename>
+        [<error_failure_warning_msg>,
+        <main_msg>
+        module_name:<module_name>,
+        filename:<filename>,
         <trailing_error_msg>
+        ]
+
+        See self.print() for outputting the line.
         '''
-        print ("%s:%s module_name:%s filename:%s" %(error_failure_warning_msg, main_msg, module_name, filename),
-               file=file)
-        if trailing_msg :
-            print (trailing_msg, file=file)
+        self.lines_of_tokens_to_print.append( [ error_failure_warning_msg,
+                                                main_msg,
+                                                "module_name:%s" %module_name,
+                                                "filename: %s"   %filename,
+                                                trailing_msg,
+                                              ] )
+            
+
+
+    def print(self, file=sys.stderr) :
+        ''' prints self.lines_of_tokens_to_print[] to file in
+        fixed width columns.
+        '''
+        for line in fixed_width_columns( self.lines_of_tokens_to_print) :
+            print (line, file=file)
+
 
 
     def announce_results(self, stream=None) :
@@ -739,15 +765,15 @@ class Test_rut_support(unittest.TestCase) :
             # e.g an error is reported if both errors and warnings
 
             # Warnings
-            efw.issue_warning("", "", "", "", file=devnull)
+            efw.issue_warning("", "", "", "")
             self.assertEqual(efw.os_return_code(), os_ret_val_warnings)
         
             # Failures
-            efw.issue_failure("", "", "", "", file=devnull)
+            efw.issue_failure("", "", "", "")
             self.assertEqual(efw.os_return_code(), os_ret_val_failures)
 
             # Errors
-            efw.issue_error("", "", "", "", file=devnull)        
+            efw.issue_error("", "", "", "")        
             self.assertEqual(efw.os_return_code(), os_ret_val_errors)
 
 

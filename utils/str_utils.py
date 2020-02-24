@@ -8,6 +8,8 @@ strings
 #               changed out of range behavior
 #               fixed bugs
 # 2019-12-09 tc Added fixed_width_columns()
+# 2020-02-24 tc Bug fix, fixed_width_columns()
+#               Protect against None tokens, treat as ""
 
 def replace_substr_at(s, substr, offset_into_s, num_substr_chars=None) :
     ''' Replaces num_substr_chars at s[offset_into_s] with
@@ -125,6 +127,9 @@ def fixed_width_columns(lines, column_padding=' ',
     
     for line in lines :
         for (indx,token) in enumerate(line) :
+            # Protect against None strings
+            if token is None :
+                token = ""
             column_widths[indx] = max(column_widths[indx],
                                       len(token))
 
@@ -136,6 +141,8 @@ def fixed_width_columns(lines, column_padding=' ',
     for line in lines :
         returned_line = ""
         for (indx,token) in enumerate(line) :
+            if token is None :    # Protect against entries of None 
+                token = ''
             returned_line += "%*s" %                                               \
                              ( sign_of_format_width * column_widths[indx], token) 
             returned_line += column_padding

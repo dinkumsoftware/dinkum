@@ -248,6 +248,9 @@ def main ():
     # os.walk is complete
     # We have iterated thru all the directories and files
 
+    # Print all errors/failures/warning we have accumulated to date
+    efw.print()
+
     # Remove duplicate tests
     # Note: this probably isn't necessary any more, but it doesn't hurt
     #       It used to be necessary where each file looked at generated
