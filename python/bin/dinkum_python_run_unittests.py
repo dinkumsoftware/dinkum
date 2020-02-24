@@ -196,6 +196,7 @@ def main ():
             dirnames.clear()
             continue ;
 
+
         # Extract all unittests from *.py files in this directory
         for filename in filenames :
 
@@ -222,6 +223,15 @@ def main ():
             if should_skip :
                 continue    # don't process this module
             
+            # Look for warnings
+            if not args.no_warnings :
+                # Returns a list of tuples for each warning
+                warnings = check_file_for_ut_coding_standard_violations(pathname)
+                for (filename, msg) in warnings :
+                    module_name = dotted_module_name_from_filename(filename)
+                    efw.issue_warning(msg, module_name, filename)
+
+                
             # Find the unittest code defined in this FILE
             # Normal unittest.loader.loadTestsFromXXX() load test_cases/functions from
             # the module AND any modules it imports.  This why the code as
@@ -231,20 +241,9 @@ def main ():
             # skip tests based on cmd line arguments
             # We previouly just checked based on pathname (as there were no unittests yet)
             # We do it again and filter based on pathname and TestCase/test_function name
-            module_test_suite = filter.filter_TestSuite(module_test_suite)
-
-            # Check for Warnings
-            if not args.no_warnings :
-                # Returns a list of tuples for each warning
-                warnings = check_TestSuite_for_ut_coding_standard_violations(module_test_suite)
-                for (filename, msg) in warnings :
-                    module_name = dotted_module_name_from_filename(filename)
-                    efw.issue_warning(msg, module_name, filename)
-
 
             # Copy all the approved (non-filtered) tests into final test_suite
-            test_suite.addTest(module_test_suite)
-
+            test_suite = filter.filter_TestSuite(module_test_suite, test_suite)
 
     # os.walk is complete
     # We have iterated thru all the directories and files

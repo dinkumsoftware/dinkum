@@ -9,12 +9,10 @@ In particular:
     All *.py files:
        1) must have unittest code.
        2) must be executable
-       Exceptions are:
+       Exceptions are: See dirs/files_with_unittest[]
           it's in *bin directory (it could be a script)
           __init__.py
-          it's in */test_data directory ( Input data for unit
-                                          tests possibly
-                                          including *.py files)
+
        3) Must run unittests if invoked as a script
 
        4) TestCase name must match Test_<module name>
@@ -33,6 +31,28 @@ utcs_emsg_no_unittest_code        = "No unittest code"
 utcs_emsg_testcase_misnamed       = "Bad TestCase name: %s"  # Requires % "Test_XXX"
 utcs_emsg_unittest_code_not_run   = "Unittest code not executed"
 
+
+# These are directories and files which do NOT have to have unittest code.
+dirs_without_unittest  = [  "bin"         ]    # Must end with bin
+files_without_unittest = [  "__init__.py" ]
+def isnt_excepted(pathname, dirs, files) :
+    ''' Returns True if pathname is NOT in dirs or files.
+    i.e. pathname is NOT and exception
+
+    filenames must match on one of files[]
+    dirs must match the END of one of dirs[]
+    '''
+    if files and  os.path.basename(pathname) in files :
+        return False  # Match, It's exempt. Return Not exempt
+
+    if dirs :
+        dirname = os.path.dirname(pathname)
+        for exempt_dir in dirs :
+            if dirname.endswith(exempt_dir) :
+                return False  # Match, It's exempt. Return Not exempt
+
+    # pathname is NOT exempt
+    return True    # isnt_except
 
 # 2020-02-20 tc Initial
 
@@ -71,7 +91,9 @@ def check_TestSuite_for_ut_coding_standard_violations(test_suite) :
     # Tell um how they did
     return violations
         
-def check_file_for_ut_coding_standard_violations(filename) :
+def check_file_for_ut_coding_standard_violations(filename,
+                                                 exception_dirs=dirs_without_unittest, 
+                                                 exception_files=files_without_unittest) :
     ''' Checks all unittests filename for unittest coding
     standard violations.  (See module doc for a list).
 
@@ -79,10 +101,24 @@ def check_file_for_ut_coding_standard_violations(filename) :
     The tuple is:
         (filename, error_msg )
 
+    The exceptions (files that it is permissable to NOT have unittests)
+    are contained in following []s :
+        exception_dirs     path(sans filename) that dirname(filename) ends with.
+                           e.g  bin matches both bin/a.py and foo_bin/a.py
+        exception_files    filenames (sans a path)
+    Set to None to disallow exceptions.
+
     If no error, returns []
     '''
+
     filename = os.path.abspath(filename)
     violations = [] # What we normally return
+
+    # Remember if file is exemption from a bunch of errors
+    # based on it's name and/or location
+    filename_not_exception =  isnt_excepted(filename,
+                                            exception_dirs,
+                                            exception_files)
 
     # Make sure it exists
     if not os.path.isfile(filename) :
@@ -97,8 +133,7 @@ def check_file_for_ut_coding_standard_violations(filename) :
         return [(filename, utcs_emsg_not_a_python_file)]
 
     # and executable
-    # ####################### special case the directories
-    if not os.access(filename, os.X_OK) :
+    if not os.access(filename, os.X_OK) and filename_not_exception :
         # It's not, report and keep checking
         violations.append( (filename, utcs_emsg_not_executable) )
 
@@ -110,8 +145,11 @@ def check_file_for_ut_coding_standard_violations(filename) :
 
     # Any test code?
     if ts.countTestCases() == 0 :
-        # Nope, add it to violations
-        violations.append ((filename, utcs_emsg_no_unittest_code))
+        if filename_not_exception :
+            # Nope, add it to violations
+            violations.append ((filename, utcs_emsg_no_unittest_code))
+
+        # In either case, nothing more to test
         return violations # Nothing more to check
     
 
@@ -134,7 +172,7 @@ def check_file_for_ut_coding_standard_violations(filename) :
             violations.append ((filename, utcs_emsg_testcase_misnamed % our_test_case))
 
     # Verify that the test code actually runs
-    if not does_unittest_execute(filename) :
+    if not does_unittest_execute(filename) and filename_not_exception :
         violations.append( (filename, utcs_emsg_unittest_code_not_run) )
 
 
@@ -240,6 +278,21 @@ class Test_coding_standards(unittest.TestCase) :
                    "multiple_testcases.py": None,
                    "unittest_not_run.py"  : utcs_emsg_unittest_code_not_run,
     }
+
+    # This is a dictionary of ./test_data/*.py files
+    # that should normally be exempt (i.e lack of unittests isn't treated
+    # as warnings).  The error message is what should be reported if
+    # normal exeception_dir/files processing is bypassed.
+    exception_test_files = { \
+                       "__init__.py"          : utcs_emsg_no_unittest_code,
+        "exceptions_bin/no_unittest_code.py"  : utcs_emsg_no_unittest_code,
+        "exceptions_bin/not_executable.py"    : utcs_emsg_not_executable,
+        "exceptions_bin/unittest_not_run.py"  : utcs_emsg_unittest_code_not_run,
+    }
+    
+
+
+
     @staticmethod
     def abspath_of_test_file(basename) :
         ''' basename into it's absolute path
@@ -253,6 +306,8 @@ class Test_coding_standards(unittest.TestCase) :
         filename = os.path.abspath (filename)
 
         return filename
+
+    
 
     def test_check_file_for_ut_coding_standard_violations(self) :
 
@@ -284,6 +339,43 @@ class Test_coding_standards(unittest.TestCase) :
             self.assertTupleEqual( results_tuple, expected_result_tuple)
 
 
+    def test_exceptions_check_file_for_ut_coding_standard_violations(self) :
+        # We iterate thru exception_test_files.  None of the files
+        # should produce a warning as they are in excepted dir or are
+        # an excepted file.
+        for filename in self.exception_test_files.keys() :
+
+            # Form the full pathname.  filename exists in ./test_data
+            filename = self.abspath_of_test_file(filename)
+
+            # We get back a [] of tuples (filename, error_msg)
+            results_list = check_file_for_ut_coding_standard_violations(filename)
+
+            self.assertListEqual(results_list, [] )  # Should be no warnings
+
+        # Do the same again, but bypass exception checking
+        # All files should produce the error message in exception_test_files{}
+        for (filename, expected_err_msg) in self.exception_test_files.items() :
+
+            # Form the full pathname.  filename exists in ./test_data
+            filename = self.abspath_of_test_file(filename)
+
+            # We get back a [] of tuples (filename, error_msg)
+            results_list = check_file_for_ut_coding_standard_violations(filename, None, [])
+
+            if len(results_list) != 1 : print ("####") ; print (results_list)
+
+
+            # Should only be a single violation
+            self.assertEqual ( len(results_list), 1, msg=filename )
+
+            # Make sure detected the right violation
+            results_tuple = results_list[0]
+            expected_result_tuple = (filename, expected_err_msg)
+            self.assertTupleEqual( results_tuple, expected_result_tuple)
+
+
+
     def test_check_TestSuite_for_ut_coding_standard_violations(self) :
         # We build a TestSuite of all the files in class variable test_files
         loader = unittest.TestLoader()
@@ -306,6 +398,7 @@ class Test_coding_standards(unittest.TestCase) :
             self.assertTrue ( basename in self.test_files, msg=basename)
             self.assertEqual ( emsg, self.test_files[basename] )
     
+
 
 if __name__ == "__main__" :
     # Run the unittests
