@@ -38,6 +38,7 @@
 ;;                                  do  not change background color
 ;;   
 ;; 2019-11-07 tc@DinkumSoftware.com get emacs shells to read ~/.bashrc
+;; 2020-04-28 tc my-insert-file-name
 ;;;-----------------------------------------------------------------------
 ;; Set an emacs variable with this directory name (where tc.emacs lives)
 ;; Any stuff that gets added on, ought to be go in it's own sub-directory
@@ -66,6 +67,7 @@
     (load "date-and-sign")
     (load "scroll-one")
     (load "save-all-buffers")
+    (load "my-insert-file-name")
 
     ;; execute more code
     ;;  (load "tc-diddle-background-color.emacs") ; use the default

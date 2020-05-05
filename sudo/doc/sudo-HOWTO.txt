@@ -1,0 +1,28 @@
+# dinkum/sudo/doc/HOWTO.txt
+#
+# A collection of notes about dealing with sudo
+#
+# 2020-05-02 tc Initial
+
+**** To change who can sudo and what they do:
+1) Put a file in /etc/sudoers.d
+2) filename can't have a "." in it or end with '~', else
+   it is silently ignored.
+3) It's permission: -r--r-----     i.e. chmod 440  <filename>
+
+# Let <user> do anything without a password
+# have /etc/sudoers.d/<somefile> contain:
+<user> ALL=NOPASSWD: ALL
+
+
+**** If you get HOSED...
+if you have a parse error in /etc/sudoers.d/whatever
+
+It won't let you sudo, which you need to fix the problem.
+One could reboot in single user mode and delete the file, but
+
+https://askubuntu.com/questions/209558/how-can-i-fix-broken-sudo-sudo-parse-error-in-etc-sudoers-near-line-23
+
+supplies a nice fix:
+    pxexec emacs   # or whatever editor you want
+

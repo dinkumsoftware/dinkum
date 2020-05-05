@@ -1,0 +1,156 @@
+dns/doc/dns-HOWTO.txt
+
+A desciption of DNS setup and tools.
+
+2020-05-04 tc Initial
+
+This describes:
+    Ubuntu 18.4.04 Desktop version
+
+As shipped there is a local cached dns server:
+    /lib/systemd/systemd-resolved
+NetManager (via Setting gui) controls individual interfaces:
+    I THINK this is:
+       /usr/lib/gvfs/gvfsd-network --spawner :1.22 /org/gtk/gvfs/exec_spaw/3
+
+Config files:
+    As shipped:
+    /etc/resolv.conf -> /run/systemd/resolve/stub-resolv.conf
+        nameserver 127.0.0.53
+        options edns0
+        search hsd1.ma.comcast.net
+
+    /etc/systemd/resolved.conf
+    All commented out, but a place to make changes.
+    You need to make systemd-resolve reread after changes. See Tools
+        # DNS=
+        #FallbackDNS=
+        #Domains=
+        #LLMNR=no
+        #MulticastDNS=no
+        #DNSSEC=no
+        #Cache=yes
+        #DNSStubListener=yes
+
+    NetworkManager (via settings gui) controls the interfaces.
+    It appears you have to turn interface off/on for changes to take effect.
+
+    Other choices if you want to diddle stuff:
+    /etc/resolv.conf -> /run/systemd/resolve/resolv.conf:
+        nameserver 10.23.4.1      #[ed. note] from dhcp via wifi Netmanager controlled iface
+        nameserver 75.75.75.75    #[ed. note] from dhcp ethernet Netmanager controlled iface
+        nameserver 75.75.76.76    #[ed. note]           ditto
+        # Too many DNS servers configured, the following entries may be ignored.
+        nameserver 2001:558:feed::1
+        nameserver 2001:558:feed::2
+        search hsd1.ma.comcast.net
+
+        /etc/systemd/network/*.network files     the per-link static settings
+        
+
+Tools:
+    systemctl --help <snips>
+        NOTE: This seems to make systemd-resolve reread it's config with out stop/start or restart
+        sudo systemctl reload-or-restart systemd-resolve.service Reload one or more units if possible,
+                                                                 otherwise start or restart
+
+        sudo systemctl start             systemd-resolve.service Start (activate) one or more units
+        sudo systemctl stop              systemd-resolve.service Stop (deactivate) one or more units
+        sudo systemctl restart           systemd-resolve.service Start or restart one or more units
+        sudo systemctl try-restart       systemd-resolve.service Restart one or more units if active
+        sudo systemctl try-reload-or-restart systemd-resolve.service   If active, reload one or more units,
+                                                                       if supported, otherwise restart
+
+        sudo systemctl list-units
+        sudo systemctl list-sockets
+
+        DON'T WORK:
+        sudo systemctl reload            systemd-resolve.service Reload one or more units
+        ==> Failed to reload systemd-resolved.service:
+        ==> Job type reload is not applicable for unit systemd-resolved.service.
+
+
+    systemd-resolve
+             systemd-resolve --status                   tells what it knows
+        sudo systemd-resolve --flush-caches
+        sudo systemd-resolve --reset-server-features    equivalent to SIGRTMIN+1
+        sudo systemd-resolve --interface --set-dns      sets dns for that interface
+        sudo systemd-resolve --interface --revert       undoes prior command
+
+        # On "my" default setup
+        systemd-resolve --status
+            My default setup, snipped
+            Global
+            Link 5 (enx58ef68e35d81) # This is eth0.  Ethernet thru USB adapter, hence the funny name.
+                Current Scopes: DNS
+                DNS Servers: 75.75.75.75        # comcast
+                75.75.76.76        # comcast
+                2001:558:feed::1   # Some other DNS API, DBus ?
+                2001:558:feed::2
+            Link 3 (wlp2s0)  # wifi
+                 DNS Servers: 10.23.4.1    # The wifi itself
+
+
+     How to find out whose listening on DNS port:                                 
+         sudo netstat -lnptu | grep ':53' # <snipped>
+             tcp 0 127.0.0.53:53 733/systemd-resolve 
+             udp 0 127.0.0.53:53 733/systemd-resolve 
+
+VPN:
+    This all started trying to bring a vpn with:
+        netExtender --version
+            NetExtender for Linux - Version 10.2.813
+            SonicWall
+            Copyright (c) 2020 SonicWall
+
+    The problem is that routing comes up and works.
+    DNS does not.  A *.local address can't be handled
+    by stub resolver and I couldn't figure out a way
+    to make systemd-resolve send *.local dns requests
+    down the vpn.
+
+    The --only-remote netExtender option should have solved it,
+    but doesn't.
+
+    https://askubuntu.com/questions/1068131/ubuntu-18-04-local-domain-dns-lookup-not-working
+        I think the above has the answer, but it didn't work.
+    One could also set the NetManager VPN Gui up, but I haven't gotten to that.
+    As a workaround, I editted /etc/hosts
+
+
+     Invoke by:
+            netExtender vpn.vecnarobotics.com     \
+            --username=<whatever>                 \
+            --password=<whatever>                 \
+            --domain=<whatever>                   \
+            --auto-reconnect                      \
+            --dns-XXX  # 3 choices
+                --dns-prefer-remote Try remote DNS first, then try local DNS
+
+                --dns-only-remote   Only use remote DNS servers
+                                    Replaces /etc/resolv.conf with:
+                                        nameserver 10.0.2.10
+                                        nameserver 10.0.2.11
+
+                --dns-prefer-remote Try remote DNS first, then try local DNS
+                                    Same as --dns-only-remove but search: changed.
+
+                --dns-only-local    Only use local DNS servers
+                                    Don't touch /etc/resolv.conf
+                
+
+
+<todo> collect urls
+https://askubuntu.com/questions/1068131/ubuntu-18-04-local-domain-dns-lookup-not-working
+says that nameserver at localhost is refusing to lookup *.local
+
+https://www.techrepublic.com/article/how-to-set-dns-nameservers-in-ubuntu-server-18-04/
+
+https://askubuntu.com/questions/721080/how-to-change-dns-of-network-from-terminal
+nmcli connection show --active to obtain active connection name
+nmcli connection edit double tab to list available connections and chose appropriate
+
+https://askubuntu.com/questions/1068131/ubuntu-18-04-local-domain-dns-lookup-not-working
+I think the above has the answer.  Let's put back the /etc/systemd/resolved.conf the way
+it was with DNS commented out.
+

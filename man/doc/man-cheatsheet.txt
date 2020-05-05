@@ -1,0 +1,20 @@
+man/doc/cheatsheet.txt
+
+Hints for man pages.
+
+2020-05-01 tc Initial
+
+# To set the maximum width of output to <n> chars
+      export MANWIDTH=<n>
+      man ...
+          --or--
+      MANWIDTH=<n> ; man ...
+                  
+# If you get an error of this sort:
+   <standard input>:1039: warning [p 13, 0.5i, div `3tbd1,1',
+                                  0.7i]: can't break line
+The man page is too wide, probably because of some table
+Try increasing or removing MANWIDTH
+    MANWIDTH=120   # --or--
+    MANWIDTH=
+    
