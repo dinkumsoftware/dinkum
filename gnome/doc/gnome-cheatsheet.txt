@@ -1,0 +1,23 @@
+dinkum/gnome/doc/cheatsheet.txt
+
+2020-05-05 tc Initial
+
+How to keep gnome/nautilis to quit asking whether to
+launch in terminal/display/cancel/run when you double-click an icon.
+
+Thanks to:
+https://superuser.com/questions/763554/how-to-make-it-so-bash-runs-instead-of-asking-where-to-run-upon-selection-from-f
+
+To get /a/bin/foo to run:
+
+Create a * foo.desktop somewhere:
+    [Desktop Entry]
+    Name=foo
+    Comment=It's not bar
+    Exec=/a/bin/foo
+    Terminal=false
+    Type=Application
+
+Now when you double-click, it runs (without a terminal)
+
+
