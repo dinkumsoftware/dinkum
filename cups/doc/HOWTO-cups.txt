@@ -1,0 +1,32 @@
+dinkum/cups/doc/HOWTO-cups
+
+2020-05-21 tc Initial
+
+*** Stop asking for username/password.
+On ubuntu 18.04 couldn't do anything that
+required root access.  It asked for username/password
+and I couldn't figure out how to enter it.  This fixed it.
+
+Thanks to:
+       https://ubuntuforums.org/showthread.php?t=2388741
+       author: https://ubuntuforums.org/member.php?u=223945 said:
+
+edited /etc/cups/cupsd.conf:
+Was:
+    <Limit CUPS-Add-Modify-Printer CUPS-Delete-Printer CUPS-Add-Modify-Class CUPS-Delete-Class CUPS-Set-Default CUPS-Get-Devices>
+    AuthType Default
+    Require user @SYSTEM
+    Order deny,allow
+    </Limit>
+
+Change to:
+    <Limit CUPS-Add-Modify-Printer CUPS-Delete-Printer CUPS-Add-Modify-Class CUPS-Delete-Class CUPS-Set-Default CUPS-Get-Devices>
+    AuthType None
+    Order deny,allow
+    </Limit>
+
+# Make the server read it
+sudo service cups restart
+
+
+

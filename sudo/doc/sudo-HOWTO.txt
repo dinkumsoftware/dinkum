@@ -3,6 +3,7 @@
 # A collection of notes about dealing with sudo
 #
 # 2020-05-02 tc Initial
+# 2020-05-10 tc bug fixes
 
 **** To change who can sudo and what they do:
 1) Put a file in /etc/sudoers.d
@@ -12,7 +13,7 @@
 
 # Let <user> do anything without a password
 # have /etc/sudoers.d/<somefile> contain:
-<user> ALL=NOPASSWD: ALL
+<username> ALL=(ALL) NOPASSWD:ALL
 
 
 **** If you get HOSED...
