@@ -1,0 +1,51 @@
+#!/bin/bash
+#<fn>
+#<repo>
+#<lic>
+#
+scriptname=$(basename $0)
+usage_str="USAGE:"$scriptname"   xyzzy_FIXME_xyzzy
+"
+
+#<rev-history>
+#</rev-history>
+
+set -e # die on error
+set -u # die on unexpandable variable
+function usage() {
+    echo -n "$usage_str" ;
+}
+
+OPTIND=1
+# Resetting OPTIND is necessary if getopts was used previously in the script.
+# It is a good idea to make OPTIND local if you process options in a function.
+# <todo> put some documentation here about getops arguments
+while getopts h opt; do
+    case $opt in
+        h)
+            usage
+            exit 0
+            ;;
+        *)
+            usage | head -1             1>&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))"   # Discard the options and sentinel --
+
+# Process your command arguments here
+
+
+# Make sure we ate all the command line arguments
+if [ $# -ne 0 ] ; then
+    echo "$scriptname: Unknown cmd line arg(s): $*" 1>&2
+    usage | head -1                               1>&2
+    exit 1
+fi
+
+# Real code starts here
+
+
+#<license>
+#</license>

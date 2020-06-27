@@ -3,6 +3,11 @@ man/doc/cheatsheet.txt
 Hints for man pages.
 
 2020-05-01 tc Initial
+2020-05-26 tc Added how to print
+
+# To print a man page
+man -t <man-page> | lpr
+
 
 # To set the maximum width of output to <n> chars
       export MANWIDTH=<n>
