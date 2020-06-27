@@ -1,0 +1,28 @@
+dinkum/ros/doc/cheatsheet-ros.txt
+
+Useful tools ROS (Robot Operating System)
+
+2020-06-01 tc Initial
+
+There are a bunch of command line tools.  They all start with
+"ros".  Command complete on "ros" to list them.
+
+GUIs:
+They start with rqt, again use command completion to test.
+Some of them:
+
+rqt
+    Lots of looks at ros.  Nodes, process, etc
+
+rqt_graph
+    Shows what nodes are subscribing to what
+
+rosrun rqt_console rqt_console
+       Shows error/warning messages
+
+rosrun rqt_logger_level rqt_logger_level
+       Lets you adjust log level per node
+
+rosrun tf view_frames
+       generates a pdf of all the frames
+

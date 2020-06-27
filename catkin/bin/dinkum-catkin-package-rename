@@ -1,0 +1,159 @@
+#!/bin/bash
+#<fn>
+#<repo>
+#<lic>
+#
+scriptname=$(basename $0)
+usage_str="USAGE:$scriptname from_pkg to_pkg
+Renames from_pkg to_pkg.  pkgs expected to be in
+catkin_ws/src directory.
+
+All references to from_pkg are changed everywhere
+in catkin_ws/src.  git difftool is launched to let
+you approve.
+
+This won't run if you don't have a clean
+git working directory.
+
+The general steps:
+    catkin_make
+    git mv src/"from_pkg" to "src/to_pkg"
+    git mv src/"to_pkg" files: $from_pkg* $to_pkg*
+    replace all instances in catkin_ws/src
+        of "from_pkg" with "to_pkg"
+    launch git difftool to let you see all
+        the changes    
+
+If   happy: git commit
+If unhappy: git reset --hard 
+"
+
+#<rev-history>
+#</rev-history>
+
+set -e # die on error
+set -u # die on unexpandable variable
+function usage() {
+    echo -n "$usage_str" ;
+}
+
+OPTIND=1
+# Resetting OPTIND is necessary if getopts was used previously in the script.
+# It is a good idea to make OPTIND local if you process options in a function.
+# <todo> put some documentation here about getops arguments
+while getopts h opt; do
+    case $opt in
+        h)
+            usage
+            exit 0
+            ;;
+        *)
+            usage | head -1             1>&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))"   # Discard the options and sentinel --
+
+# Process your command arguments here
+if [ $# -lt 2 ] ; then
+    echo "$scriptname: Not enough cmd line args" 1>&2
+    usage | head -1                              1>&2
+    exit 1
+fi
+
+# Pick off our arguments
+from_pkg=$1 ; shift
+to_pkg=$1   ; shift
+
+# Make sure we ate all the command line arguments
+if [ $# -ne 0 ] ; then
+    echo "$scriptname: Unknown cmd line arg(s): $*" 1>&2
+    usage | head -1                                 1>&2
+    exit 1
+fi
+
+
+# Real code starts here
+
+# find the from package
+from_pkg_dir=$(rospack find "$from_pkg")
+src_dir=$(dirname $from_pkg_dir)    # catkin_ws/src
+ws_dir=$(dirname $src_dir)          # catkin_ws
+
+# Make sure git working directory is clean
+# we ignore untracked files
+# Thanks to: https://unix.stackexchange.com/questions/155046/determine-if-git-working-directory-is-clean-from-a-script
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then 
+    echo "$scriptname: Uncommitted git files." 1>&2
+    echo "I won't do it"                       1>&2
+    usage | head -1                            1>&2
+    exit 2
+fi
+
+
+# go to catkin_ws/src
+(set -x ; cd $src_dir)
+
+# to_package must not exist
+if [ -e "$to_pkg" ] ; then
+    echo "$scriptname: to_pkg exists: $to_pkg" 1>&2
+    usage | head -1                            1>&2
+    exit 2    
+fi
+
+# Make sure it builds
+# we suppress the make stdout output
+echo catkin_make: suppressing the output of catkin_make
+(set -x ; catkin_make --directory "$ws_dir" "$from_pkg" > /dev/null)
+
+# git mv "from_pkg" to "to_pkg"
+(set -x ; git mv $from_pkg $to_pkg)
+
+# rename all the files that start with "from_pkg"
+for file in $(find $to_pkg -name "$from_pkg"'*' -type f) ; do
+                                        # e.g. file=to_pkg/worlds/from_pkg.world
+    dir=$(dirname $file)                # to_pkg/worlds
+    src_fn=$(basename $file )           # from_pkg.world
+    des_fn=${src_fn/#$from_pkg/$to_pkg} # to_pkg.world
+
+    echo dir $dir
+    echo src_fn $src_fn
+    echo des_fn $des_fn
+
+    (set -x ; git mv ${dir}/${src_fn} ${dir}/${des_fn} )
+done
+
+# rename all the dirs that start with "from_pkg"
+# EXCEPT the to_pkg director itself (hence the -samefile)
+# note: we do a separate file/dir pass otherwise
+#       directories don't exist for git mv as
+#       find runs and completes before the git mv's
+for dir in $(find $to_pkg -name "$from_pkg"'*' -type d ! -samefile "$to_pkg") ; do
+                                         # e.g. dir=from_pkg'*'
+    des_dir=${dir/#$from_pkg/$to_pkg} # to_pkg.world
+
+    (set -x ; git mv ${dir} ${des_dir} )
+done
+
+
+# replace all instances in catkin_ws/src/*
+# of "from_pkg" with "to_pkg"
+for file in $(find "$src_dir" -type f ) ; do
+    sed --in-place s/"$from_pkg"/"$to_pkg"/g "$file"
+done
+
+# launch git difftool to let you see all
+git difftool .
+
+# Make sure it still makes
+# we suppress the make stdout output
+echo catkin_make: suppressing the output of catkin_make
+(set -x ; catkin_make --directory "$ws_dir" "$from_pkg" > /dev/null)
+
+# show them a closing summary
+git status
+
+# All done
+echo "If   happy: git commit"
+echo "If unhappy: git reset --hard"
