@@ -46,7 +46,9 @@ sudo nano /etc/postfix/main.cf
      was:        inet_interfaces = all
      should be:  inet_interfaces = loopback-only
      
-    
+     add:        virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp
+               
+
 # restart the server
 sudo systemctl restart postfix
 
@@ -55,16 +57,19 @@ Outbound email should work at this point.  Test if you like.
 
 
 # Force all user/system accounts to be sent to remote address
-sudo nano /etc/aliases
+# https://serverfault.com/questions/144325/how-to-redirect-all-postfix-emails-to-one-external-email-address
+echo '/.+@.+/ tc@DinkumSoftware.com'  | sudo tee -a /etc/postfix/virtual-regexp > /dev/null
 
-# Add at bottom of file:
-    root:   tc@DinkumSoftware.com
-    tc:     tc@DinkumSoftware.com
+# note: requires main.cf edit above, virtual_maps = 
+sudo postmap /etc/postfix/virtual-regexp
 
-sudo newaliases
+sudo touch /etc/postfix/virtual && sudo postmap /etc/postfix/virtual
+
+
 
 # Test it
-    echo "This is the body of the email" | mail -s "This is the subject line" root
+    echo "This is the body of the email" | mail -s "This is the subject line" tc
+    
 
 
 # All done
