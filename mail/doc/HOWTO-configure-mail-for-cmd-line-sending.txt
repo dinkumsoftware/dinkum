@@ -1,0 +1,81 @@
+email/doc/HOWTO-configure-mail-for-cmd-line-sending.txt
+
+This describes how to configure a host to be able to
+send email from the command line, i.e.
+
+    echo "This is the body of the email" | mail -s "This is the subject line" somebody@somewhere.com
+
+2020-07-11 tc Initial
+
+What it does:
+    It installs a mail system such that:
+        mail originates from USER@gosnold.DinkumSoftware.com
+
+
+Documentation:
+   These are the general instructions followed:
+   https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-as-a-send-only-smtp-server-on-ubuntu-18-04
+
+   /etc/postfix/main.cf    # Postfix config file
+       See /usr/share/postfix/main.cf.dist for a commented, more complete version
+
+       For the syntax, and for a complete parameter list,
+           see the postconf(5) manual page (command: "man 5 postconf").
+
+<todo> replace private username/hosts
+
+sudo apt update
+sudo apt install mailutils # It asks some questions:
+
+    General type of mail configuration:
+        Internet Site              [default]
+    Postfix Configuration
+        gosnold.DinkumSoftware.com [default]
+        
+# edit /etc/postfix/main.cf
+# See Documentation section above
+
+
+sudo nano /etc/postfix/main.cf
+     was:        myhostname = gosnold.hsd1.ma.comcast.net
+     should be:  myhostname = gosnold.DinkumSoftware.com
+
+     was:        append_dot_mydomain = no
+     should be:  append_dot_mydomain = yes
+
+     was:        inet_interfaces = all
+     should be:  inet_interfaces = loopback-only
+     
+    
+# restart the server
+sudo systemctl restart postfix
+
+Outbound email should work at this point.  Test if you like.
+    echo "This is the body of the email" | mail -s "This is the subject line" somebody@somewhere.com
+
+
+# Force all user/system accounts to be sent to remote address
+sudo nano /etc/aliases
+
+# Add at bottom of file:
+    root:   tc@DinkumSoftware.com
+    tc:     tc@DinkumSoftware.com
+
+sudo newaliases
+
+# Test it
+    echo "This is the body of the email" | mail -s "This is the subject line" root
+
+
+# All done
+
+NOTES:
+
+    (1) If you need to ever return to re-adjust these settings,
+    you can do so by typing:
+        sudo dpkg-reconfigure postfix
+    But note that it will overwrite the manual changes
+    you made to /etc/postfix/main.cf        
+
+    (2) To start completely over:
+        sudo apt purge mailutils postfix # Like apt remove, but removes config files as well.
