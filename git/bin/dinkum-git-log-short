@@ -1,0 +1,10 @@
+#!/bin/bash
+# git log with a pretty one-line format
+#
+# 2020-07-04 tc Initial from cheatsheet
+
+# Pretty one line log list
+# Thanks to: http://stackoverflow.com/questions/1441010/the-shortest-possible-output-from-git-log-containing-author-and-date
+# example output: 2016-11-23 tom campbell    dacf92c   test-socketCAN user interface enhancements.
+git log --pretty=format:"%ad %<(15,trunc)%an %<(9,trunc)%h %s" --date=short
+
