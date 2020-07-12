@@ -17,6 +17,7 @@ Frequently used git commands.
 2019-11-13 tc Listed some git gui's
 2019-11-14 tc moved gui listing to git-tools.txt
 2019-11-22 tc Added meld and git-cat-files notes
+2020-07-04 tc Added List files changed in a commit:
 
 Table of contents
     *** Creating stuff
@@ -116,6 +117,13 @@ git push origin LOCAL
 # How to tell if file under git control
 # http://stackoverflow.com/questions/2405305/how-to-tell-if-a-file-is-git-tracked-by-shell-exit-code
 git ls-files <file-name> --error-unmatch  &>>/dev/null  # returns 0 if in git, 1 if not
+
+List files changed in a commit:
+Thanks to https://stackoverflow.com/questions/5096268/how-to-get-a-list-of-all-files-that-changed-between-two-git-commits
+       git diff --name-only <commit1> <commit2>   # in general
+       git diff --name-only <starting SHA> HEAD   # e.g. HEAD~1
+       git diff --name-only <starting SHA>        # if you want to include changed-but-not-yet-committed files
+
 
 # Pretty one line log list
 # Thanks to: http://stackoverflow.com/questions/1441010/the-shortest-possible-output-from-git-log-containing-author-and-date
