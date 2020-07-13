@@ -6,77 +6,101 @@ send email from the command line, i.e.
     echo "This is the body of the email" | mail -s "This is the subject line" somebody@somewhere.com
 
 2020-07-11 tc Initial
+2020-07-13 tc debugging
+
+Developed on ubuntu 18.04.4 LTS, postfix 3.3.0
 
 What it does:
+    Sets up command line email for a non-primary machine.
+    Assumes:
+        a user REALUSER who gets their email as REALUSER@EXAMPLE.COM
+        on a machine somewhere using remote SMTP/IMAP/POP server
+        using a non-command line email client, e.g. thunderbird
+            
+        A non-primary machine : NPM.EXAMPLE.COM
+          whose hostname may or may not be resolvable in dns.
+                         may or may not have a valid reverse dns
+                         may have a static or dhcp ip address
+          Has a user                      : REALUSER
+          Has other users (including root): OTHERUSER
+
     It installs a mail system such that:
-        mail originates from USER@gosnold.DinkumSoftware.com
+        accepts no email from any network
+        accepts internal email, i.e. from anyone at localhost
+        forwards local email to root, REALUSER to: REALUSER@EXAMPLE.COM
+        delivers other local email to local user.
+        sends cmd-line email such that:
+            mail from: REALUSER  appears from: REALUSER@EXAMPLE.COM
+            mail from: OTHERUSER appears from: OTHERUSER@NPM.EXAMPLE.COM
+            REALUSER email can be replied to, OTHERUSER email can not
 
 
 Documentation:
-   These are the general instructions followed:
-   https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-postfix-as-a-send-only-smtp-server-on-ubuntu-18-04
-
    /etc/postfix/main.cf    # Postfix config file
        See /usr/share/postfix/main.cf.dist for a commented, more complete version
 
        For the syntax, and for a complete parameter list,
            see the postconf(5) manual page (command: "man 5 postconf").
           
+   http://www.postfix.org/BASIC_CONFIGURATION_README.html
    http://www.postfix.org/STANDARD_CONFIGURATION_README.html
    http://www.postfix.org/ADDRESS_REWRITING_README.html 
-
-
+   http://www.postfix.org/postconf.5.html#myhostname       # describes main.cf parameters
           
-<todo> replace private username/hosts
-
+# Install postfix
 sudo apt update
-sudo apt install mailutils # It asks some questions:
+sudo apt install mailutils
+
+     # It asks some questions:
+     # Accept the defaults
 
     General type of mail configuration:
-        Internet Site              [default]
-    Postfix Configuration
-        gosnold.DinkumSoftware.com [default]
+        Internet Site
+    Postfix Configuration:
+        NPM.EXAMPLE.COM
         
-# edit /etc/postfix/main.cf
-# See Documentation section above
+
+# Watch the happenings, in another window:
+tail -f /var/log/syslog    
+
+# configure
+sudo edit /etc/postfix/main.cf:
+     # replace with:
+     myhostname = NPM.EXAMPLE.COM
+
+     # replace with:
+     append_dot_mydomain = yes
+
+     # replace with:
+     myorigin = $myhostname  # mail comes from FQDN
+
+     # replace with:
+     inet_interfaces = loopback-only    # accept only local mail
+
+     # add:
+     sender_canonical_maps = hash:/etc/postfix/sender_canonical
+
+sudo systemctl restart postfix # kick the server
+
+# Deliver local mail to REALUSER@EXAMPLE.COM
+sudo edit /etc/aliases
+     # All local addresses get sent elsewhere
+     root     :  REALUSER@EXAMPLE.COM
+     REALUSER :  REALUSER@EXAMPLE.COM
+# rebuild db
+sudo newaliases
 
 
-sudo nano /etc/postfix/main.cf
-     was:        myhostname = gosnold.hsd1.ma.comcast.net
-     should be:  myhostname = gosnold.DinkumSoftware.com
+# main from REALUSER appears as REALUSER@EXAMPLE.COM
+sudo edit /etc/postfix/sender_canonical
+    REALUSER  REALUSER@EXAMPLE.COM
+sudo postmap /etc/postfix/sender_canonical # Build the data base
 
-     was:        append_dot_mydomain = no
-     should be:  append_dot_mydomain = yes
+# kick the server again to be sure
+sudo systemctl restart postfix 
 
-     was:        inet_interfaces = all
-     should be:  inet_interfaces = loopback-only
-     
-     add:        virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp
-                 # note: requires creation of /etc/postfix/virtual-regexp below               
-
-# restart the server
-sudo systemctl restart postfix
-
-Outbound email should work at this point.  Test if you like.
-    echo "This is the body of the email" | mail -s "This is the subject line" somebody@somewhere.com
-
-
-# Force all local user/system accounts to be sent to a remote address
-# https://serverfault.com/questions/144325/how-to-redirect-all-postfix-emails-to-one-external-email-address
-          
-echo '/.+@gosnold/ tc@DinkumSoftware.com'  | sudo tee -a /etc/postfix/virtual-regexp > /dev/null
-     # note: requires main.cf edit above, virtual_maps = 
-
-sudo postmap /etc/postfix/virtual-regexp
-
-sudo touch /etc/postfix/virtual && sudo postmap /etc/postfix/virtual
-
-# restart the server
-sudo systemctl restart postfix
-
-# Test it
-    echo "This is the body of the email" | mail -s "This is the subject line" tc
-
+# test:
+echo "body" | mail -s "subject" <whoever>    
 
 # All done
 
@@ -90,3 +114,9 @@ NOTES:
 
     (2) To start completely over:
         sudo apt purge mailutils postfix # Like apt remove, but removes config files as well.
+
+    (3) To list all settings:
+        postconf 
+
+    (4) To see the version:
+        postconf -d mail_version
