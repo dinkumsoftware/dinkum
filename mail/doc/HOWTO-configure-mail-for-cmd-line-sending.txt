@@ -21,7 +21,12 @@ Documentation:
 
        For the syntax, and for a complete parameter list,
            see the postconf(5) manual page (command: "man 5 postconf").
+          
+   http://www.postfix.org/STANDARD_CONFIGURATION_README.html
+   http://www.postfix.org/ADDRESS_REWRITING_README.html 
 
+
+          
 <todo> replace private username/hosts
 
 sudo apt update
@@ -47,7 +52,7 @@ sudo nano /etc/postfix/main.cf
      should be:  inet_interfaces = loopback-only
      
      add:        virtual_maps = hash:/etc/postfix/virtual, regexp:/etc/postfix/virtual-regexp
-               
+                 # note: requires creation of /etc/postfix/virtual-regexp below               
 
 # restart the server
 sudo systemctl restart postfix
@@ -56,20 +61,21 @@ Outbound email should work at this point.  Test if you like.
     echo "This is the body of the email" | mail -s "This is the subject line" somebody@somewhere.com
 
 
-# Force all user/system accounts to be sent to remote address
+# Force all local user/system accounts to be sent to a remote address
 # https://serverfault.com/questions/144325/how-to-redirect-all-postfix-emails-to-one-external-email-address
-echo '/.+@.+/ tc@DinkumSoftware.com'  | sudo tee -a /etc/postfix/virtual-regexp > /dev/null
+          
+echo '/.+@gosnold/ tc@DinkumSoftware.com'  | sudo tee -a /etc/postfix/virtual-regexp > /dev/null
+     # note: requires main.cf edit above, virtual_maps = 
 
-# note: requires main.cf edit above, virtual_maps = 
 sudo postmap /etc/postfix/virtual-regexp
 
 sudo touch /etc/postfix/virtual && sudo postmap /etc/postfix/virtual
 
-
+# restart the server
+sudo systemctl restart postfix
 
 # Test it
     echo "This is the body of the email" | mail -s "This is the subject line" tc
-    
 
 
 # All done
