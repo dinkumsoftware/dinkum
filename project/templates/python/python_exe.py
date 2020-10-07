@@ -30,24 +30,33 @@
 #    2020-10-02 tc Initial
 #</history>
 
+import sys
 
-#<unittests>
-import unittest
+def main() :
+    ''' See module doc
 
-#<fixme>
-class Test_MODULE_NAME_HERE(unittest.TestCase):
-        
-    #<fixme>
-    def test_FUNCTION_NAME_HERE(self) :
-        ''' <fixme> '''
-        pass # <fixme>
-        
+    Normally returns NONE
+    On error, returns a printable description of the error
+    '''
 
-if __name__ == "__main__" :
-    # Run the unittests
-    unittest.main()
-    
+    pass #<fixme>
 
 
+# main() launcher
+if __name__ == '__main__':
+    try:
+        sys.exit( main() )
 
-#</unittests>
+    except KeyboardInterrupt as e: # Ctrl-C
+        raise e
+    except SystemExit as e: # sys.exit()
+        raise e
+    except Exception as e:
+        raise e
+    print (str(e))
+    traceback.print_exc()
+        os._exit(1)
+
+    assert False, "Can't get here"
+
+
