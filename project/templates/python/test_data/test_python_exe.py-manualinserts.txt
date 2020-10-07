@@ -1,0 +1,111 @@
+<filename> test_python_exe.py-manual-inserts.txt
+<path> project/templates/python/test-data/
+<repo> https://github.com/dinkumsoftware/dinkum.git
+
+manual inserts into python_exe.py:main() for testing the behavior of
+that template.
+
+This is normally of interest to developers who are working on the template
+python_exe.py.
+
+To use:
+    insert each of the inserts below into main()
+    run python_exe.py
+    stdout and os return code (bash: $?) should match expected.
+
+<todo> When DML is up, make this an executable with unit tests which
+       replace the main innards, execute, compare results </todo>
+
+<copyright> Copyright (c) 2020 Dinkum Software
+<lic>
+'''Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+''' </lic>
+
+<authors> tc    tom campbell, www.DinkumSoftware.com <todo> change to .org
+
+<history>
+    2020-10-07 tc Initial
+</history>
+
+
+Inserts:
+    What to put in python_exe.py:main()
+Expected:
+        "stdout output"  AND os return code (bash: $?)
+Useful command line to do this:
+    python_exe.py ; echo $?
+
+
+Normal Return ------------------------------ 
+  Insert:
+    return 0
+  Expect: ""
+          0
+
+Error Return  ------------------------------ 
+  Insert:
+    return "error return from main"
+  Expect: "error return from main"
+          1
+
+^C Trapping  ------------------------------ 
+  Insert:
+    print("Type Control-c")
+    while(True) :
+        pass
+  Expect: "^CKeyboardInterrupt: Probably Control-C typed."
+          1
+
+sys.exit(good no arg) --------------------------------
+  Insert:
+    sys.exit()
+  Expect: ""
+          0
+
+sys.exit(good with arg) --------------------------------
+  Insert:
+    sys.exit(0)
+  Expect: ""
+          0
+
+sys.exit(bad with numeric_arg) -----------------------
+  Insert:
+    sys.exit(188)
+  Expect: "188"
+          188
+
+sys.exit(bad with str) -----------------------
+  Insert:
+    sys.exit("bad sys.exit()")
+  Expect: "bad sys.exit()"
+          1
+
+exception(base)  ------------------------------------
+  Insert:
+    raise Exception("oops")
+  Expect: Stack Trace PLUS Exception: oops
+          1
+
+exception(derived)  ------------------------------------
+  Insert:
+    class FooExp( Exception ) : pass
+    raise FooExp("oops")
+  Expect: Stack Trace PLUS __main__.FooExp: oops
+          1
+
+os._exit():
+  Insert:
+    import os
+    os._exit(18)
+  Expect: ""
+          18

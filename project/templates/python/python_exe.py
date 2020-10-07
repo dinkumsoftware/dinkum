@@ -41,21 +41,21 @@ def main() :
 
     pass #<fixme>
 
-
 # main() launcher
 if __name__ == '__main__':
     try:
+        # This handles normal and error returns
         sys.exit( main() )
 
-    except KeyboardInterrupt as e: # Ctrl-C
-        raise e
+    except KeyboardInterrupt as e:
+        # Ctrl-C
+        sys.exit( "KeyboardInterrupt: Probably Control-C typed.")
+
     except SystemExit as e: # sys.exit()
+        # Just pass it along
         raise e
-    except Exception as e:
-        raise e
-    print (str(e))
-    traceback.print_exc()
-        os._exit(1)
+
+    # Let any other Exception run it's course
 
     assert False, "Can't get here"
 
