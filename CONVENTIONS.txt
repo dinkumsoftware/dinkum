@@ -7,26 +7,21 @@ This is list of conventions followed in the dinkum repo (see above)
 2019-04-30 tc Initial
 2019-11-26 tc Added some python requirements
 2019-12-07 tc Added some python unittest requirements
+2020-10-02 tc Added more tests conventions
+              Stayed with current flat approach
 
 All executables start with dinkum- or dinkum_
 
 Anything starting with tc- is NON-generic and are the author's desired customization.
 
-document lives in ./doc directory
+documentation lives in ./doc directory
+Cheatsheets are named: cheatsheet-<package-name>.[txt/pdf/etc]
 
-<todo> rethink this... currently dinkum/package/package/module.py
-                                 dinkum/package/package/bin/dinkum_executable_code.py
-                                 with sym-links of dinkum-executable-code => dinkum_executable_code.py
-                                      in both the bin directory AND dinkum/bin directory
-       If I stay with below, consider python => python_src
-       As I type this, I like the below better
-
-All the python library source will be in:
-    dinkum/python/dinkum/a/b/*.py    # In package library code
-           python/bin/dinkum-*.py    # Is executable
-
-    dinkum/bin ; sym links.e.g.
-          dinkum-* ==> ../python/bin/dinkum-*.py
+package/subproject layout:
+        dinkum/package/package/module.py
+        dinkum/package/package/bin/dinkum_executable_code.py
+            with sym-links of dinkum-executable-code => dinkum_executable_code.py
+            in the dinkum/bin directory
 
 Python unit testing:
     All non-bin *.py files will have unittest code
@@ -35,3 +30,12 @@ Python unit testing:
     class Test_<module_name>(unittest.TestCase):
     individual tests start with: test_
     Any required data lives in ./test_data
+
+Executable testing:
+    Test Programs for executables live in ./tests directory
+    Other Test Programs can live their as well.
+    A program that tests the "foo" executable, should be name "test-foo"
+    Returns 0 if test passes and non-zero otherwise.
+
+    Any test data is in ./test_data which is shared by unit tests.
+    
