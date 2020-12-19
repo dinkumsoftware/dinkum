@@ -28,9 +28,12 @@
 
 #<history>
 #    2020-10-02 tc Initial
+#    2020-12-19 tc Added argparse and append ERROR: to main returns
 #</history>
 
 import sys
+import argparse
+import textwrap    # dedent
 
 def main() :
     ''' See module doc
@@ -39,13 +42,34 @@ def main() :
     On error, returns a printable description of the error
     '''
 
-    pass #<fixme>
+    # Specify and parse the command line arguments
+    parser = argparse.ArgumentParser(
+        # print document string "as is" on --help
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(__doc__)
+    )
+
+    # Common optional arguments <fixme>
+    parser.add_argument("-v", "--verbose",
+                        help="Print all changed filenames.",
+                        action="store_true")
+
+    parser.add_argument("-d", "--dry_run",
+                        help="Nothing changed, only print what would be done.",
+                        action="store_true")
+
+    args = parser.parse_args()
+
+    #<fixme> Code goes here
 
 # main() launcher
 if __name__ == '__main__':
     try:
         # This handles normal and error returns
-        sys.exit( main() )
+        err_msg = main()    # returns human readable str on error
+        if err_msg :
+            err_msg = "ERROR:" + err_msg  # Label the output
+        sys.exit( err_msg )
 
     except KeyboardInterrupt as e:
         # Ctrl-C
