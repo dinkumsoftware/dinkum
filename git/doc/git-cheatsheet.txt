@@ -18,6 +18,7 @@ Frequently used git commands.
 2019-11-14 tc moved gui listing to git-tools.txt
 2019-11-22 tc Added meld and git-cat-files notes
 2020-07-04 tc Added List files changed in a commit:
+2021-01-28 tc fixed up rebase instructions
 
 Table of contents
     *** Creating stuff
@@ -54,6 +55,9 @@ printing a file in git:
         from https://stackoverflow.com/questions/11007552/git-whole-file-to-stdout
         git show HEAD:<file>
 
+See log of all commits since last push:
+    git log origin/master..HEAD
+
 *** Changing state
 git add -A .  # stages All in current directory
 git add .     # stages new and modified, without deleted
@@ -75,7 +79,11 @@ git branch --set-upstream-to <origin/whatever> [<branchname>]
 git rebase -i HEAD~<N> ; 1st pick, remainder squash
 
 # squash all commits since last push
-git rebase -i origin
+git rebase -i origin/master   ; 1st editor:
+                              ;   all but 1st entry: pick==>squash
+                              ;   to bail: delete entire editor window
+                              ; 2nd editor: make commit msg
+                              ; to undo: git rebase --abort
 
 # edit the last commit message
 git commit --amend
