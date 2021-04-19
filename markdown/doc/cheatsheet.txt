@@ -1,0 +1,12 @@
+2021-02-08 tc Initial
+
+markdown cheatsheet
+
+To convert markdown (*.md) to:
+    *.html
+        grip --export  foo.md  foo.html
+
+    *.pdf
+        grip foo.md
+        chrome localhost:6419
+        print as pdf

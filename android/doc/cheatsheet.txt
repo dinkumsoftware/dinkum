@@ -1,0 +1,23 @@
+#<filename>    cheatsheet.txt
+#<path>        android/doc
+#<repo>        https://github.com/dinkumsoftware/dinkum.git
+#<copyright>   Copyright (c) 2020 Dinkum Software, All rights reserved
+#<lic oneline> No license, you can't use it
+
+Cheatsheet for a android phone.
+
+
+#<authors> tc    tom campbell, www.DinkumSoftware.com <todo> change to .org
+
+#<history>
+2021-02-04 tc Initial
+#</history>
+
+Phone Numbers:
+   How to include an extension of x123
+       pause:  800555555,123
+       wait:   800555555;123
+   NO SPACES around , or ;
+   pause waits 2 seconds for each comma
+   wait  waits for automated message to stop, then sends extension
+
