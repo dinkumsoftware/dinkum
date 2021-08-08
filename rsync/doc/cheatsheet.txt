@@ -4,13 +4,13 @@ rsync/doc
 2021-08-07 tc Initial
 
 ** how to copy a filetree via rsync
-
+   # dir-des pre-exists
    before:      a/b/c/dir-src   d/e/f/dir-des
 
    rsync   -avz a/b/c/dir-src   user@host-des:dir-des
    !!! NO TRAILING / on dir-src !!!
 
-   after                   d/e/f/dir-des/dir-src
+   after                        d/e/f/dir-des/dir-src
 
    Multiple dir-src's are allowed
    non-existent dir-des's will be created
