@@ -1,0 +1,127 @@
+#!/bin/bash
+# absolute-pathname
+#
+usage()
+{
+cat >/dev/stderr <<eof
+USAGE: absolute-pathname pathname
+    Outputs the absolute pathname of "pathname" on stdout.
+    "pathname" can be a file or a directory.
+    At least directory portion of "pathname" MUST exist.
+eof
+}
+#
+# On success
+#    absolute-pathname to stdout
+#    nothing to stderr
+#    exit 0
+#   
+# On error
+#    messages to stderr
+#    nothing to stdout
+#    exit 1
+#
+# note: scripts can detect errors from:
+#    testing $?
+#    -or-
+#    if [ -z `absolute-pathname whatever` ] ...
+#
+#
+# Algorithm:
+#    Separate pathname pathname into dirname and basename
+#    cd dirname   
+#    Do a pwd (which returns absolute-pathname)
+#    tack on basename and return it   
+#
+# 31-May-05 tc@DinkumSoftware.com Initial
+
+
+
+# There must be exactly one command line argument
+if (( $# != 1 )) ; then
+    usage
+    echo >/dev/stderr "There must be EXACTLY one command line argument."
+    exit 1
+fi
+
+# Pick off what we want to expand
+DINKUM_PATHNAME=$1
+
+# Separate into dirname and basename
+DINKUM_BASENAME=`basename $DINKUM_PATHNAME`
+if (( $? )) ; then
+    usage
+    echo >/dev/stderr "Error from basename $DINKUM_DIRNAME"
+    exit 1
+fi
+
+DINKUM_DIRNAME=`dirname   $DINKUM_PATHNAME`
+if ((  $? )) ; then
+    usage
+    echo >/dev/stderr "Error from dirname $DINKUM_DIRNAME"
+    exit 1
+fi
+
+
+# We must special case a few pathalogical conditions
+#   DINKUM_DIRNAME      DINKUM_BASENAME         invoking pathname
+#       /                    /                  /
+#       .                    .                  .
+#       ..                  ..                  ..
+#     whatever               .                  whatever/.
+#     whatever              ..                  whatever/..
+
+
+if [[ ($DINKUM_BASENAME == "/") && ($DINKUM_BASENAME == "/") ]] ; then
+    echo /
+    exit 0
+fi
+
+if [[ ($DINKUM_BASENAME == ".") || ($DINKUM_BASENAME == "..") ]] ; then
+    # Check for being invoked by just . or ..
+    if [ $DINKUM_DIRNAME == $DINKUM_BASENAME ] ; then
+        # Kill DINKUM_BASENAME so it is not appended later
+        DINKUM_BASENAME=""
+    else
+        # strip trailing /. or /.. and recurse 
+        # this will handle /x/y/./././.
+        absolute-pathname $DINKUM_DIRNAME
+        exit $?
+    fi
+fi
+
+# We have a DINKUM_DIRNAME that is a directory
+# We have a DINKUM_BASENAME that is a file or directory
+#                           that is NOT . or ..
+# Go to directory above pathname, i.e. dirname result
+cd $DINKUM_DIRNAME
+if (( $? )) ; then
+    usage
+    echo >/dev/stderr "Error doing cd $DINKUM_DIRNAME"
+    echo >/dev/stderr "Directory portion of $DINKUM_PATHNAME probably does not exist"
+    exit 1
+fi
+
+
+# Append basename to pwd results and spew it to stdout
+# Some of the special cases above kill basename to signal
+# us to not output it.
+
+DINKUM_PWD_DIRNAME=`pwd`
+echo -n $DINKUM_PWD_DIRNAME
+
+if [ ! -z $DINKUM_BASENAME ] ; then
+
+    if [ $DINKUM_PWD_DIRNAME != "/" ] ; then
+        echo -n /
+    fi
+
+    echo -n $DINKUM_BASENAME
+fi
+
+echo  # close the line
+
+# All done, life is good
+exit 0
+
+

@@ -1,0 +1,315 @@
+#!/usr/bin/perl
+# diff-by-stats
+#
+my $usage_str = <<ENDDOCO ;
+USAGE:diff-by-stats  dir_a dir-b
+  Recursively compares file trees via the stat command.
+  Fields checked:
+    mode uid gid size mtime
+
+  Any files that differ are announced with relative_pathname
+  and a keyword of all mismatching fields on stdout.
+
+  Any files that only exist in dir_a are reported.
+ENDDOCO
+
+# 26-Aug-05 tc@DinkumSoftware.com initial
+# 31-Aug-05 tc@DinkumSoftware.com Don't recurse into symbolic links
+
+# Table of contents
+#    main                well not really, it's perl you know
+#    file_find_callback  File:find() callback, does the work
+
+
+use strict "vars" ; use strict "subs" ; use strict "refs" ;
+use warnings ;
+
+use File::Find ;   # find()
+use File::Spec ;   # 
+
+
+    # For configuration, create an array of labels for each stat
+    # and corresponding bool array which should be true if needs to be tested
+    my @stat_labels ;                my @is_stat_to_be_tested ;
+
+    $stat_labels[ 0] = "dev"     ;   $is_stat_to_be_tested[ 0] = 0 ;
+    $stat_labels[ 1] = "ino"     ;   $is_stat_to_be_tested[ 1] = 0 ;
+    $stat_labels[ 2] = "mode"    ;   $is_stat_to_be_tested[ 2] = 1 ;
+    $stat_labels[ 3] = "nlink"   ;   $is_stat_to_be_tested[ 3] = 0 ;
+    $stat_labels[ 4] = "uid"     ;   $is_stat_to_be_tested[ 4] = 1 ;
+    $stat_labels[ 5] = "gid"     ;   $is_stat_to_be_tested[ 5] = 1 ;
+    $stat_labels[ 6] = "rdev"    ;   $is_stat_to_be_tested[ 6] = 0 ;
+    $stat_labels[ 7] = "size"    ;   $is_stat_to_be_tested[ 7] = 1 ;
+    $stat_labels[ 8] = "atime"   ;   $is_stat_to_be_tested[ 8] = 0 ;
+    $stat_labels[ 9] = "mtime"   ;   $is_stat_to_be_tested[ 9] = 1 ;
+    $stat_labels[10] = "ctime"   ;   $is_stat_to_be_tested[10] = 0 ;
+    $stat_labels[11] = "blksize" ;   $is_stat_to_be_tested[11] = 0 ;
+    $stat_labels[12] = "blocks"  ;   $is_stat_to_be_tested[12] = 0 ;
+
+    my $num_of_stats = 13 ;
+
+    # What we print when file in dir_a doesn't exist in dir_b
+    # We want to align the filenames
+    #                                   mode uid gid size mtime <dir_a|dir_b>/whatever/whereever/name
+    my $missing_label        = "MISSING                               <dir_b>" ;
+    my $missing_field_filler = "        " ;
+
+#main()
+    # Set true to get debug output to stdout
+    my $want_debug = 0 ;
+
+
+    # Pick of the required arguments
+    #                       0     1
+    #    diff-by-stats  dir_a dir_b
+    if ($#ARGV != 1)
+    {   print $usage_str ;
+        die "ERROR: wrong number of arguments\n" ;
+    }
+    
+    my $dir_a_tree_root = shift ;
+    my $dir_b_tree_root = shift ;
+
+
+    # find() requires absolute paths
+    $dir_a_tree_root = File::Spec->rel2abs( $dir_a_tree_root ) ; 
+    $dir_b_tree_root = File::Spec->rel2abs( $dir_b_tree_root ) ; 
+
+    # file_find_callback() needs length of $dir_a_tree_root
+    # Precompute it to make things run faster
+    my $dir_a_tree_root_length = length($dir_a_tree_root) ;
+    my $dir_b_tree_root_length = length($dir_b_tree_root) ;
+
+
+    # Make sure the dir_a exists and is a directory
+    if ( ! -e $dir_a_tree_root )
+    {   
+        print $usage_str ;
+        die "ERROR: $dir_a_tree_root does NOT exist" ;
+    }
+    if ( ! -d $dir_a_tree_root )
+    {   
+        print $usage_str ;
+        die "ERROR: $dir_a_tree_root is NOT a directory" ;
+    }
+
+    # Likewise for dir-b
+    if ( ! -e $dir_b_tree_root )
+    {   
+        print $usage_str ;
+        die "ERROR: $dir_b_tree_root does NOT exist" ;
+    }
+    if ( ! -d $dir_b_tree_root )
+    {   
+        print $usage_str ;
+        die "ERROR: $dir_b_tree_root is NOT a directory" ;
+    }
+
+
+# Algorithm:
+    # We use File::find to traverse the dir_a_tree_root and it's kids
+    # It cd's to each directory in dir_a_tree_root and calls callback
+    # function file_find_callback() with info about filename and
+    # where we are.
+    #
+
+    # Do it
+    find(\&file_find_callback, ($dir_a_tree_root) ) ;
+
+
+# file_find_callback()
+#
+# Callback function from File:find() from traversing dir_a
+#
+# Responsible for:
+#    Building name of corresponding file in dir_b
+#    Getting and comparing stats on both files
+#    Announce any differences to stdout
+#
+# We arrive here for every directory and file in $dir_a_tree_root
+# We are cd'd to the directory in $dir_a_tree_root
+# 
+# input variables:
+# From find()
+#   $File::Find::dir is the current directory name,
+#   $_ is the current filename within that directory
+#   $File::Find::name is the complete pathname to the file.
+#
+# Global from main()               
+#    $dir_a_tree_root_length      length($dir_a_tree_root)
+#    $dir_b_tree_root             base output path
+#
+# 26-Aug-05 tc@DinkumSoftware.com Initial
+# 31-Aug-05 tc@DinkumSoftware.com Don't recurse into symbolic links
+
+
+    # The current working directory in the destination tree is here.  
+    # it is "static" so that the file creation code can use it
+    my $dir_b_curr_dir ;
+ 
+    # the current working directory relative to dir_a or dir_b
+    # used to label the output
+    my $relative_curr_dir ;
+
+
+                       
+
+
+sub file_find_callback
+{
+
+
+    # the file in dir_a tree
+    my $filename_a = $File::Find::name ;
+
+
+    # create filename_relative to use for output labeling
+    # create filename_b to compare against
+    my $filename_relative ;
+    my $filename_b ;
+    # Is this a directory?
+    if ( -d $filename_a )
+    {
+        # We just arrived a new directory
+        # Construct the name of the correspoding directory in dir_b
+        # We construct full_pathname in  "dir_b_curr_dir"
+        # We construct relative pathname "relative_curr_dir"
+
+        #      Note that this is global to us so we can use it making up
+        #      up the filename as well
+        # Example:
+        #  $dir_a_tree_root   /home/whatever/a/b/src
+        #  $File::Find::name  /home/whatever/a/b/src/x/y/z
+
+        #  $dir_b_tree_root   /home/whatever/c/d/e/des
+        #
+        # outputs
+        #  relative_curr_dir                          /x/y/z
+        #  dir_b_curr_dir     /home/whatever/c/d/e/des/x/y/z 
+
+
+        # If it is a symblic link
+        # do not recurse
+        if ( -l $File::Find::name )
+        {
+            # The directory is a symbolic link
+            # Do nothing and recurse no further
+            $File::Find::prune = 1 ;
+            return ;
+        }
+        else
+        {
+            # Not a symbolic link, enable recursion
+            $File::Find::prune = 0 ;
+        }
+
+
+        $relative_curr_dir = substr $File::Find::name, $dir_a_tree_root_length ;
+        $dir_b_curr_dir =  $dir_b_tree_root . $relative_curr_dir ;
+
+        # we want to compare the directory itself
+        $filename_relative = $relative_curr_dir ;
+        $filename_b        = $dir_b_curr_dir ;
+
+    }
+    else
+    {
+        # It is not a directory, must be a file
+        # We count on $dir_b_curr_dir having been set
+
+        # Make up the name
+        my $volume = "" ; # ignored
+        $filename_relative = File::Spec->catpath( $volume, $relative_curr_dir, $_ );
+        $filename_b        = File::Spec->catpath( $volume, $dir_b_curr_dir,    $_ );
+
+    }
+    # Special case printout non-directory files in dir_a or dir_a itself
+    if ( (substr $filename_relative, 0, 1) ne "/" ) { $filename_relative = "/" . $filename_relative ; }
+
+
+
+
+    # compare the stats of filename_a and filename_b
+    # We know filename_a exists cause find() is iterating over it
+    my @stat_a = stat $filename_a ;
+
+    # filename_b might not exist
+    my @stat_b = stat $filename_b ;
+    if ( -e $filename_b )
+    {
+        # it does, grab it's stats
+        @stat_b = stat $filename_b ;
+    }
+    else
+    {
+        # filename_b does not exist
+        # Announce and quit
+        print "$missing_label$filename_relative\n" ;
+        return ;
+    }
+
+    # iterate over each stat and compare the ones to be tested
+    # set stat_mismatch[] true or false appropriately
+    my @stat_mismatch ;
+
+    #keep track of any failure (or of all stat_mismatch[]) here
+    my $stats_match_completely = 1 ;
+    for ( my $i = 0 ; $i < $num_of_stats ; $i++)
+    {
+        # assume success
+        $stat_mismatch[$i] = 0 ;
+
+        if ( $is_stat_to_be_tested[$i] )
+        {
+            if ( $stat_a[$i] != $stat_b[$i] )
+            {
+                # we have a mismatch
+                $stats_match_completely = 0 ;
+                $stat_mismatch[$i] = 1 ;
+            }
+        }
+    }
+
+
+    # If there is any error, announce it
+    if ( ! $stats_match_completely )
+    {
+        # Skip initial MISSING label
+        print $missing_field_filler ;  # a bunch of spaces
+
+        # For each tested stat
+        #     does not match: Print the keyword for every matching stat
+        #            matches: Print spaces of same length as keyword
+        # This is so the columns line up
+        for ( my $i = 0 ; $i < $num_of_stats ; $i++)
+        {
+            if ( $is_stat_to_be_tested[$i] )
+            {
+                if ( $stat_mismatch[$i] )
+                {
+                    # print keyword
+                    print $stat_labels[$i] ;
+                }
+                else
+                {
+                    # print same number of spaces
+                    my $num_spaces_to_print = length $stat_labels[$i] ;
+                    for ( my $space_cnt = 0 ; $space_cnt < $num_spaces_to_print ; $space_cnt++)
+                    {
+                        print " " ;
+                    }
+                }
+
+                # we have printed either keyword or equivalent number of spaces
+                # add one more space to separate
+                print " " ;
+            }
+        }
+
+        # We have printed all the mismatched keywords
+        # print the relative filename
+        print "<dir_a|dir_b>$filename_relative\n" ;
+    }
+
+}
+

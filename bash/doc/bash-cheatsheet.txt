@@ -1,8 +1,18 @@
 dinkum/bash/bash-cheatsheet.txt
 
-# 2016-12-06 tom@rail-pod.com Initial
-
+# 2016-12-06 tc Initial
+# 2021-08-08 tc added stuff from subversion
 
 # To diddle the PATH cache
 hash -r 
 hash -d <single basename to remove>
+
+# Puts stdin in and stderr on both terminal and file
+your-command 2>&1 | tee your-command.log
+
+# Given a file reference, get absolute pathname of it's directory
+FILE=whatever
+ABS_PATNAME = $(cd `dirname $FILE` 2> /dev/null && pwd -P)
+
+
+

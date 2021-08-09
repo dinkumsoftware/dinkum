@@ -1,0 +1,25 @@
+HOWTO-pass-environment.txt
+
+2011-08-14 tcampbell@whoi.edu 
+
+
+1. All variables marked for export are passed to the command.
+   export <var>
+   declare -x <var>    ; bash only
+
+   export -n           ; no longer export
+   export              ; report
+
+2. assignments before command passed
+   a=1 b=2 command
+
+3. assignments anywhere on the line with a set -k
+       set -k           ; set -o keyword
+       command a=1 b=2
+
+4. after all export, anything changed passed in
+       set -a           ; set -o allexport
+       a=1
+       b=2
+       command
+

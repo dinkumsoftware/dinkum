@@ -1,0 +1,315 @@
+#!/usr/bin/perl
+#make-a-random-filetree
+
+#        1         2         3         4         5         6         7          
+#23456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.
+
+my $usage_str = <<ENDDOCO ;
+USAGE:make-a-random-filetree <tree-root> <avg-dir-width> <avg-dir-depth> ...
+                                     <avg-files-per-dir> <avg-file-size>
+                            
+Makes a file tree at <tree-root> with random number of subdirectories, files,
+and file contents.
+
+Creates <tree_root> which must not exist.
+Populates it with a directory structure similiar to:
+
+    <tree_root>
+        0.<gibberish>
+            0-0.<gibberish>
+                    0-0-0.<gibberish>
+                    0-0-1.<gibberish>
+                    0-0-2.<gibberish>
+            0-1.<gibberish>
+            0-2.<gibberish>
+        1.<gibberish>
+            1-0.<gibberish>
+        2.<gibberish>
+            2-0.<gibberish>
+            2-1.<gibberish>
+
+The width and depth vary randomly between +-50% <avg-dir-width/height>.
+Each directory has <avg-files-per-dir> +-50%files with gibberish names.
+File content is lines of ascii gibberish containing 0 to <avg-file-size> bytes.
+ENDDOCO
+
+# 24-Aug-05 tc@DinkumSoftware.com Initial
+# 29-Aug-05 tc@DinkumSoftware.com Added disable_gibberish
+
+# Table of contents
+#    main                well not really, it's perl you know
+#    make_the_dirs       recursively make directories
+#    gibberish_filename_trailer  makes up random chars for filename
+#    random_around_avg    returns 0.5 to 1.5x it's argument
+
+use strict "vars" ; use strict "subs" ; use strict "refs" ;
+use warnings ;
+
+use File::Find ;   # find()
+use File::Spec ;   # 
+
+
+# config stuff
+my $disable_randomness = 0 ; # for debug...set it true to get repeatable results
+                                #          ...just uses the <avg> values directly
+
+my $disable_gibberish =  0 ; # Make files names easier to ready
+
+
+my $default_dir_mode = oct 755 ;
+
+
+    # List of choices of legal filenames and length of same
+my $possible_filename_chars = "abcdefghijklmnopqrstuvwxyz"    .
+                              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"    .
+                              "0123456789"                    .
+                              "`~!@#$%^&*()-_=+[{]}\|;:,<.>? " ;
+                              # omitted ' " /
+                              # the quotes are actually legal but did not
+                              # want to deal with the syntax
+
+
+my $possible_filename_chars_length = length( $possible_filename_chars ) ;
+
+
+
+
+#main()
+
+    # Pick off the arguments
+    if ($#ARGV != 4)
+    {   print $usage_str ;
+        die "ERROR: wrong number of arguments\n" ;
+    }
+    my $tree_root         = shift ;
+    my $avg_dir_width     = shift ;
+    my $avg_dir_depth     = shift ;
+    my $avg_files_per_dir = shift ;
+    my $avg_file_size     = shift ;
+
+    # Compute how much disk we are gonna chew up
+    my $num_dirs = 0 ;
+    for (my $d = 0 ; $d < $avg_dir_depth ; $d++)
+        {
+            $num_dirs += $avg_dir_width ** $d ;
+        }
+
+    my $disk_usage = $num_dirs          *
+                     $avg_files_per_dir *
+                     $avg_file_size     ;
+
+    # Convert to absolute path to avoid funny syntax
+    $tree_root = File::Spec->rel2abs( $tree_root ) ; 
+
+    # Announce our intentions
+    print "Making a random file tree at $tree_root\n" ;
+    print "Making about $num_dirs directories(+-50%)\n" ;
+    print "I will consume $disk_usage bytes(+-50%)\n" ;
+
+    # Make sure tree-root does NOT exist
+    if ( -e $tree_root )
+    {   
+        print $usage_str ;
+        die "ERROR: $tree_root already exists" ;
+    }
+
+    #Create tree-root
+    if ( !mkdir $tree_root, $default_dir_mode )
+    {
+        die "ERROR: Could not mkdir($tree_root,$default_dir_mode): $!\n" ;
+    }
+
+
+
+    # recursively build the directories
+    srand ;
+    make_the_dirs ($tree_root, "", 0, $avg_dir_width, $avg_dir_depth, $avg_files_per_dir, $avg_file_size) ;
+
+
+
+
+#make_the_dirs(parent_directory, dir_lead_str, current_depth, avg_width, avg_depth,
+#                                                             avg_files_per_dir, avg_file_size )
+#
+#    parent_directory    the absolute pathname of the directory where we are gonna
+#                        create the directorys.
+#                         e.g. /usr/local/whereever/tree-root/0.<gibberish/0-2.<gibberish>/0-2-1.<gibberish>
+#    dir_lead_str        what to prepend to the name of the directories,
+#                         e.g. 0-2-1-
+#    current_depth       0 to N-1, how deep in the tree we currently are 
+
+#
+# Recursively makes the required directories
+
+sub make_the_dirs
+{
+    #Pick off the arguments
+    my ($parent_dir, $dir_lead_str, $current_depth, $avg_width, $avg_depth, $avg_files_per_dir, $avg_file_size) = @_ ;
+
+    # Stop if too depth in tree
+    my $desired_depth = random_around_avg( $avg_depth ) ;
+    if ( $current_depth >= $desired_depth )
+    {
+        return ;     
+    }
+
+
+    # Pick the width, ie number of directories-to-make
+    my $width = random_around_avg ($avg_width) ;
+
+
+    # Iterate width-wise
+    for (my $w = 0 ; $w < $width ; $w++)
+    {
+        # Pick full pathname of the directory we are going to create
+        # e.g. /usr/local/whereever/tree-root/0.<gibberish/0-2.<gibberish>/0-2-1.<gibberish>/0-2-1-0.<gibberish>
+        my $absolute_dir_name = $parent_dir . "/" . $dir_lead_str . $w . "." . gibberish_filename_trailer() ;
+
+        # Make the directory
+        if ( !mkdir $absolute_dir_name, $default_dir_mode )
+        {
+            die "ERROR: Could not mkdir($tree_root,$default_dir_mode): $!\n" ;
+        }   
+
+        # Create the required files in the directory we just make
+        make_the_files( $absolute_dir_name, $avg_files_per_dir, $avg_file_size) ;
+
+        # recurse down one depth level
+        make_the_dirs( $absolute_dir_name, $dir_lead_str . $w . "-", $current_depth + 1, $avg_width, $avg_depth,
+                       $avg_files_per_dir, $avg_file_size) ;
+
+    }
+
+    # all done
+    return ;     
+}
+
+
+# make_the_files( $dir, $avg_files_per_dir, $avg_file_size)
+#
+# Makes up random number of files of random size/content in $dir
+#
+# filenames:
+#    file-0.<gibberish>
+#    file-1.<gibberish>
+#       ...
+
+
+sub make_the_files
+{
+    # args
+    my ($dir, $avg_files_per_dir, $avg_file_size ) = @_ ;
+
+    # figure out how many we are making
+    my $files_per_dir = random_around_avg( $avg_files_per_dir ) ;
+
+    # iterate over each one
+    for ( my $i = 0 ; $i < $files_per_dir ; $i++)
+    {
+        my $filename = "file-" . "$i" . "." . gibberish_filename_trailer() ;
+        my $open_arg  = ">" . "$dir" . "/" . $filename ;
+
+        # open the file for writing
+        unless (open F, $open_arg)
+        {
+            die "ERROR: Could not open $filename (exact arg is $open_arg)\n" ;
+        }
+
+        # Write random contents
+        my $file_size = random_around_avg($avg_file_size) ;
+
+        my $chars_per_line = 0 ;
+        for ( my $l = 0 ; $l < $file_size ; $l++, $chars_per_line++)
+        {
+            # Pick the character to write from same global array as used
+            # to make filename gibberish
+            my $c = substr $possible_filename_chars, rand($possible_filename_chars_length), 1 ;
+
+            print F "$c" ;
+
+            # Force newlines to make it easy for human to view
+            if ( $chars_per_line > 50 )
+            {
+                print F "\n" ;
+                $chars_per_line = 0 ;
+            }
+
+        }
+        print F "\n" ;
+
+        # close it
+        close F ;
+
+    }
+
+
+    return ;
+}
+
+
+# gibberish_filename_trailer()
+#
+# returns a random length string of random chars that are legal for a filename
+#
+# Globals:
+#    possible_filename_chars             List of choices of legal filenames
+#    possible_filename_chars_length      length of same
+#
+sub gibberish_filename_trailer
+{
+    # for debug
+    if ( $disable_gibberish  ) { return ""          ; }
+    if ( $disable_randomness ) { return "gibberish" ; }
+
+    my $avg_gibberish_length = 6 ;
+
+    my $gibberish = "" ; # what we return
+
+    # decide length of string we are returning
+    my $trailer_length = random_around_avg($avg_gibberish_length) ;
+
+
+    for (my $i = 0 ; $i < $trailer_length ; $i++)
+    {
+        $gibberish .= substr $possible_filename_chars, rand($possible_filename_chars_length), 1 ;
+    }
+
+    return $gibberish ;
+}
+
+ 
+
+# random_around_avg(avg)
+#
+# Returns an integer between avg/2 and 2*avg
+#
+sub random_around_avg
+{
+    # Pick off arguments
+    my ($avg) = @_ ;
+
+    # For debug, it is nice to turn off randomness
+    if ( $disable_randomness )
+    {
+        return $avg ; 
+}
+    
+
+
+
+    # build up the answer
+    # doco assumes $avg = 10
+    my $answer = rand $avg ;    # 0   - 9.99
+    $answer += ($avg/2) ;       # 5   - 14.99
+    $answer += 0.5 ;            # 5.5 - 15.49
+    $answer = int $answer ;     # 5   - 15
+
+    return $answer ;
+
+}
+
+
+
+
+
+

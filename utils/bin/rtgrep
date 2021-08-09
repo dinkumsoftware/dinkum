@@ -1,0 +1,131 @@
+#!/usr/bin/perl
+# rtgrep
+# Recursive Text Grep
+#$Id: rtgrep,v 1.3 1998/07/10 16:49:08 tc Exp $
+#
+my $usage_str = <<ENDDOCO ;
+Usage: rtgrep <directory> <perl_regular_expression>
+       Recursively searchs all TEXT files starting in <directory>, writing
+       to stdout the filename of all files that have a line(s) that match
+       <perl_regular_expression>. IE does a perl
+            m/<perl_regular_expression>/
+ENDDOCO
+#
+#$Log: rtgrep,v $
+#Revision 1.3  1998/07/10 16:49:08  tc
+#To force clean code, Put in:
+#    use strict "vars" ; use strict "subs" ; use strict "refs" ;
+#
+#Revision 1.2  1998/07/09 17:57:00  tc
+#First working
+#
+#Revision 1.1  1998/07/09 16:22:26  tc
+#Initial revision
+#
+# Table of contents
+#   main    
+#   do_a_dir    Recursive workhorse
+#   match       does the m// on contents of a single file
+
+use strict "vars" ; use strict "subs" ; use strict "refs" ;
+
+#main()
+    # Pick of the required arguments
+    #            0                 1
+    # rtgrep <directory> <perl_regular_expression>
+    if ($#ARGV != 1)
+    {   print $usage_str ;
+        exit 1 ;
+    }
+    my $directory               = $ARGV[0] ;
+    my $perl_regular_expression = $ARGV[1] ;
+
+
+    # Recursively do it
+    &do_a_dir($directory, $perl_regular_expression) ;
+
+    exit 0 ;
+
+
+# -------------------------------------------------------------
+#do_a_dir(directory, perl_regular_expression)
+#
+# Process the current directory (breadth first) and recurses to
+# all the subdirectorys.
+#
+# See doco at top of file for details
+
+sub do_a_dir
+{
+    # Pick off the arguments
+    (my $directory, my $perl_regular_expression) = @_ ;
+
+    # Remember where we started 
+    my $prior_dir = `pwd` ; chomp $prior_dir ;
+
+    # Get to the right place and remember it
+    chdir $directory or die "Can't cd to directory: $directory\n" ;
+    my $curr_dir  = `pwd` ; chomp $curr_dir ;
+
+    # First pass, scan all the text files
+    opendir DIR, "."   or die "do_a_dir(): Cannot open curr dir\n" ;
+    my @filelist = grep -T, readdir DIR ;
+    closedir DIR ;
+    foreach my $file (@filelist )
+    {   if ( &match($file, $perl_regular_expression))
+        {  # matches, assemble and print full path of the file
+           print $curr_dir . '/' . $file . "\n" ;
+        }
+    }
+
+     
+    # Second pass, recurse in all the directories
+    opendir DIR, "."   or die "do_a_dir(): Cannot open curr dir\n" ;
+    @filelist = grep -d, readdir DIR ;
+    closedir DIR ;
+    foreach my $file (@filelist)
+    {   # Special case . and ..
+        next if ( $file eq '.'  ) ;
+        next if ( $file eq '..' ) ;        
+
+        # Recurse
+        do_a_dir( $file, $perl_regular_expression) ;
+    }
+
+
+    # Finish where we started
+    chdir $prior_dir or die "Can't cd to back to directory: $prior_dir\n" ;
+
+}
+
+# match($file, $perl_regular_expression)
+#
+# Runs m/$perl_regular_expression/
+#
+# Returns TRUE if gets a match and FALSE otherwise
+
+sub match
+{
+    # The args
+    (my $file, my $perl_regular_expression) = @_ ;
+
+    # What we return
+    my $match_results = 0 ; # Assume no match
+
+    open FILE, $file  or die "Cannot open $file\n" ;
+    while (<FILE>)
+    {   # This line match?
+        if ( m/$perl_regular_expression/o )
+        {   # Yes, signal success and look no further
+            $match_results = 1 ;
+            last ;
+        }   
+    }
+
+    close FILE ;
+    return $match_results ;
+}
+
+      
+
+

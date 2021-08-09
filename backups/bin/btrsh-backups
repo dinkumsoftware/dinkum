@@ -1,0 +1,147 @@
+#!/usr/bin/perl
+#
+# btrsh-backups
+#$Id: btrsh-backups,v 1.1 1998/07/23 15:43:35 tc Exp $
+#
+# Gets rid of all files that end in ~
+#
+my $usage_str = <<ENDDOCO ;
+Usage:btrsh-backups [-R] [-h] [-v] [directory]
+    Moves all backup files (those that end in ~) in "directory" to magic place.
+    If "directory" is omitted, uses the current directory.
+    -R means recursively, all subdirectory contents are also done.
+    -v means verbose, files moved are echoed to stdout.
+    -h prints this message.
+
+    The magic directory is ~/btrsh/btrsh-backups-~-files/..../.
+    Where ... is a directory tree matching current directory. (This
+    means a/foo.c~ and b/foo.c~ go to different places.
+    All these directories are silently created as needed.
+ENDDOCO
+
+#$Log: btrsh-backups,v $
+#Revision 1.1  1998/07/23 15:43:35  tc
+#Initial revision
+#
+
+# Table of contents
+#    main
+#    do_a_dir           Recursive workhorse
+#    make_target_dir    creates where we do the move
+
+
+use strict "vars" ; use strict "subs" ; use strict "refs" ;
+
+use Getopt::Std; 
+use Cwd;
+use File::Path ;
+
+
+# Config stuff
+my $base_target_directory = $ENV{"HOME"} . "/btrsh/btrsh-backups-~-files" ;
+
+# Process the command line arguments
+getopts("Rhv") || die $usage_str ;    # The switches
+
+
+my $directory = shift ;                     # The optional directory
+if ( ! $directory ) { $directory = "." } ;  # Use current if none spec'ed
+
+# They want help?
+if ($Getopt::Std::opt_h)
+{   print $usage_str ;
+    exit ;
+}
+
+# Set our own variables to tell us what to do
+my $recursive = $Getopt::Std::opt_R ;
+my $verbose   = $Getopt::Std::opt_v ;
+
+
+# Do it
+&do_a_dir ( $directory, $base_target_directory, $recursive, $verbose) ;
+
+
+# --------------------------------------------------------------------
+#do_a_dir ( $directory, $base_target_directory, $recursive, $verbose)
+#
+# Searches $directory for files that end in ~ and moves them to a
+# subdirectory of $base_target_directory.
+#
+# $recursive means do it in subdirectories.
+# $verbose means echo files copied to stdout
+
+sub do_a_dir
+{
+    # Pick off args
+    my ( $directory, $base_target_directory, $recursive, $verbose) = @_ ;
+
+    # Get to $directory, remembering where we were and are
+    my $prior_wd = cwd() ;
+    chdir $directory || die "Cannot chdir to directory: $directory\n" ;
+    my $curr_wd = cwd() ;
+
+    # The directory where we want to move stuff
+    # We leave it empty string to keep track of the first time we do move
+    # It is computed and created later if we actually need it
+    my $target_directory ;
+
+    # Scan all the files in current directory
+    local ( *DH) ; my @filelist ;
+    opendir( DH, "." ) || die "cannot open current directory\n" ;
+    @filelist = grep !/^\.\.?$/, readdir DH ;
+    closedir( DH ) ;
+
+    foreach my $afile (@filelist)
+    {
+        if ( -d "$afile" )
+        {   # this is a directory, recurse if they said so
+            if ( $recursive )
+            {    &do_a_dir( "$afile",
+                            $base_target_directory, $recursive, $verbose) ;
+            }
+        }
+        # Filename ends in ~ ?
+        elsif ( $afile =~ /.*~$/ )
+        {   # need to move this file
+            # First time, create the target directory
+            if ( ! $target_directory )
+            {    $target_directory = &make_target_dir($base_target_directory,
+                                                      $curr_wd) ;
+            }
+
+            # Move the file away
+            `mv $afile $target_directory` ;
+            if ( $verbose )
+            {   # Output the name of the file
+                # Special case "./" for read-ability
+                my $print_dir = $directory eq "." ? "" : "$curr_wd/" ;
+                print "$print_dir" . "$afile\n" ;
+            }
+
+        }
+    }
+
+    # leave us where we started
+    chdir $prior_wd || die "Cannot chdir to whence we came: $prior_wd\n" ;
+}
+
+# $target_direcotry = make_target_dir($base, $curr)
+#
+# Figures and returns the name of the target directory by appending $base and
+# $curr.
+#
+# The directory is created.
+
+sub make_target_dir
+{
+    my ($base, $curr) = @_ ;
+
+    # Create the name
+    my $dir = $base . $curr ;
+
+    # Create the directory and any intermediate ones
+    mkpath ( $dir ) ;
+
+    return $dir ;
+}
