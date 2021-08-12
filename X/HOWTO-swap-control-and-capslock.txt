@@ -1,0 +1,8 @@
+18-Apr-05 tc@DinkumSoftware.com Fedora Core 3
+
+edit /etc/X11/xorg.cong
+
+uncomment line with;
+             Option "XkbOptions" "ctrl:swapcaps"
+
+

@@ -1,0 +1,80 @@
+#!/bin/bash
+# evolution-import-all-data
+#
+# Imports ALL evolution data (mail/calendar/passwords/etc) from
+# one account to another.
+#
+# 2008.01.06 tc@DinkumSoftware.com Initial, everything hardwired for
+#                                  transfer from nellie to orphan
+
+
+# Where we get the data
+FROM_HOST=tc@localhost
+FROM_HOMEDIR=backups/nellie-residual-files-from-cent02-2008.01/tc
+
+TO_HOMEDIR=~tc
+
+# Directorys to copy relative to HOMExxx
+# Do small ones first so don't have to wait for the password
+PATHS_TO_COPY=".gnome2_private/Evolution .camel_certs .evolution"
+    # This file should be the results of:
+    # gconftool-2 --shutdown ; gconftool-2 --dump /apps/evolution > this-file
+XML_TO_IMPORT=evolution-nellie-tc-apps-evolution.xml
+
+echo "Importing evolution data...."
+echo "  From:" "$FROM_HOST:$FROM_HOMEDIR"
+echo "    To:" "$TO_HOMEDIR"
+
+echo    "!!!! THIS WILL DELETE ALL OF YOUR MAIL !!!!"
+echo    "!!!! Are you REALLY SURE you want to do this?"
+
+echo -n "     Answer \"Y<enter>\" if you want to proceed:"
+read ANSWER
+if [ "$ANSWER" != "Y" ] ; then
+    echo "OK.... I'm quitting"
+    exit 0 
+fi
+
+
+cd $TO_HOMEDIR || exit 1
+
+# Kill any running evolution
+echo "Stopping any running evolutions"
+evolution --force-shutdown || exit 2
+
+
+# remove the data
+rm -rf $PATHS_TO_COPY
+
+# Forcibly remove any gconf files.
+# We have to stop and restart the daemon
+gconftool-2 --shutdown
+rm -rf .gconf/apps/evolution
+gconftool-2 --spawn
+
+echo "Poof! there goes your mail"
+
+
+# Copy the required files
+
+for F in $PATHS_TO_COPY ; do
+    scp -rp $FROM_HOST:$FROM_HOMEDIR/$F .
+done
+
+# Import the gconf settings
+# Copy over the file to import
+echo importing gconf settings
+XML=`mktemp`
+scp -p $FROM_HOST:$FROM_HOMEDIR/$XML_TO_IMPORT  $XML
+
+
+gconftool-2 --shutdown
+gconftool-2 --load=$XML
+gconftool-2 --spawn
+
+rm -f $XML
+
+echo "Done"
+
+
+

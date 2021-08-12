@@ -1,0 +1,51 @@
+2008.01.06 tc@DinkumSoftware.com from
+
+http://www.go-evolution.org/FAQ#Where_does_Evolution_store_my_data.3F
+
+ Where does Evolution store my data?
+
+Evolution stores your data in
+          $HOME/.evolution/
+your account settings in
+     $HOME/.gconf/apps/evolution
+and your passwords in (The passwords are not stored encrypted,
+just base64 encoded.)
+    $HOME/.gnome2_private/Evolution.
+
+
+SSL Certificates are stored in
+    $HOME/.camel_certs
+
+and if Evolution crashed while you were writing an email, there could even be
+a file
+  $HOME/.evolution/.evolution-composer.autosave-123456
+(where 123456 is some string)
+
+Note: If you run Evolution 2.8 or older, the file will be at
+$HOME/.evolution-composer.autosave-123456.
+
+
+        from 10-Dec-06 tc@DinkumSoftware.com Initial
+
+
+How does evolution store mail?
+This was by reverse engineering the mail folders.
+
+    For a mail folder named "foo"
+
+    foo                  file   The mail in the folder
+    foo.cmeta            file   
+    foo.ibex.index       file
+    foo.ibex.index.data  file
+    foo.ev-summary       file   [optional] only present sometimes?
+    foo.sbd              dir    [optional] Only if folder has subdirectories
+
+    For every sub-folder of "foo", same files appear in foo.sbd
+
+So  "export":
+    shutdown evolution
+    mv all those files to another directory
+    it should work just fine.
+
+Try it manually
+        

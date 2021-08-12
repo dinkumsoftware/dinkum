@@ -1,0 +1,16 @@
+ 7-Jun-04 tc@DinkumSoftware.com 
+
+Trying to allow remote X access.
+
+Things you have to do:
+   gdmsetup
+       Enable XDMCP
+       Security: uncheck disallow TCP connections
+   /etc/hosts.allow:
+       gdm: 172.16.63.0/255.255.255.0
+   xhost + hostname
+   firewall down (or open to 177)
+
+   things I thought I had to do but didn't:
+       /etc/inittab remove -nodaeamon from 5:respawn line
+

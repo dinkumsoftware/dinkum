@@ -1,0 +1,468 @@
+Gsoftware/foss-net/evolution/working-notes.txt
+
+10-Dec-06 tc@DinkumSoftware.com Initial
+
+
+How does evolution store mail?
+This was by reverse engineering the mail folders.
+
+    For a mail folder named "foo"
+
+    foo                  file   The mail in the folder
+    foo.cmeta            file   
+    foo.ibex.index       file
+    foo.ibex.index.data  file
+    foo.ev-summary       file   [optional] only present sometimes?
+    foo.sbd              dir    [optional] Only if folder has subdirectories
+
+    For every sub-folder of "foo", same files appear in foo.sbd
+
+
+
+2008.01.06 tc@DinkumSoftware.com 
+
+Moving evolution data from CentOS 4.? evolution to Fedora 7 (orphan)
+New version of evolution is:
+    Evolution 2.10.3
+
+Their home page:
+http://www.gnome.org/projects/evolution/documentation.shtml
+
+From
+http://www.go-evolution.org/FAQ#Where_does_Evolution_store_my_data.3F
+
+
+ How can I transfer all my Evolution data between computers/to a new partition/to a new computer?
+
+Make sure you haven't started Evolution on the new computer/new
+partition yet.
+
+<opps... too late>
+
+ First of all, shut Evolution and its background
+processes (Evolution Data Server, Evolution Alarm Notify) completely
+down by using evolution --force-shutdown.
+
+Then copy the contents of
+     $HOME/.evolution/
+     $HOME/.gnome2_private/Evolution
+     $HOME/.camel_certs.
+
+Then dump your Evolution settings stored in GConf by running
+     gconftool-2 --dump /apps/evolution > some-file.xml where
+some-file.xml is the name of the file the information is written
+to.
+
+On the new computer, make sure you are not running gconf (by ps ax
+| grep gconf for example; you normally have to leave gnome for that
+and then run
+
+    gconftool-2 --shutdown
+
+. Then import those settings by running
+  gconftool-2 --load some-file.xml
+
+Try this on new test account.
+except.... I didn't export the gconf settings from Centos system.
+
+
+/etc/gconf/2/path:
+        # Give users a default storage location, ~/.gconf
+        xml:readwrite:$(HOME)/.gconf
+
+There is also  a:
+      /etc/gconf/2/evoldap.conf
+file which looks like evolution config file of some sort.
+
+
+-rw-r--r-- 1 root root 3397 2007-03-25 00:18 /etc/gconf/2/evoldap.conf
+
+rpm -qf /etc/gconf/2/evoldap.conf 
+GConf2-2.18.0.1-2.fc7
+
+
+OK.... find all the evolution data on orphan
+       ~/.evolution
+       ~/.gconf/apps/evolution
+       ~/.gnome2_private/Evolution
+       ~/.camel_certs   does not exist
+
+And nellie:
+  cd /Desktop/backups/nellie-residual-files-from-cent02-2008.01/tc/
+  1.5G    .evolution/
+  640K    .gconf/apps/evolution/
+  8.0K    .gnome2_private/Evolution
+          
+          .camel_certs   does not exist
+
+
+Ok... give it a whirl on a test account
+Write a script, just hardwire directories for now.....
+      evolution-import-all-data
+
+All the damn .ev-summary files aren't readable, e.g.
+-rw------- 1 tc tc 44 2008-01-02 10:18 /home/tc/.evolution/mail/local/Outbox.ev-summary
+
+Try scp....
+    It doesn't have the nice --parents switch that cp does.
+    but ... if I use scp, it will work over the network......
+
+Confirm that I can "copy" 
+        .gconf/apps/evolution/
+
+gconftool-2 --dump /apps/evolution > some-file.xml where
+
+nope ... I can't
+I'll have to do the dump stuff
+
+So on the old machine......
+   gconftool-2 --dump /apps/evolution > evolution-nellie-tc-apps-evolution.xml
+; Make a 50K file
+
+scp works, but one has to enter the password a bunch of times
+rsync might be better, but I'm tired at the moment and just get it done.
+
+I was just trying to delete the gconf information,
+
+  rm -rf .gconf/apps/evolution
+
+but next time I started evolution, it thought it had been run.
+So
+    gconftool-2 --shutdown
+    rm -rf .gconf/apps/evolution
+    gconftool-2 --spawn
+
+It seemed to mostly work ok on test account, except it got into
+an infinite loop trying to fetch mail and I wouldn't give it the
+password.
+
+The password file didn't make it over... not sure why
+
+
+Try it for real on ~tc
+
+Seemed to work.... but the passwords didn't make it over.
+But mail is flowing......
+
+
+2008.01.11 tc@DinkumSoftware.com 
+
+Time to sort pruning and re-organizing the mail.
+
+Created evolution-import-tc-data
+
+Found out why passwords didn't make it before.
+Permission:
+        cp: cannot stat `/home/tc/.gnome2_private/Evolution': Permission denied
+
+http://email.about.com/cs/evolutiontips/qt/et110103.htm
+    * Open the folder in Evolution.
+    * Select Edit | Select All from the menu.
+    * Now select File | Save As... from the menu.
+    * Choose the location and file name where you want to save your emails.
+          o You can give the file a .mbx extension so it's clear that it is a mbox file. 
+    * Click OK. 
+
+Doesn't work with sub-directories.
+
+How does evolution store mail?
+This was by reverse engineering the mail folders. see above
+
+    For a mail folder named "foo"
+
+    foo                  file   The mail in the folder
+    foo.cmeta            file   
+    foo.ibex.index       file
+    foo.ibex.index.data  file
+    foo.ev-summary       file   [optional] only present sometimes?
+    foo.sbd              dir    [optional] Only if folder has subdirectories
+
+    For every sub-folder of "foo", same files appear in foo.sbd
+
+
+I manually moved out all of aaaMail, copied it back in, and it
+seemed to work.  Made a DVD backup of all of tc.
+
+2010-10-30 DinkumSoftware.com/tc
+
+Sitting in Burlington hotel lobbey and can't send email cause cape.com
+isn't taking stmp mail.  Try to get all mail on one computer.
+
+I've got:
+  evolution email sitting on orphan ~tc (old fedora)
+  evolution email sitting on nellie ~tc (debian lenny)
+
+evolution has been occasional crashing on nellie.  I'm fed up with it.
+I tried Thunderbird (IceDove on debian) and it looked ok.  It's version 2
+and they are shipping version 3, but whatever.  I've also GOT to move my
+mail to an imap server.  I've had a dummy setup at cape.com for a while but
+haven't touched it.  I've had one running on nellie for a while.  I really,
+really have to resolve this.
+
+I gave up filing email individually a few weeks ago.  There is a too be
+filed directory on each computer.  Have to convert to imap and use search.
+I've also got CDs with evolution dumped mail on desk, some lost webb research
+mail somewhere on a cd.  What a mess.
+
+I think the approach I'll take is get IMAP up and running.
+
+1. Get nellie evolution talking to nellie imap and try to move mail
+there.
+
+2. Then either get orphan talking to imap and move it's mail... or
+   import orphan evolution mail to nellie and move it to imap.
+
+
+See sidebar in foss/courier/doc/working-notes.txt
+
+I got courier imap up and working on nellie.
+I moved all of nellies evolution mail into it.
+I seem to be able to see it from thunderbird.
+
+Ok now I have to get orphan's evolution email and later all the other
+CDs of evolution email into the nellie courier imap.
+
+Probably the best way is to just brute force drag it into ~tc/.evolution
+I think I have some scripts that do this (or some part of it)
+
+So:
+x  nellie thunderbird...
+        clean up existing imap in basket
+    mv orphan:~/.evolution/? to nellie:~/.evolution/mail
+    nellie evolution, move it into nellie courier imap.
+
+Went to orphan and copied .evolution/{mail,address,calendar} to
+separate folder: orphan(efedora)-evolution-folder-bound-for-nellie-2010-10-29.
+    first bug... it's 1.7G and I've got a 1.9G flash drive.
+
+Made some space, it should fit.
+
+Kill the evolutions on nellie.
+tc@nellie:~$ evolution --force-shutdown
+
+backup nellie mail/calendar/address to
+    Desktop: nellie-evolution-backup-2010-10-30-probably-junk
+
+Ran out of space on flash drive.... try tar'ing it.
+
+
+tar -cjvf nellie-evolution-backup-2010-10-30-probably-junk.bz2 nellie-evolution-backup-2010-10-30-probably-junk
+
+
+Wait, go back and empty trash on orphan evolution first....
+sigh.. that took it down to 1.3 Mbytes.... wonder where the attachments went.
+
+double sigh... and the rest of the mail.  I just lost orphan's evolution
+email.... but I found it in the trash... 
+    orphan desktop: orphan-evolution-mail-2010-10-30
+Found it in Trash I think.
+
+Should probably backup nellie Maildir first:
+  ~/btrsh/Maildir-2010-10-29.09:04
+
+2010-10-31 www.DinkumSoftware.com/tc 
+Back at the hotel bar in Burlington at 3:45.
+Typing not drinking.
+
+
+evolution come up ok when I drug the mail boxes and the like in, but
+it crashed a bunch when I tried to move the email into courier.
+Most of the mail seem to get there, but some appeared lost... start over.
+
+
+Ugh... recursive moves don't work.  I spent and hour or so painfully moving
+subdirecectories one by one.  Many failed.  Then took 10 seconds to
+google:
+
+http://www.ubuntugeek.com/how-to-export-your-mails-from-evolution-to-thunderbird.html
+
+Transferring mail from Evolution to Thunderbird
+
+Open up two windows to your Home Directory. Navigate in one of the windows to the path that Thunderbird has assigned for your email storage above. HINT: CTRL+h in your home folder will show all hidden files and folders so you will be able to see the “.mozilla-thunderbird” folder. Once you are in this folder you will see some files in there with names such as Inbox, Inbox.msf, Junk.msf and so on.
+
+In the other window from your home folder navigate to “.evolution/mail/local” This is where any locally stored mail from Evolution is placed. There are a similar set of files to what you see in the Thunderbird folder, Inbox, Drafts and so on.
+
+Copy the files named Inbox, Sent, Outbox and Drafts from the evolution folder to the mozilla-thunderbird folder (dragging and dropping while holding down your ctrl key will copy rather than move the files). When it asks if its ok to overwrite them just say yes. Its ok, nothing bad will happen. Its just a copy. You can trust me. Honest.
+
+If you have your mail folders organised in evolution under your Inbox there will be a sub directory called “Inbox.sbd” under the .evolution/mail/local/ directory. In that directory you will find files named the same as your folders such as Humour, Humour.cmeta, Humour.ev-summary, Humour.ibex.index and so on. Of course, this depends on what you’ve called your folders.
+
+For any of the folders you want to move to Thunderbird chose the file WITHOUT any extension and copy it to the localhost folder where you previously placed the Inbox and other files.
+
+Ok... here's what seems to work....
+    navigate to .evolution/mail/local
+    Copy EVERYTHING to .mozilla-thunderbird/60XXX.default/Mail/Local Folders
+    recursively remove:
+        *.cmeta
+        *-summary
+        *.index
+        *.data
+        *.ev-summary-meta
+
+That got everything into the thunderboard local folder...
+but I still can't seem to move trees of folders from Local to imap
+in thunderbird.
+
+Maybe I can look for some thunderbird add ons...
+not much.....
+
+Let's try a different tack.... [If it's too hard, you are doing it wrong!]
+    I've got all the email in Thunderbird Local Folder
+    I've got courier IMAP Maildir
+    Try to move/import (at filesystem level) thunderbird => Maildir
+
+Side note... in googling, I have another knowledgeable user that solved
+the problem using Outlook 2007.. sigh
+
+Found http://www.weirdkid.com/products/emailchemy/
+which alledges to do the job.  Free neutered demo. $30 to buy.
+
+Give it a shot....
+    to ~play
+        copy ~tc/.mozilla-thunderbird
+        copy ~tc/Maildir
+
+Couldn't get it to work in 10 minutes.
+It couldn't figure out the output directory to convert to.
+
+So I'm back to doing it in thunderbird.
+more googling... someone recommended KMail has lots of import/output choices.
+Try that.
+
+Backup up ~tc/.mozilla-thunderbird, ~tc/Maildir to nellie:~tc/Desktop/prekmail-backup
+
+It looked promising, [It also has direct evolution imports!] but when I
+tried to import from mozilla (doing remove duplicate messages) It hung doing
+moo-gateway and the family just woke up.
+
+I can:
+    1. retry the import from thunderbird
+    2. Reload evolution and try kmail import directly from evolution.
+       Probably the best.
+
+
+I got kmail talking to imap server.
+So...
+x    1. play with kmail/imap and make sure it works
+           add/delete folders, move around etc
+           recursive moves
+x    2 If that looks good, rename orphan-evolution-import to
+      partial-orphan-evolution-thunderbird
+    3. Reload evolution
+    4. import from evolution -> kmail -> imap
+    5. Cleanup:
+            remove thunderbird Local mail
+            remove imap partial from above
+
+We'll see....
+
+2010-11-01 www.DinkumSoftware.com/tc 
+Back at the office.
+
+     kmail email looks ok, some minor quirks.
+     but in general ok
+
+
+copy in orphan email to nellie:~tc/.evolution/mail
+
+GNOME evolution 2.22.3.1
+
+the import hung on moo-gateway (like it did reading the partial thunderbird
+import)
+
+crank up evolution.
+renamed and moved moo-gateway
+still hung, just delete it.
+now it hung on RS-232 monitor.
+
+hum.. what to do...
+
+x    1. Start over with evolution
+    2. Try to manually to get evolution to put troublesome dirs in imap:
+            evolution-troublesome-import-dirs-2010-11-01
+    3. Keep plowing thru Kmail imports and copys to imap(Maildir)
+
+
+brought evolution.
+       deleted:
+           inbox/*
+           send/*
+           Molly's email
+           emptied trash.
+
+As i went to exit to make the imap evolution-troublesome-import-dirs-2010-11-01
+It hung on exit. (which big rsync backup was running).  It eventually worked.
+
+   moo-gateway
+   docklight. 232 tools or something   ; made it to troublesome on evolution
+                                       ; local, but NOT imap. <todo> fix.
+   wacon
+   
+
+opps, I fetched pop.cape.com mail on evolution..... <todo> fix.
+
+The import hung, and I couldn't see how far it got because screen saver kicked
+in and window wouldn't repaint.  Turn off screen saver, kill Kmail, and try again.
+
+When I killed Kmail... it was churning for a while.  Let it finish.... 12:15
+Kmail finally finished.
+
+System too slugglish to use.
+       deal with vendors/?/RedHat (use evolution to move it)
+       and try the import again.
+
+
+Back at it.
+   moo-gateway
+   docklight. 232 tools or something   ; made it to troublesome on evolution
+   wacon
+   vendor/Redhat died, moved it.
+   paypal
+   vendor/ebay/PURCHASEDS/marionette
+
+Finally... it finished..
+    noticed hardware/me is misfiled <todo> fix it.
+    need to get evolutions inbox to the imap.... done
+
+
+2010-11-03 www.DinkumSoftware.com/tc 
+When I went to Thunderbird, it didn't see the folders in imap that I
+thought that Kmail put there.
+
+Turns out that you have to "check mail" or something on Kmail to get
+it to actually move the mail to the imap server.  There is also some
+notion of a Kmail Imap "cache", some button or the other that I hit in
+Kmail relative to folders asked something on the order.
+    this will lose local imap cached messages that
+    haven't been written to the server.
+
+I finished up all those folders getting actually transfered to the
+localhost courier imap/Maildir server.  There were 4 folders it wouldn't
+write and put in lost-found.  
+      ; not sure where in the file tree they came from
+      alias
+      aws                                     ; i think amazon signup stuff
+      build-system-fixed-price-contracts      ; wrc/fred work
+      www.netbeans
+
+Error message something of the sort:
+    server folder was deleted or you don't have permisions to write there
+
+I'm guessing some sort of chown or chmod issue with the underlying data.
+I tried copying them to a local Kmap folder in hopes of making chown issues
+going away, but it still would allow copy/write to Imap/courier.
+
+<todo> fix this.
+
+2010-11-08 www.DinkumSoftware.com/tc 
+
+I found out how to export evolution to csv:
+http://www.webchicklet.com/computers/ubuntu/easily-export-ubuntu-evolution-contacts-to-gmail/
+    evolution-addressbook-export --format=csv > evolution.contacts.csv
+
+It crashed....
+
+    *** glibc detected *** evolution-addressbook-export: free(): invalid pointer: 0xb7527faa ***
+
+But it wrote out 145 contacts.
+I don't think that's all of them....
+
