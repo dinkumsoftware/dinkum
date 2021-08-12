@@ -1,0 +1,72 @@
+vc-working-dinkum/software/linux/howto-and-working-notes/
+HOWTO-post-configure.txt
+
+Describes manual steps used to configure a given class of machine
+after a fresh installation.
+
+Based on:
+      ubuntu-12.04.02-lts
+
+2013-03-16 tc@DinkumSoftware.com Initial
+
+
+Class of machines
+      tc-client-private    I control the hardware
+      tc-client-public     A net account or client account
+      server-private
+      server-public
+
+
+>> * [any machine]
+
+   configure static ips, nameservers, dns-serch as reqd:
+        /etc/network/interfaces
+
+   apt-get install emacs
+   apt-get install tree
+
+>> TC-CLIENT-*
+
+>> TC-CLIENT-PRIVATE
+
+   configure caching nameserver
+       /etc/resolv.conf: nameserver localhost
+       /etc/bind/named.conf.options: forwarders
+       sudo service bind9 restart
+        
+>> TC-CLIENT-PUBLIC
+
+   ssh-copy-id
+
+>> SERVER-*
+
+   configure caching nameserver ?? really want to do this for public ???
+
+   ssh-copy-id
+   /etc/ssh/sshd_config PasswordAuthentication => no
+
+
+>> SERVER-PRIVATE
+    1:1 NAT rules in sonicwall
+        Put in a sonicwall address object:
+        Network->Address Objects
+        eth0.<SRV>     10.23.2.54    Zone:servers Type:Host
+        <SRV>          250.78.19.60  Zone:Wan     Type:Host
+
+        Put in 1:1 NAT rules:
+        Network => NAT Policies
+        *source*                *Destination*      *Service*        *Interface*     *Comment*
+
+        eth0.<SRV> <SRV>         Any,Original      Any,Original     X3,Any          <SRV> 1:1 NAT
+        LAN Subnets, original   <SRV>, eth0.<SRV>  Any,Original     X0,Any          LAN to <SRV>
+
+
+>> SERVER-PUBLIC
+
+
+
+
+
+
+
+

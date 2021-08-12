@@ -1,0 +1,121 @@
+HOWTO-pdf.txt
+
+Summary of tool choices:
+     Acrobat5           /usr/local/bin/acroread
+     
+     GNOME PDF Viewer   built in        no printer
+     ggv                /usr/bin/ggv 
+     gv                 /usr/X11R6/bin/gv
+     xpdf               /usr/bin/xpdf   weakest UI
+
+11-Oct-04 tc@DinkumSoftware.com Initial
+16-Apr-05 tc@DinkumSoftware.com Renamed HOWTO-pdf.txt
+
+In trying to get mozilla to print my netledger invoices,
+I ended up trying to downloading Adobe Acrobat.
+
+There's a glob of PDF viewers around.
+Make a list here in one place.
+
+GnomeStart->Preferences->Files types ....
+     gives *.pdf
+           application/pdf
+           and list of ggv,gv,xpdf
+     
+
+Gnome gives choice:
+GNOME PDF Viewer
+          GNOME PDF Viewer 0.110
+          A PDF viewer based on Xpdf
+          I assume it's built in
+          ft:
+    Decent Viewer
+    Pages line up
+    No printer
+    No searching
+
+ggv
+         Gnome Ghostview 2.4.0.1
+         The GNOME PostScript document previewer  
+         rpm:ggv-2.4.0.1-1 /usr/bin/ggv 
+    Decent viewer
+    Printing works (via lpr, preferences let you print it elsewhere)
+    
+
+
+
+gv
+        An X11 user interface for GhostScript
+        gv 3.5.8 June 1997
+        rpm:gv-3.5.8-23 /usr/X11R6/bin/gv
+           not quite as nice as ggv
+           similiar side menu to ggv
+           old (support address us uwvax!tim HA)
+           printing works
+
+xpdf
+        version 2.03
+        rpm:xpdf-2.03-1 /usr/bin/xpdf
+            weak user interface
+            don't really like the fonts
+            printing works
+              
+
+
+
+Looking at mozilla's configuration file:
+~/.mozilla/pluginreq.dat
+        34:application/pdf: PDF file: pdf:$
+        35:application/x-pdf: PDF file: pdf:$
+        36:text/pdf: PDF file: pdf:$
+        37:text/x-pdf: PDF file: pdf:$
+Don't know what it means
+
+web crawling for the answer
+http://mozilla.gunnars.net/mozfaq_use.html#acrobat_reader
+
+    If you want to display PDF documents inside of the browser window,
+do the following: - Make sure that the Adobe Acrobat plugin (
+nppdf32.dll) is in Mozilla's plugins directory. Then, open Acrobat
+Reader and select "Edit" -> "Preferences". In the window that opens,
+make sure that "Display PDF in browser" is checked.  If you do not
+wish to display PDF documents inside of the browser window,
+remove/delete the plugins and make sure that "Display PDF in browser"
+is not checked.  For more information or if these instructions do not
+work, check this thread) in Mozillazine's
+
+      http://forums.mozillazine.org/viewtopic.php?t=8008
+      This thread is good.
+
+
+ls -1 /usr/lib/mozilla/plugins
+   flashplayer.xpt@
+   libflashplayer.so@
+   mozplugger.so*
+        rpm -qf /usr/lib/mozilla
+        file /usr/lib/mozilla is not owned by any package ??????????
+
+ls -1 /usr/lib/mozilla-1.4.1/plugins/
+flashplayer.xpt@
+libflashplayer.so@
+libjavaplugin_oji.so@
+libnullplugin.so*
+        rpm -qf /usr/lib/mozilla-1.4.1/
+            mozilla-1.4.1-18
+            mozilla-mail-1.4.1-18
+
+
+
+When I open file:..../*.pdf
+It opens xfig in a browser window.
+
+rtgrep'ed thru /usr/loib/mozilla-1.4.1 and no ascii file
+contained xfig.  I can only guess it's built into the browser.
+
+
+12-Oct-04 tc@DinkumSoftware.com Downloaded and installed acrobet
+
+See ~/software-open-source/adobe-acrobat
+
+14-Oct-04 tc@DinkumSoftware.com Added summary at top
+

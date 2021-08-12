@@ -1,0 +1,50 @@
+-rw-rw-r--    1 tc       tc           1094 Oct 10 08:06 manual-steps-create
+^
+regular file
+
+drwx---r-x   42 tc       tc           4096 Oct 10 07:45 /home/tc
+^
+directory
+
+crw-rw----    1 root     disk      27,  19 Mar 23  2001 /dev/zqft3
+^
+char device
+
+brw-rw----    1 root     disk      13,  73 Mar 23  2001 /dev/xdb9
+^
+block device
+------------------------------------------------------------------
+            -rw-rw-r--
+
+owner(u)    ***
+group(g)       ***
+other(o,a)        ***
+
+
+        REGULAR_FILE        DIRECTORY
+r       read                can do ls
+w       write               can create/delete files
+x       execute             can cd
+
+                            so need r_x, all along the full path
+------------------------------------------------------------------
+bash
+
+       umask [-p] [-S] [mode]
+              The user file-creation mask is  set  to  mode.   If
+              mode  begins  with a digit, it is interpreted as an
+              octal number; otherwise it is interpreted as a sym­
+              bolic   mode  mask  similar  to  that  accepted  by
+              chmod(1).  If mode is omitted, the current value of
+              the mask is printed.  The -S option causes the mask
+              to be printed in symbolic form; the default  output
+              is  an octal number.  If the -p option is supplied,
+              and mode is omitted, the output is in a  form  that
+              may  be reused as input.  The return status is 0 if
+              the mode was successfully changed  or  if  no  mode
+              argument was supplied, and false otherwise.
+
+
+
+
+

@@ -1,0 +1,21 @@
+svn-root-active/software/linux/howto-and-working-notes/
+howto-ubuntu-gnome-put-application-icon-in-folder.txt
+
+2020-03-26 tc Initial
+
+ubuntu 14.xx:
+
+cp /usr/share/applications/<APPLICATION>.desktop  <DESIRED_FOLDER>
+
+# Make executable
+chmod ugo+x <APPLICATION>.desktop
+      --or--
+<APPLICATION> right-click
+properties
+Permissions
+Check "Allow executing file as progam"
+
+double-click application
+Tell system it is trusted.
+
+
