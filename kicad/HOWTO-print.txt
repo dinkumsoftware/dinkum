@@ -1,0 +1,33 @@
+KiCad
+HOWTO print
+
+2009-05-01  www.dinkumsoftware.com/tc  Initial
+2009-05-06  www.dinkumsoftware.com/tc  upgrade to kicad 20090216-final
+
+I created the original schematics as "B" (11x17) "ledger" size.
+
+
+Here's one path that works.
+	INITIAL: In KiCad: PLOT to postscript, with AUTO format, color
+
+
+To get it printed on letter on LilBrother:
+	Doesn't seem to work either directly or via envince.
+        Didn't explore very much.
+
+To get B size on HP5500 printer:
+	lpr *.ps -P hp5500.wrc.DinkumSoftware.com
+		--or--
+	evince (default postscript viewer) will also print properly
+	to hp5500.wrc.DinkumSoftware.com.  You might have to force tray 2,
+	not sure about that.
+			
+
+
+
+Here's things that didn't work on older KiCad (one shipping with debian/ubuntu)
+On limited test, didn't seem to work on KiCad 20090216-final, but didn't test hard.
+    printing directly from KiCad
+    almost all permutations of psresize, a2ps, gv, etc
+
+

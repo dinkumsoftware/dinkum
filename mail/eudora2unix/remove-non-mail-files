@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Removed non-mail files after eudora2unix conversion
+#
+# 16-May-04 tc@DinkumSoftware.com Initial
+
+cd ~/mail.e2u
+find . -name '*.E2U_*'     -exec rm '{}' \;
+find . -name '*.toc'       -exec rm '{}' \;
+find . -name 'descmap.pce' -exec rm '{}' \;

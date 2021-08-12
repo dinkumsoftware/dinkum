@@ -1,0 +1,45 @@
+working-notes.txt
+vc-working-dinkum/software/foss/kicad/doc$ 
+
+KiCad an open source schematic capture and layout package.
+
+2010-04-21 www.DinkumSoftware.com/tc 
+
+There was a prior HOWTO on printing.
+
+Installed windows (shudder) version on Mark B's machine. My notes:
+(from /home/tc/vc-working-root/vc-working-dinkum/software/foss/svn/doc)
+
+google kicad, probably first entry is:
+    http://www.lis.inpg.fr/realise_au_lis/kicad/
+    There is an "install" link on the left hand side of home page
+    with instructions
+
+    ... but basically
+    download
+        KiCad-2010-04-06-SVN2508-final-WinXP_full_with_components_doc_autoinstall.zip
+    (It's the installer program)
+    unzip and run it
+
+about 5 minutes on Mark's machine.
+
+Seemed to work out of the box.
+
+
+2020-04-15 tc
+Reinstalled (several computers later)
+Installed KiCad from package and cursor ghosted.
+
+Fix at https://bugs.launchpad.net/ubuntu/+source/kicad/+bug/1767652
+    The new ppa fixes it for me.
+        https://launchpad.net/~js-reynaud/+archive/ubuntu/kicad-4
+        http://kicad-pcb.org/download/ubuntu/
+
+sudo add-apt-repository ppa:js-reynaud/kicad-4
+sudo apt-get update
+
+It's version:
+    4.0.7-e2-6376~61ubuntu18.04.1, release build
+    wxWidgets 3.0.4 Unicode and Boost 1.65.1
+    platform: linux 4.15.0-1079-oem x86_64, 64 bit
+    

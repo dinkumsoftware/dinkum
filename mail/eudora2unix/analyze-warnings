@@ -1,0 +1,10 @@
+#!/bin/bash
+# analyze-warnings
+
+cd $HOME/mail.e2u && for f in `find . -type f -print | sort`; do
+         [ -f $f.E2U_WARN ] && diff -u $f.E2U_ORIG $f
+         [ -f $f.E2U_ERR  ] && diff -u $f.E2U_ORIG $f
+
+#     inform
+     done
+  , \ | less -eiMs +/"^\@\@"

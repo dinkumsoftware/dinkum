@@ -1,0 +1,13 @@
+HOWTO-emacs.txt
+software/foss/emacs
+
+2010-05-05 www.DinkumSoftware.com/tc Initial
+
+Tramp:
+    http://www.gnu.org/software/tramp/#Top
+    Some ways to visit a file
+        /su::
+        /sudo::
+        /ssh:root@otherhost:/etc/motd <RET>
+
+

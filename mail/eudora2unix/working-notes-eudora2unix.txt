@@ -1,0 +1,151 @@
+16-May-04 tc@DinkumSoftware.com 
+
+From a google search of "How do I import eudora to evolution"
+
+     eudora2unix.sourceforge.com
+
+Used their names for input folder:
+    ~tc/eudora-folder
+
+Tried it:
+
+    cd ~
+    Eudora2Unix.py -a eudora-folder/attach eudora-folder
+
+failed: OSError: [Errno 2] No such file or directory: 'eudora-folder/attach'
+
+try it without the -a
+    cd ~
+    Eudora2Unix.py eudora-folder
+
+finished......
+Eudora2Unix.py: DONE.
+Eudora2Unix.py: Use the following command to analyze conversion problems:
+Eudora2Unix.py:   (
+Eudora2Unix.py:     cd $HOME/Mail && for f in `find . -type f -print | sort`; do
+nEudora2Unix.py:         [ -f $f.E2U_WARN ] && diff -u $f.E2U_ORIG $f
+Eudora2Unix.py:         [ -f $f.E2U_ERR  ] && diff -u $f.E2U_ORIG $f
+Eudora2Unix.py:     inform
+Eudora2Unix.py:     done
+Eudora2Unix.py:  , \ | less -eiMs +/"^\@\@"
+Eudora2Unix.py: You should first convert all *.E2U_ORIG files from DOS to Unix
+Eudora2Unix.py: EOL (End-Of-Line) convention, or else you will get lots of diff's.
+Eudora2Unix.py: Example:  dos2unix \`find \$HOME/Mail -name '*.E2U_ORIG' -print\`
+Eudora2Unix.py: After analysis, remove these files with:
+Eudora2Unix.py:   find $HOME/Mail -type f \
+Eudora2Unix.py:   ( -name '*.E2U_*' -o -name '*.toc*' -o ) -exec rm -v '{}' ';'
+Eudora2Unix.py: You will also want to remove any directories or files that
+Eudora2Unix.py: do not correspond directly to mail folders or mailboxes,
+Eudora2Unix.py: or to the attachments directory.
+Eudora2Unix.py: Windows Eudora has a file 'dscmap.pci' in each subdirectory.
+Eudora2Unix.py: Eudora2Unix uses these files, but you may delete them after
+Eudora2Unix.py: conversion.
+Eudora2Unix.py: When you're satisfied, move mail.e2u to mail
+Eudora2Unix.py: and fire up pine.  Good luck!
+
+Didn't appear to be any errors
+54 warnings
+
+/home/tc/mail.e2u/BIZ/trademar.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/FALMOUTH-PUBLIC-SCHOOLS/OBSOLETE/firewall-bug.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/FALMOUTH-PUBLIC-SCHOOLS/OBSOLETE/web-page-xfer.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/OBSOLETE-CLIENTS/EDIC/corresp.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/OBSOLETE-CLIENTS/EDIC/isp-quotes.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/OBSOLETE-CLIENTS/EDIC/ore-isdn.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/OBSOLETE-CLIENTS/TONY-DRA/invoices.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/OBSOLETE-CLIENTS/TONY-DRA/my-messa.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/SIPPICAN/SILENT700-FIP-ECA/SILENT-700/fip-eca-working.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/BUGS-open-not-on-todo-list/abort-exit-to-os-hangs.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/PROJECTS/WRC-Cmd-Control.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/TRASH-probably-throw-away/aaa-my-messages.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/TRASH-probably-throw-away/bug-reports.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/TRASH-probably-throw-away/code-release-stuff.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/TRASH-probably-throw-away/data-release-stuff.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/TRASH-probably-throw-away/gliders-corresp.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/TRASH-probably-throw-away/misc-glider-corresp.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDERS/VENDER-INFO/PERSISTOR/persistor-corresp-99-feb03.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/FLOATS/float-web-page.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/FLOATS/kolterman-gts.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/DREA/ORIGINAL-2002-KeyWest/working-probably-trash.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/DREA/DSP-2004/misc-drea-corresp.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/DREA/DSP-2004/startup-budget-tech.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/ET/ET-mar04-field-crisis.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/RUTGERS/PEOPLE/John Kerfoot.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/RUTGERS/COMMAND--CONTROL/COMMAND-and-CONTROL-ongoing.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/WEBB-RESEARCH/GLIDER-CUSTOMERS/princeton.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/DSS/VENDER/Daisy.E2U_WARN
+/home/tc/mail.e2u/CLIENTS/DSS/VENDER/matrox.E2U_WARN
+/home/tc/mail.e2u/CONTACTS/david-pi.E2U_WARN
+/home/tc/mail.e2u/FRIENDS/rubin.E2U_WARN
+/home/tc/mail.e2u/HARDWARE/WHOOPS/HOWTO/sound-no-workee.E2U_WARN
+/home/tc/mail.e2u/HARDWARE/sonicsys.E2U_WARN
+/home/tc/mail.e2u/MIKE-TO-DO/pins.E2U_WARN
+/home/tc/mail.e2u/NETWORK/dialin-backup.E2U_WARN
+/home/tc/mail.e2u/NETWORK/cape-com-smtp-server-ips.E2U_WARN
+/home/tc/mail.e2u/SALES/bobmoore.E2U_WARN
+/home/tc/mail.e2u/SERVICES/EBAY/PURCHASES/marionette.E2U_WARN
+/home/tc/mail.e2u/Software/Cs/microsoft mfc rs-232.E2U_WARN
+/home/tc/mail.e2u/Software/TimeSlip.E2U_WARN
+/home/tc/mail.e2u/Software/emacs-win32.E2U_WARN
+/home/tc/mail.e2u/Software/quinn-curtis.E2U_WARN
+/home/tc/mail.e2u/TC/SAILING/beneteau-mailing-list.E2U_WARN
+/home/tc/mail.e2u/TC/SAILING/boat-stu.E2U_WARN
+/home/tc/mail.e2u/VENDER/SUBMIT-IT/sites-su.E2U_WARN
+/home/tc/mail.e2u/VENDER/verizon.E2U_WARN
+/home/tc/mail.e2u/Buffer-Trash.E2U_WARN
+/home/tc/mail.e2u/JUNK-TO_ACCEPT.E2U_WARN
+/home/tc/mail.e2u/sent-mail.E2U_WARN
+/home/tc/mail.e2u/JUNK.E2U_WARN
+/home/tc/mail.e2u/trash.E2U_WARN
+/home/tc/mail.e2u/MAIL-LIST-INFO/WinNTmag.E2U_WARN
+/home/tc/mail.e2u/MAIL-LIST-INFO/beneteau.E2U_WARN
+/home/tc/mail.e2u/saved-messages.E2U_WARN
+
+
+Think I'll just ignore the warnings and plow ahead
+
+    find ~/mail.e2u -exec rm '{}' \;
+
+
+
+mv mail.e2u mail
+Imported it (as pine) into evolution
+failed with two many open files
+
+Try it as Kmail
+       Eudora2Unix.py eudora-folder Kmail
+
+last time I forgot to delete EU2 stuff
+if this fails, predelete some directories
+
+same 54 errors
+
+removed all the descmap.pce files
+                E2U_*
+                *.toc
+
+mv mail.eu2 Mail
+that failed, couldn't find importer.
+
+reran
+       Eudora2Unix.py eudora-folder Kmail
+       remove-non-mail-files
+       manually deleted junk/trash directories
+             two files per mbox
+             <foo>
+             <foo>.toc.txt
+       mv ~/mail.eu2 mail
+
+that failed, too many open files ... but got further.
+Do it in pieces.
+
+I should also probably figure out if attachment stuff works
+
+It doesn't seem to.
+Had to do it directory by directory.
+Mark them all read.
+delete folders *.toc.txt
+
+
+             
+
