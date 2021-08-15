@@ -1,0 +1,7 @@
+echo running ~/.bash_login | tee -a ~/BSL.LOG
+export BSL_bash_login=x$BSL_bash_login
+
+# include .profile if it exists
+if [ -f "$HOME/.profile" ]; then
+    . "$HOME/.profile"
+fi

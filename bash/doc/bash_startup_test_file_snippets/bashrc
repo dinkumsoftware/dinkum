@@ -1,0 +1,12 @@
+echo running ~/.bashrc | tee -a ~/BSL.LOG
+export BSL_bashrc=x$BSL_bashrc
+
+<snip>
+
+echo BSL_bash_login $BSL_bash_login | tee -a ~/BSL.LOG
+echo BSL_profile    $BSL_profile    | tee -a ~/BSL.LOG
+echo BSL_bashrc     $BSL_bashrc     | tee -a ~/BSL.LOG
+
+date                                | tee -a ~/BSL.LOG
+echo FINAL                          | tee -a ~/BSL.LOG
+echo                                | tee -a ~/BSL.LOG

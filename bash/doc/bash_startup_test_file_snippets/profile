@@ -1,0 +1,4 @@
+echo running ~/.profile | tee -a ~/BSL.LOG
+export BSL_profile=x$BSL_profile
+
+<snip>

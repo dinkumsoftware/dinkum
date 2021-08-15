@@ -1,0 +1,93 @@
+bash-startup-sequence.txt
+
+2021-08-14 tc Initial
+
+What files bash reads on startup/shutdown
+Taken from Bash Reference Manual 6.2 Bash Startup Files
+[ubuntu] file0 file1 means that stock ubuntu 20.04 reads file<n>
+
+TOC:
+    **STARTUP**            file(s) read on invocations
+    **SHUTDOWN**           file(s) read on exist
+    **WHERE TO PUT STUFF** an opinion on where to put startup code
+    **See subdir bash_startup_test_file_snippets
+
+
+**STARTUP**
+
+* interactive login shell
+                     invoked by:   1. login:  2. bash --login 3. su -l bash
+  1. /etc/profile
+        [ubuntu] a. diddle PS1
+                 b. read /etc/bash.bashrc
+
+
+  2. First of:
+     a. ~/.bash_profile    [ubuntu] does not exist
+     b. ~/.bash_login      [ubuntu] does not exist
+     c. ~/.profile         [ubuntu] a. source ~/.bashrc
+                                    b. add ~/bin        to PATH
+                                    c. add ~/.local/bin to PATH
+
+* interactive non-login shell
+                        invoked by:  1) bash
+  1. source ~/.bashrc
+
+
+* non-interactively
+                     invoked by:   1. foo.sh
+  1. source $BASH_ENV                     
+
+
+* remote shell daemon
+                     invoked by:   1. ssh user@host
+
+  1. source ~/.bashrc                     
+          [ubuntu] by experiment, runs .profile which in term runs .bashrc
+                   this must be done by sshd
+
+
+* [Ubuntu] Gnome launched apps (by experiment)
+                     invoked by:   1. icon
+                                   2. gnome_terminal & # or whatever
+   1. source ~/.profile
+   2. source ~/.bashrc     from .profile
+
+   but.... when gnome first starts (before any apps) the .bashrc doesn't
+   get very far because it is being run non-interactively. So effectively
+   just reads .profile.
+
+   gnome-terminal/emacs read both .profile and .bashrc
+
+
+* Others not covered in this document:
+      invoked as sh, posix, unequal uid/gid
+
+
+**SHUTDOWN**
+                     invoked by: 1. interactive login shell exits
+                                 2.  non-interactive login shell executes exit
+  1. source ~/.bash_logout
+
+
+
+
+**WHERE TO PUT STUFF**
+
+If you are doing something that safely overwrites a prior invocation
+(like setting an environment variable)
+    put it .bashrc
+that gets read by everything but a script invocation (EXPORT the
+variable to pass it along)
+
+
+If you are doing something that you don't want to do multiple times
+per invocation (like adding something to PATH).
+    put it in .profile
+
+in principal one could do it in .bash_login or .bash_profile (and source'ing
+.profile) but it fails under gnome as .bash_login doesn't appear to
+be read.
+ 
+**See subdir bash_startup_test_file_snippets for code to insert in various .xxx files
+for test.
