@@ -19,6 +19,8 @@ Frequently used git commands.
 2019-11-22 tc Added meld and git-cat-files notes
 2020-07-04 tc Added List files changed in a commit:
 2021-01-28 tc fixed up rebase instructions
+2021-08-18 tc added simple workflow
+              Added ssh git clone examples
 
 Table of contents
     *** Creating stuff
@@ -29,12 +31,18 @@ Table of contents
     *** Publishing Stuff
     *** Determining state
     *** username/password caching
+    *** simple workflow
 ==================================================
 *** Creating stuff
 # Initial copy of a repo from GitHub
 cd parent
-git clone https://<USERNAME>@github.com/whatever/repo.git      ; creates in directory parent/repo
-git clone https://<USERNAME>@github.com/whatever/repo.git  DIR ; creates in directory parent/DIR
+    # creates in directory parent/repo
+    git clone https://<USERNAME>@github.com/whatever/repo.git      
+    git clone git@github.com:dinkumsoftware/repo.git
+
+    # creates in directory parent/DIR
+    git clone https://<USERNAME>@github.com/whatever/repo.git  DIR 
+    git clone git@github.com:dinkumsoftware/repo.git           DIR
 
 
 # Create new LOCAL branch based on REMOTE
@@ -77,6 +85,20 @@ git branch --set-upstream-to <origin/whatever> [<branchname>]
 # squash <N> commits into one
 # Do NOT do this after a push
 git rebase -i HEAD~<N> ; 1st pick, remainder squash
+
+# squash all commits on a branch
+# Thanks to https://makandracards.com/makandra/527-squashing-several-git-commits-into-a-single-commit
+# This example squashes all commits on topic-branch.  It's done on another branch for safety in case
+# of rebase screwups.
+git checkout topic-branch
+git checkout -b squashed-topic-branch
+git rebase -i master
+git checkout master
+git merge squashed-topic-branch
+
+    Note: that rebasing to the master does not work if you merged the master into
+    your feature branch while you were working on the new feature. If you did this
+    you will need to find the original branch point and call git rebase with a SHA1 revision.
 
 # squash all commits since last push
 git rebase -i origin/master   ; 1st editor:
@@ -176,3 +198,28 @@ git clone https://<USERNAME>@github.com/whatever/repo.git
 # Thanks to http://superuser.com/questions/199507/how-do-i-ensure-git-doesnt-ask-me-for-my-github-username-and-password
 git config --global url."https://username@github.com/REPO".insteadOf "https://github.com/REPO"
 
+
+*** simple workflow
+
+; a branch to work on
+git checkout -b topic-branch
+
+iterate:
+    edit
+    git commit
+
+; squash all topic-branch commits to single commit
+; (with backup to squashed-topic-branch)
+git checkout -b squashed-topic-branch
+git rebase -i master
+
+; merge to master
+git checkout master
+git merge squashed-topic-branch
+
+; tidy up at your leisure
+git checkout master
+git branch -d squashed-topic-branch
+git branch -D topic-branch     ; -D req'd because topic-branch never merged.
+
+    
