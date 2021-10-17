@@ -1,0 +1,6 @@
+# dinkum/bin/.gitignore
+#
+# 2021-10-17 tc Initial
+
+# Ignore the directory made by dinkum/startup_files/dot_profile
+symlinks
