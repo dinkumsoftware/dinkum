@@ -1,32 +1,33 @@
 dinkum/projects/python/src/python-cheatsheet.txt
 
 2019-11-28 tc Initial
+2021-10-20 tc how to run a single unit test
 2021-10-24 tc unittest stuff
 
 To reload (re-import) in Python 3.4+ only.
 Prior to 3.4 reload was built in
     from importlib import reload
 
-unit tests: recursively running all 
-    # For help:
-    python3 -m unittest --help
-
-    # Recursively run all the unit tests in *.py files in current directory
-    python3 -m unittest discover -v -p '*'.py
-
-    # Recursively run all the unit tests in *.py files in <dir>
-    python3 -m unittest discover -v -s <dir> -p '*'.py
-
+unit tests:
     # Useful arguments
       -v, --verbose         Verbose output
       -f, --failfast        Stop on first fail or error
       -q, --quiet           say little
 
+    # For help:
+    python -m unittest --help
+
+    # To a specific test in a module
+    python module.py Test_module.test_testname
+
     # To run all tests in module
     python -m  module_name  [optional args]
 
-    # To a specific test in a module
-    python -m 
+    # Recursively run all the unit tests in *.py files in current directory
+    python -m unittest discover -v           -p '*'.py
+
+    # Recursively run all the unit tests in *.py files in <dir>
+    python -m unittest discover -v -s <dir> -p '*'.py
 
     # To run unit tests under emacs compile mode
     ^X^E python module.py
