@@ -1,6 +1,7 @@
 dinkum/projects/python/src/python-cheatsheet.txt
 
 2019-11-28 tc Initial
+2021-10-24 tc unittest stuff
 
 To reload (re-import) in Python 3.4+ only.
 Prior to 3.4 reload was built in
@@ -19,8 +20,14 @@ unit tests: recursively running all
     # Useful arguments
       -v, --verbose         Verbose output
       -f, --failfast        Stop on first fail or error
+      -q, --quiet           say little
+
+    # To run all tests in module
+    python -m  module_name  [optional args]
+
+    # To a specific test in a module
+    python -m 
 
     # To run unit tests under emacs compile mode
-    # quotes required! python3 required on ubuntu 18.04 (and others) as
-    # it has python 2.7 installed by default
-      ^X^E bash -ic "python3 -m unittest --failfast board.Test_board"
+    ^X^E python module.py
+
