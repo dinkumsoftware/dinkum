@@ -19,6 +19,7 @@ Frequently used git commands.
 2019-11-22 tc Added meld and git-cat-files notes
 2020-07-04 tc Added List files changed in a commit:
 2021-01-28 tc fixed up rebase instructions
+2021-10-26 tc how to see all history of a file
 
 Table of contents
     *** Creating stuff
@@ -58,6 +59,13 @@ printing a file in git:
 See log of all commits since last push:
     git log origin/master..HEAD
 
+See full history of a file (even deleted):
+https://intellipaat.com/community/9088/git-how-to-find-a-deleted-file-in-the-project-commit-history
+    git log --all --full-history -- <path-to-file>  # show the history
+    git show <SHA>               -- <path-to-file>  # print a specific one
+    git checkout <SHA>^          -- <path-to-file>  # get to working dir
+                                                    # The ^ is prior to deletion
+
 *** Changing state
 git add -A .  # stages All in current directory
 git add .     # stages new and modified, without deleted
@@ -77,7 +85,7 @@ git branch --set-upstream-to <origin/whatever> [<branchname>]
 # squash <N> commits into one
 # Do NOT do this after a push
 git rebase -i HEAD~<N> ; 1st pick, remainder squash
-
+ 
 # squash all commits since last push
 git rebase -i origin/master   ; 1st editor:
                               ;   all but 1st entry: pick==>squash
