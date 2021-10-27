@@ -20,6 +20,7 @@ Frequently used git commands.
 2020-07-04 tc Added List files changed in a commit:
 2021-01-28 tc fixed up rebase instructions
 2021-10-26 tc how to see all history of a file
+2021-10-27 tc how to see why file is being ignored
 
 Table of contents
     *** Creating stuff
@@ -65,6 +66,10 @@ https://intellipaat.com/community/9088/git-how-to-find-a-deleted-file-in-the-pro
     git show <SHA>               -- <path-to-file>  # print a specific one
     git checkout <SHA>^          -- <path-to-file>  # get to working dir
                                                     # The ^ is prior to deletion
+
+See why file/dir is being .gitignore'd
+    git check-ignore [<options>] <pathname>...
+      -v, --verbose Tell which .gitignore applies
 
 *** Changing state
 git add -A .  # stages All in current directory
