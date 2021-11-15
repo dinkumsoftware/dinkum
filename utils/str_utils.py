@@ -11,6 +11,10 @@ strings
 # 2020-02-24 tc Bug fix, fixed_width_columns()
 #                 Protect against None tokens, treat as ""
 #               Made comply with dinkum_python_run_unittests
+# 2021-10-19 tc Added FixedColWidths
+
+import sys
+import io
 
 def replace_substr_at(s, substr, offset_into_s, num_substr_chars=None) :
     ''' Replaces num_substr_chars at s[offset_into_s] with
@@ -110,29 +114,33 @@ def fixed_width_columns(lines, column_padding=' ',
            a       xxxx    what ever
            abbb    y       what
 
-    Note: It leaves column_padding to the right of the
-          last column.  You can remove it if you want.
-
     '''
-    # Make an initial pass thru all the lines
-    # computing the longest token in each column
+    # Don't consider any word that is all whitespace, empty, or None
+    print ("before lines:",lines)
+    for indx, words in enumerate(lines) :
+        if words :
+            words = [word.rstrip().lstrip() for word in words         ]
+            words = [word                   for word in words if word ]
+            lines[indx] = words
+    print ("after lines:",lines)
 
+    # compute the longest word in each column
     # In order to size column_widths, we need
-    # to know the maximum number of tokens in
+    # to know the maximum number of words in
     # in all lines
     max_num_columns = 0
-    for line in lines :
+    for list_of_words in lines :
         max_num_columns = max(max_num_columns,
-                              len(line))
+                              len(list_of_words))
     column_widths = [0] * max_num_columns
     
-    for line in lines :
-        for (indx,token) in enumerate(line) :
+    for list_of_words in lines :
+        for (indx,word) in enumerate(list_of_words) :
             # Protect against None strings
-            if token is None :
-                token = ""
+            if word is None :
+                word = ""
             column_widths[indx] = max(column_widths[indx],
-                                      len(token))
+                                      len(word))
 
     # Now go thru and build up each line and yield it to them
 
@@ -141,15 +149,90 @@ def fixed_width_columns(lines, column_padding=' ',
 
     for line in lines :
         returned_line = ""
-        for (indx,token) in enumerate(line) :
-            if token is None :    # Protect against entries of None 
-                token = ''
+        for (indx,word) in enumerate(line) :
+            if word is None :    # Protect against entries of None 
+                word = ''
             returned_line += "%*s" %                                               \
-                             ( sign_of_format_width * column_widths[indx], token) 
+                             ( sign_of_format_width * column_widths[indx], word) 
             returned_line += column_padding
 
-        # Give them the line
-        yield returned_line
+        # Give them the line, sans the last column_padding we just added
+        yield returned_line.rstrip()
+
+class FixedColWidths() :
+    ''' Used to print lines of text in fixed width columns.
+
+    Typical usage:
+        fwc=FixedColWidths(file=sys.stdout, column_padding=' ', right_justified=False )
+            fwc.print("a b c e" , x, y, z, sep='3')
+                     .....
+            fwc.print("dd ee ff gg", w, end='' )
+
+            fwc.really_print(file=sys.stdout)
+
+    works just like print() excepts prints all in fixed column
+    widths.  It can't know all the column widths until it's seen all
+    the lines.
+
+    In the initial calls, fwc.print() prints to an internal buffer.
+    when fwc.really_print() is called, the buffer is printed to
+    the last file= it print saw, in either the constructor or in
+    an fwc.print().
+
+    '''
+    def __init__(self, **kwargs) :
+        self.file            = kwargs.pop("file"           , sys.stdout)
+        self.column_padding  = kwargs.pop("column_padding" , ' '       )
+        self.right_justified = kwargs.pop("right_justified", False     )
+
+        if kwargs:
+            raise TypeError('Unknown keyword arguments: ' + str(list(kwargs.keys())))
+        
+        self.buffer = None  # Where we buffer printed strings
+
+    def print(self, *args, **kwargs) :
+        ''' passes all it's arguments along to the real print(),
+        but captures the real print's output to an internal buffer.
+        call really_print() to actually print the internal buffer.
+        '''
+        # We have a place to print to?
+        if self.buffer is None :
+            # nope, make one
+            self.buffer = io.StringIO()
+
+        # Remove any file= arg and Remember where they
+        # really want to print it
+        their_file_arg = kwargs.pop("file", None)
+        if their_file_arg is not None :
+            self.file = their_file_arg
+
+        # print to it
+        print (*args, file=self.buffer, **kwargs)
+
+    def really_print(self) :
+        ''' converts self.buffer to fixed width columns
+        and prints() it to self.file
+        '''
+
+        print("self.buffer.getvalue():\n", '<<<', self.buffer.getvalue(), '>>>')
+
+        # Convert buffer to [] of [] of words
+        list_of_list_of_words = []
+        print ("self.buffer.getvalue().split('nl')", self.buffer.getvalue().split('\n'))
+        for l in self.buffer.getvalue().split('\n') :
+            print ("l:", l)
+            list_of_list_of_words.append( l.split() )
+            print ("nxt words:", list_of_list_of_words[-1])
+        print("list_of_list_of_words:", list_of_list_of_words)
+
+        for l_to_print in fixed_width_columns(list_of_list_of_words,
+                                              column_padding=self.column_padding,
+                                              right_justified=self.right_justified) :
+            print(l_to_print, file=self.file)
+
+        # Start afresh on next self.print()
+        self.file=None
+        self.buffer=None
 
 # test code
 import unittest
@@ -211,8 +294,8 @@ class Test_str_utils(unittest.TestCase):
         lines[1] = [ 'abbb', 'y',    'what'      ]
 
         expect=[None] * 2
-        expect[0] = "a       xxxx    what ever    "
-        expect[1] = "abbb    y       what         "
+        expect[0] = "a       xxxx    what ever"
+        expect[1] = "abbb    y       what"
 
         for (i,l) in enumerate(fixed_width_columns(lines, "    ")) :
             self.assertEqual(l, expect[i] )
@@ -238,8 +321,8 @@ class Test_str_utils(unittest.TestCase):
 
         expect=[None] * 2
         #                12345678    12345678         12345678
-        expect[0] = "   a        xxxx        what ever        "
-        expect[1] = "abbb           y             what        "
+        expect[0] = "   a        xxxx        what ever"
+        expect[1] = "abbb           y             what"
 
         for (i,l) in enumerate(fixed_width_columns(lines, " "*8, True)) :
             self.assertEqual(l, expect[i] )
@@ -261,12 +344,67 @@ class Test_str_utils(unittest.TestCase):
         lines[2] = [ 'x', 'y'      ]
 
         expect=[None] * 3
-        expect[0] = "a b c "
-        expect[1] = "1 2 3 "
-        expect[2] = "x y "
+        expect[0] = "a b c"
+        expect[1] = "1 2 3"
+        expect[2] = "x y"
 
         for (i,l) in enumerate(fixed_width_columns(lines)) :
             self.assertEqual(l, expect[i] )
+
+        
+    def test_fcw_constructs(self) :
+        ''' FixedColWidths constructs ok '''
+
+        fcw=FixedColWidths()    # Should work
+
+        fcw=FixedColWidths(column_padding=12,
+                           file="foo",
+                           right_justified=False)
+        self.assertEqual( 12,    fcw.column_padding )
+        self.assertEqual( "foo", fcw.file           )
+        self.assertEqual( False, fcw.right_justified) 
+
+        # Make sure it picks up bad arguments
+        self.assertRaises(TypeError, fcw, [], {"unknown":69})
+
+    def test_fcw_prints(self) :
+        ''' check that one can print() '''
+        input='''
+abcd       efg    h    ijk    lmnop
+12 45        3      18    250000000
+3333 22 4       7 2
+'''
+
+        desired='''
+abcd efg h ijk     lmnop
+  12  45 3  18 250000000
+3333  22 4   7         2
+'''
+
+        input='''
+abcd       efg
+'''
+        desired='''
+abcd efg
+'''
+
+        print("input:", input)
+        print("desired:", desired)        
+
+        fcw=FixedColWidths(right_justified=True)
+        output_file=io.StringIO()
+
+        print ("input.split(nl):", input.split('\n'))
+        for l in input.split('\n') :
+            print ("l:", l)
+            fcw.print(l, file=output_file)
+        fcw.really_print()
+
+        output=output_file.getvalue()
+
+        print("output:", output)
+
+        self.assertEqual(output, desired)
 
 
 if __name__ == "__main__" :
