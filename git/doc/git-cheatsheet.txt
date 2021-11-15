@@ -23,6 +23,7 @@ Frequently used git commands.
               Added ssh git clone examples
 2021-10-26 tc how to see all history of a file
 2021-10-27 tc how to see why file is being ignored
+2021-11-03 tc added how to see files changed in a commit.
 
 Table of contents
     *** Creating stuff
@@ -67,6 +68,9 @@ printing a file in git:
 
 See log of all commits since last push:
     git log origin/master..HEAD
+
+To see what files changed in a commit:
+    git show --stat <commit-hash>
 
 See full history of a file (even deleted):
 https://intellipaat.com/community/9088/git-how-to-find-a-deleted-file-in-the-project-commit-history
