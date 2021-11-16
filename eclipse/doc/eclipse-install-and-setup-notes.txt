@@ -4,6 +4,7 @@
 # Primary focus on python development
 #
 # 2019-11-20 tc Initial
+# 2021-11-16 tc ubuntu 20.04 via snap
 
 # Table of contents
 #    Overview of eclipse installation
@@ -12,6 +13,12 @@
 #    Tweaks to eclipse/pydev
 
 *** Overview of eclipse installation
+This was done under ubuntu 20.04 LTS
+Much easier:
+     sudo snap install --classic eclipse
+     sudo apt install default-jre
+
+
     This was done under ubuntu 18.04.3 LTS,
     but should apply to most linux systems
 
@@ -45,6 +52,10 @@ You can download and install directly from eclipse
     .bashrc: export PATH="$HOME/eclipse/java-2019-09/eclipse:$PATH"
        
 *** Install PyDev
+    Under ubuntu 20.04
+    
+
+    Under ubuntu 18.04
     This gets a python development environment and more importantly
     the only reasonable python debugger I could find.
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # dinkum/utils/str_utils.py
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/
 ''' A collection of stand-alone functions to manipulate
 strings
 '''
@@ -116,13 +118,11 @@ def fixed_width_columns(lines, column_padding=' ',
 
     '''
     # Don't consider any word that is all whitespace, empty, or None
-    print ("before lines:",lines)
     for indx, words in enumerate(lines) :
         if words :
             words = [word.rstrip().lstrip() for word in words         ]
             words = [word                   for word in words if word ]
             lines[indx] = words
-    print ("after lines:",lines)
 
     # compute the longest word in each column
     # In order to size column_widths, we need
@@ -214,16 +214,11 @@ class FixedColWidths() :
         and prints() it to self.file
         '''
 
-        print("self.buffer.getvalue():\n", '<<<', self.buffer.getvalue(), '>>>')
-
         # Convert buffer to [] of [] of words
         list_of_list_of_words = []
-        print ("self.buffer.getvalue().split('nl')", self.buffer.getvalue().split('\n'))
         for l in self.buffer.getvalue().split('\n') :
-            print ("l:", l)
-            list_of_list_of_words.append( l.split() )
-            print ("nxt words:", list_of_list_of_words[-1])
-        print("list_of_list_of_words:", list_of_list_of_words)
+            if l :
+                list_of_list_of_words.append( l.split() )
 
         for l_to_print in fixed_width_columns(list_of_list_of_words,
                                               column_padding=self.column_padding,
@@ -355,55 +350,82 @@ class Test_str_utils(unittest.TestCase):
     def test_fcw_constructs(self) :
         ''' FixedColWidths constructs ok '''
 
-        fcw=FixedColWidths()    # Should work
+        FixedColWidths()    # Should work
 
-        fcw=FixedColWidths(column_padding=12,
+        fcw=FixedColWidths(column_padding=12*' ',
                            file="foo",
                            right_justified=False)
-        self.assertEqual( 12,    fcw.column_padding )
+        self.assertEqual( 12*' ',fcw.column_padding )
         self.assertEqual( "foo", fcw.file           )
         self.assertEqual( False, fcw.right_justified) 
 
         # Make sure it picks up bad arguments
         self.assertRaises(TypeError, fcw, [], {"unknown":69})
 
-    def test_fcw_prints(self) :
-        ''' check that one can print() '''
-        input='''
-abcd       efg    h    ijk    lmnop
-12 45        3      18    250000000
-3333 22 4       7 2
-'''
+    def test_fcw_prints_a_line(self) :
+        ''' check that can print() a line '''
 
-        desired='''
-abcd efg h ijk     lmnop
-  12  45 3  18 250000000
-3333  22 4   7         2
-'''
-
-        input='''
-abcd       efg
-'''
-        desired='''
-abcd efg
-'''
-
-        print("input:", input)
-        print("desired:", desired)        
-
+        # Default col = 1 space
+        tst_in =  'abcd       efg'
+        desired='abcd efg\n'
         fcw=FixedColWidths(right_justified=True)
         output_file=io.StringIO()
 
-        print ("input.split(nl):", input.split('\n'))
-        for l in input.split('\n') :
-            print ("l:", l)
+        fcw.print(tst_in, file=output_file)
+        fcw.really_print()
+
+        output=output_file.getvalue()
+        self.assertEqual(output, desired)
+
+
+        # col = 3 space
+        desired='abcd   efg\n'
+        fcw=FixedColWidths(column_padding=3*' ')
+        output_file=io.StringIO()
+
+        fcw.print(tst_in, file=output_file)
+        fcw.really_print()
+
+        output=output_file.getvalue()
+        self.assertEqual(output, desired)
+
+
+    def test_fcw_prints_a_line(self) :
+        ''' prints multiple lines '''
+
+
+        tst_in=[ 'abcd       efg    h    ijk    lmnop',
+                 '12 45        3      18    250000000',
+                 '3333 22 4       7 2',
+        ]
+
+        desired= 'abcd efg h ijk lmnop\n' + \
+                 '12   45  3 18  250000000\n'   + \
+                 '3333 22  4 7   2\n'
+
+        fcw=FixedColWidths()
+        output_file=io.StringIO()
+
+        for l in tst_in :
             fcw.print(l, file=output_file)
         fcw.really_print()
 
         output=output_file.getvalue()
+        self.assertEqual(output, desired)
 
-        print("output:", output)
 
+        desired= 'abcd efg h ijk     lmnop\n' + \
+                 '  12  45 3  18 250000000\n' + \
+                 '3333  22 4   7         2\n'
+
+        fcw=FixedColWidths(right_justified=True)
+        output_file=io.StringIO()
+
+        for l in tst_in :
+            fcw.print(l, file=output_file)
+        fcw.really_print()
+
+        output=output_file.getvalue()
         self.assertEqual(output, desired)
 
 
