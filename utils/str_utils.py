@@ -175,10 +175,11 @@ class FixedColWidths() :
     the lines.
 
     In the initial calls, fwc.print() prints to an internal buffer.
-    when fwc.really_print() is called, the buffer is printed to
+    when fwc.really_print(lead_str) is called, the buffer is printed to
     the last file= it print saw, in either the constructor or in
     an fwc.print().
 
+    Each line actually printed is preceeded by lead_str.
     '''
     def __init__(self, **kwargs) :
         self.file            = kwargs.pop("file"           , sys.stdout)
@@ -209,9 +210,11 @@ class FixedColWidths() :
         # print to it
         print (*args, file=self.buffer, **kwargs)
 
-    def really_print(self) :
+    def really_print(self, lead_str='') :
         ''' converts self.buffer to fixed width columns
         and prints() it to self.file
+        
+        Each line is preceeded by 'lead_str'
         '''
 
         # Convert buffer to [] of [] of words
@@ -223,7 +226,7 @@ class FixedColWidths() :
         for l_to_print in fixed_width_columns(list_of_list_of_words,
                                               column_padding=self.column_padding,
                                               right_justified=self.right_justified) :
-            print(l_to_print, file=self.file)
+            print(lead_str + l_to_print, file=self.file)
 
         # Start afresh on next self.print()
         self.file=None
