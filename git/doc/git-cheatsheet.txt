@@ -24,6 +24,7 @@ Frequently used git commands.
 2021-10-26 tc how to see all history of a file
 2021-10-27 tc how to see why file is being ignored
 2021-11-03 tc added how to see files changed in a commit.
+2021-12-19 tc git log --pretty
 
 Table of contents
     *** Creating stuff
@@ -128,6 +129,12 @@ git rebase -i origin/master   ; 1st editor:
 git commit --amend
 git commit --amend -m "New commit message"
 
+# edit the previous commit message
+git rebase -i origin/mast
+    # select r (reword)
+
+
+
 *** Deleting stuff
 
 # Throw away all uncommitted changes to tracked file in the
@@ -176,6 +183,10 @@ Thanks to https://stackoverflow.com/questions/5096268/how-to-get-a-list-of-all-f
 # Thanks to: http://stackoverflow.com/questions/1441010/the-shortest-possible-output-from-git-log-containing-author-and-date
 # example output: 2016-11-23 tom campbell    dacf92c   test-socketCAN user interface enhancements.
 git log --pretty=format:"%ad %<(15,trunc)%an %<(9,trunc)%h %s" --date=short
+    # to make this default for --pretty :
+    #    git config --global log.date       short
+    #    git config --global format.pretty  format:"%ad %<(15,trunc)%an %<(9,trunc)%h %s"
+    #    sigh: last line doesn't work.  It is applied to ALL git log, not just git log --pretty
 
 # git log useful options
 --oneline      Suppress commit message
