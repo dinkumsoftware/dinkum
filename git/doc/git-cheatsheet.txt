@@ -25,6 +25,7 @@ Frequently used git commands.
 2021-10-27 tc how to see why file is being ignored
 2021-11-03 tc added how to see files changed in a commit.
 2021-12-19 tc git log --pretty
+2022-01-04 tc how to pick either file from merge.
 
 Table of contents
     *** Creating stuff
@@ -146,6 +147,12 @@ git clean
 
 # throwaway the last attempted merge
 git merge --abort
+
+# merge conflict, pick one file in entirty
+# The following commands will keep the original file for mine.y
+# and then use the merged in file only for merged.x
+git checkout --ours    mine.y
+git checkout --theirs  merged.x
 
 # Delete <N> commits
 # http://stackoverflow.com/questions/1338728/delete-commits-from-a-branch-in-git
