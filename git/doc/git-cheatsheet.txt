@@ -25,7 +25,9 @@ Frequently used git commands.
 2021-10-27 tc how to see why file is being ignored
 2021-11-03 tc added how to see files changed in a commit.
 2021-12-19 tc git log --pretty
-2022-01-04 tc how to pick either file from merge.
+2022-01-04 tc how to pick either file from merge conflict.
+2022-01-04 tc clarifed how to pick either file from merge conflict.
+2022-02-16 tc added revision specification syntax
 
 Table of contents
     *** Creating stuff
@@ -36,6 +38,7 @@ Table of contents
     *** Publishing Stuff
     *** Determining state
     *** username/password caching
+    *** revision specification syntax
     *** simple workflow
 ==================================================
 *** Creating stuff
@@ -149,6 +152,16 @@ git clean
 git merge --abort
 
 # merge conflict, pick one file in entirty
+# after a merge conflict on file: foo.bar
+# This will pick the one from a later commit, which
+# is generally what you want.  If not, use --ours
+# instead of --theirs
+
+git checkout --theirs -- foo.bar
+git add                  foo.bar
+git rebase --continue
+
+
 # The following commands will keep the original file for mine.y
 # and then use the merged in file only for merged.x
 git checkout --ours    mine.y
@@ -232,6 +245,51 @@ git clone https://<USERNAME>@github.com/whatever/repo.git
 # Associate remote USERNAME with a REPO
 # Thanks to http://superuser.com/questions/199507/how-do-i-ensure-git-doesnt-ask-me-for-my-github-username-and-password
 git config --global url."https://username@github.com/REPO".insteadOf "https://github.com/REPO"
+
+
+*** revision specification syntax
+from https://git-scm.com/docs/gitrevisions
+
+commit references:
+  <sha1>
+  HEAD      @  names the commit on which you based the changes in
+               the working tree.
+
+Revision Range Summary 
+<rev>
+Include commits that are reachable from <rev> (i.e. <rev> and its
+ancestors).
+
+^<rev>
+Exclude commits that are reachable from <rev> (i.e. <rev> and its
+ancestors).
+
+<rev1>..<rev2>
+
+Include commits that are reachable from <rev2> but exclude those that
+are reachable from <rev1>. When either <rev1> or <rev2> is omitted, it
+defaults to HEAD.
+
+<rev1>...<rev2>
+
+Include commits that are reachable from either <rev1> or <rev2> but
+exclude those that are reachable from both. When either <rev1> or
+<rev2> is omitted, it defaults to HEAD.
+
+<rev>^@, e.g. HEAD^@
+
+A suffix ^ followed by an at sign is the same as listing all parents
+of <rev> (meaning, include anything reachable from its parents, but
+not the commit itself).
+
+<rev>^!, e.g. HEAD^!
+
+A suffix ^ followed by an exclamation mark is the same as giving
+commit <rev> and then all its parents prefixed with ^ to exclude them
+(and their ancestors).
+
+<rev>^-<n>, e.g. HEAD^-, HEAD^-2
+Equivalent to <rev>^<n>..<rev>, with <n> = 1 if not given.
 
 
 *** simple workflow
