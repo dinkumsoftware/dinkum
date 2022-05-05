@@ -5,8 +5,7 @@
 #<copyright>   Copyright (c) 2020 Dinkum Software
 #<lic oneline> Apache 2.0 (see end of file)
 
-#<authors> tc tom campbell, www.DinkumSoftware.com <todo> change to .org
-#                                                  <todo> change to email?
+#<authors> tc tom campbell, www.DinkumSoftware.com
 
 #<history>
 #    <***FIXME***>
@@ -22,10 +21,9 @@ function usage() {
     echo -n "$usage_str" ;
 }
 
+# Parse all cmd line args
+# handle the standard ones
 OPTIND=1
-# Resetting OPTIND is necessary if getopts was used previously in the script.
-# It is a good idea to make OPTIND local if you process options in a function.
-# <todo> put some documentation here about getops arguments
 while getopts h opt; do
     case $opt in
         h)
@@ -40,8 +38,7 @@ while getopts h opt; do
 done
 shift "$((OPTIND-1))"   # Discard the options and sentinel --
 
-# Process your command arguments here
-
+# Handle your command arguments here
 
 # Make sure we ate all the command line arguments
 if [ $# -ne 0 ] ; then
@@ -51,6 +48,8 @@ if [ $# -ne 0 ] ; then
 fi
 
 # Real code starts here
+
+
 
 
 #<lic>
