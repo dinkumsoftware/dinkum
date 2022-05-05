@@ -29,6 +29,8 @@ Frequently used git commands.
 2022-01-04 tc clarifed how to pick either file from merge conflict.
 2022-02-16 tc added revision specification syntax
 2022-02-20 tc squash/merge automagically
+2022-03-01 tc improved rebase/squash
+2022-04-25 tc rearranged a bit.
 
 Table of contents
     *** Creating stuff
@@ -90,9 +92,10 @@ See why file/dir is being .gitignore'd
       -v, --verbose Tell which .gitignore applies
 
 *** Changing state
-git add -A .  # stages All in current directory
-git add .     # stages new and modified, without deleted
+git add --all # stages modified, deleted, new
 git add -u    # stages modified and deleted, without new
+git add .     # stages new and modified, without deleted
+
 
 git commit -a # stage modified/deleted (not new) and commit
 
@@ -110,14 +113,22 @@ git branch --set-upstream-to <origin/whatever> [<branchname>]
 git rebase -i HEAD~<N> ; 1st pick, remainder squash
 
 # squash all commits on a branch
-# Thanks to https://makandracards.com/makandra/527-squashing-several-git-commits-into-a-single-commit
-# This example squashes all commits on topic-branch.  It's done on another branch for safety in case
-# of rebase screwups.
-git checkout topic-branch
-git checkout -b squashed-topic-branch
-git rebase -i master
-git checkout master
-git merge squashed-topic-branch
+# Choice A
+   # thanks to: https://stackoverflow.com/questions/25356810/git-how-to-squash-all-commits-on-branch
+   $ git checkout master
+   $ git merge --squash yourBranch
+   $ git commit # all commit messages of yourBranch in one, really useful
+    > [status 5007e77] Squashed commit of the following: ...
+
+# Choice B
+   # Thanks to https://makandracards.com/makandra/527-squashing-several-git-commits-into-a-single-commit
+   # This example squashes all commits on topic-branch.  It's done on another branch for safety in case
+   # of rebase screwups.
+   git checkout topic-branch
+   git checkout -b squashed-topic-branch
+   git rebase -i master
+   git checkout master
+   git merge squashed-topic-branch
 
     Note: that rebasing to the master does not work if you merged the
     master into your feature branch while you were working on the new
@@ -131,6 +142,26 @@ git rebase -i origin/master   ; 1st editor:
                               ; 2nd editor: make commit msg
                               ; to undo: git rebase --abort
 
+# merge conflict, pick one file in entirty
+# after a merge conflict on file: foo.bar
+# This will pick the one from a later commit, which
+# is generally what you want.  If not, use --ours
+# instead of --theirs
+
+git checkout --theirs -- foo.bar
+git add                  foo.bar
+git rebase --continue
+
+# The following commands will keep the original file for mine.y
+# and then use the merged in file only for merged.x
+git checkout --ours    mine.y
+git checkout --theirs  merged.x
+
+Note that a rebase merge works by replaying each commit from the
+     working branch on top of the <upstream> branch. Because of this,
+     when a merge conflict happens, the side reported as ours is the
+     so-far rebased series, starting with <upstream>, and theirs is
+     the working branch. In other words, the sides are swapped.
 
 # edit the last commit message
 git commit --amend
@@ -138,7 +169,7 @@ git commit --amend -m "New commit message"
 
 
 # edit the previous commit message
-git rebase -i origin/mast
+git rebase -i origin/master
     # select r (reword)
 
 
@@ -154,22 +185,6 @@ git clean
 
 # throwaway the last attempted merge
 git merge --abort
-
-# merge conflict, pick one file in entirty
-# after a merge conflict on file: foo.bar
-# This will pick the one from a later commit, which
-# is generally what you want.  If not, use --ours
-# instead of --theirs
-
-git checkout --theirs -- foo.bar
-git add                  foo.bar
-git rebase --continue
-
-
-# The following commands will keep the original file for mine.y
-# and then use the merged in file only for merged.x
-git checkout --ours    mine.y
-git checkout --theirs  merged.x
 
 # Delete <N> commits
 # http://stackoverflow.com/questions/1338728/delete-commits-from-a-branch-in-git
