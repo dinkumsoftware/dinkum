@@ -2,11 +2,14 @@
 ;;
 ;; Sets the key binds to tc's liking
 ;;
-;; 2007.05.07  Initial, moved from AAA.emacs inline code
-;; 2016-11-10  tc@DinkumSoftware.com bug fix,
+;; 2007.05.07  tc  Initial, moved from AAA.emacs inline code
+;; 2016-11-10  tc  bug fix,
 ;;                   previous-window() renamed to tc-previous-window()
 ;;                   to avoid internal emacs name collision.
-;;               removed f7 binding to shell
+;;                   removed f7 binding to shell
+;; 2022-02-05 tc   Remap C-g from keyboard-quit => keyboard-quit-context"
+;;                 Make a single C-g leave minibuffer instead of two C-g's
+
 
 (global-set-key [f3] 'date-stamp)         ; requires date-stamp.el
 (global-set-key [f4] 'date-and-sign)      ; requires date-and-sign.el
@@ -41,4 +44,12 @@
 
 (define-key ctl-x-map "\C-e" 'compile)
 (define-key ctl-x-map "\C-n" 'next-error)
+
+;; remap C-g
+;; See https://emacs.stackexchange.com/questions/70357/it-now-takes-multiple-c-g-presses-to-cancel-actions-in-minibuffer-window?noredirect=1#comment113167_70357
+
+;;########## (global-set-key [remap keyboard-quit] #'keyboard-quit-context+)
+;;########## (global-set-key [remap keyboard-quit] #'keyboard-quit-context+)
+
+
 

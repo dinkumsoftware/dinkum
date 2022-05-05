@@ -7,38 +7,42 @@
 ;;      https://github.com/dinkumsoftware/dinkum.git
 ;;      dinkum/emacs/bin/dinkum-install-tc-emacs
 
-;;04-Aug-97 tc@dinkum-software.com      Initial, moved from .emacs
-;;20-Mar-98 tc@dinkum-software.com      Changed date-and-sign from
-;;    tc@dinkum-software.com to tc@DinkumSoftware.com
-;; 21-Apr-01 tc@DinkumSoftware.com Set the background color
+;; 04-Aug-97 tc Initial, moved from .emacs
+;; 20-Mar-98 tc Changed date-and-sign from
+;; 21-Apr-01 tc Set the background color
 ;;                                 new-h-file, new-cc-file
-;;  8-Apr-04 tc@DinkumSoftware.com on whoops
+;;  8-Apr-04 tc on whoops
 ;;                                   (menu-bar-enable-clipboard)
 ;;                                   made F7 and F8 do a shell to
 ;;                                     avoid the vncviewer F8 trap
 ;;                                   made F1 do nothing(was Polaroid cd)
-;;  9-Dec-04 tc@DinkumSoftware.com Removed set-backgorund-color "Thistle"
-;;  3-May-05 tc@DinkumSoftware.com Getting clipboard to work on Fedora Core 3
+;;  9-Dec-04 tc Removed set-backgorund-color "Thistle"
+;;  3-May-05 tc Getting clipboard to work on Fedora Core 3
 ;;                                   removed: (menu-bar-enable-clipboard)
 ;;                                    added:   (setq x-select-enable-clipboard t)
 ;;                                  Changed background colors:
 ;;                                      tc          thistle
 ;;                                      root        AliceBlue
 ;;                                      other       OliveDrab
-;;  4-May-05 tc@DinkumSoftware.com Fedora Core 3; getting ls to not issue
+;;  4-May-05 tc Fedora Core 3; getting ls to not issue
 ;;                                 terminal control chars
 ;;                                 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
-;; 2007.05.06 tc@DinkumSoftware.com
+;; 2007.05.06 tc
 ;;   Fedora 7 test 4  Changed my emacs customization approach.
 ;;   Retired the old emacs add-ons with AAA.emacs that I had been using.
 ;;   Now require one line modification of ~/.emacs, which reads this file.
 ;;   Combed thru years of customizations and tossed some stuff
-;; 2016-11-10 tc@DinkumSoftware.com Moved from svn to git.
+;; 2016-11-10 tc Moved from svn to git.
 ;;                                  changed names (tc-init.emacs) and locations (~/.emacs.c)
 ;;                                  do  not change background color
 ;;   
-;; 2019-11-07 tc@DinkumSoftware.com get emacs shells to read ~/.bashrc
+;; 2019-11-07 tc get emacs shells to read ~/.bashrc
 ;; 2020-04-28 tc my-insert-file-name
+;; 2022-02-05 tc put in use-package to rebind C-g to 
+;;               https://github.com/jwiegley/use-package.git
+;; 2022-02-05 tc Remap C-g from keyboard-quit => keyboard-quit-context"
+;;               Make a single C-g leave minibuffer instead of two C-g's
+
 ;;;-----------------------------------------------------------------------
 ;; Set an emacs variable with this directory name (where tc.emacs lives)
 ;; Any stuff that gets added on, ought to be go in it's own sub-directory
@@ -47,7 +51,7 @@
 
 (defvar tc-emacs-addons-directory "~/.emacs.d"
     "The directory which contains all of the add on emacs packages
-    subdirectories that are part of tc's customizations.  See tc-init.emacs"
+    subdirectories that are part of tc's customizations."
 )
 
 ;; ****  tc's customizations from subdirectory: tc-lisp
@@ -68,6 +72,7 @@
     (load "scroll-one")
     (load "save-all-buffers")
     (load "my-insert-file-name")
+;;######################################    (load "keyboard-quit-context")
 
     ;; execute more code
     ;;  (load "tc-diddle-background-color.emacs") ; use the default
