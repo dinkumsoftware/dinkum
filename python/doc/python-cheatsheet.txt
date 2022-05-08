@@ -3,12 +3,21 @@ dinkum/projects/python/src/python-cheatsheet.txt
 2019-11-28 tc Initial
 2021-10-20 tc how to run a single unit test
 2021-10-24 tc unittest stuff
+2022-05-08 tc added argparse
+
+Table of contents:
+  **reload**
+  **unittest**
+  **argparse**
+
+
+**reload** ...................................
 
 To reload (re-import) in Python 3.4+ only.
 Prior to 3.4 reload was built in
     from importlib import reload
 
-unit tests:
+**unit tests** ...................................
     # Useful arguments
       -v, --verbose         Verbose output
       -f, --failfast        Stop on first fail or error
@@ -32,3 +41,23 @@ unit tests:
     # To run unit tests under emacs compile mode
     ^X^E python module.py
 
+**argparse** ...................................
+see: https://docs.python.org/3/library/argparse.html
+
+import argparse
+parser = argparse.ArgumentParser(description="What I'm all about.")
+
+parser.add_argument("-o", "--optional_switch",
+                    help="I'm a command line switch.",
+                    action="store_true" )
+
+parser.add_argument("reqd_arg", help="I'm a required positional argument")
+
+parser.add_argument("optional_arg", help="I'm an optional positional argument",
+                    nargs='?', default="default for optional_arg")
+
+args = parser.parse_args()
+
+print (args.optional_switch)
+print (args.reqd_arg)
+print (args.optional_arg)

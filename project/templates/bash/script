@@ -21,8 +21,8 @@ function usage() {
     echo -n "$usage_str" ;
 }
 
-# Parse all cmd line args
-# handle the standard ones
+# Parse all cmd line optional args
+# and handle the standard ones
 OPTIND=1
 while getopts h opt; do
     case $opt in
