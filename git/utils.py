@@ -22,33 +22,86 @@ LICENSE
 #   2019-05-06 tc Initial
 #   2020-02-24 tc Added no-op unittest to make
 #                 comply with dinkum_python_run_unittests
+#   2022-05-08 tc switched call() => getstatusoutput()
+#                 added git_root_dir()
 
-from subprocess import call 
+from subprocess import getstatusoutput
+from os.path    import *
 
-def is_a_gitfile(file) :
+def is_a_gitfile(file_or_dir) :
     '''\
-    Returns True if file is a tracked git file.
-    Directories are considered tracked, if they have tracked content.
-    Returns False if file doesn't exist. (with msg to stdout)
+    Returns True if file_or_dir is a tracked git file.
+        Directories are considered tracked, if they have tracked content.
+    Returns False
+        if not under git control
+        file doesn't exist.
 
-    The work is done in shell script: ../bin/dinkum-is-git-file
+    The work is done in shell script: 'dinkum-is-git-file'
     This needs to be on the PATH.
     '''
-    return_code = call(['dinkum-is-git-file', file])
-    return return_code==0  # Tell um how it went
+
+    # The workhorse we use
+    '''
+    USAGE: dinkum-is-git-file <file0> [ .. <fileN>]
+    Silently tests all <file*> for being under git control.
+    Returns: 0 if ALL files are    under git control.
+            33 if any file  is NOT under git control.
+             1 on any other sort of error
+    '''
+    workhorse_prog = 'dinkum-is-git-file'
+    cmd_line = workhorse_prog + ' ' + file_or_dir
+
+    # Execute it
+    (exitcode,ignored) = getstatusoutput(cmd_line)
+
+    if exitcode == 0 :
+        return True  # tis a git file
+    else :
+        return False # tisn't
+
+    assert False, "can't get here"
 
 
-# Test code
-# No-op, i.e. doesn't do anything
-import unittest
-class Test_utils(unittest.TestCase) :
-    def test_noop(self) :
-        pass
+def git_root_dir(file_or_dir) :
+    '''\
+    Finds the root git directory (the one with .git) of
+    file_or_dir.
 
+    If it's under git control:
+        Returns the absolute path of git root directory
 
-if __name__ == "__main__" :
-    # Run the unittests
-    unittest.main()
+    If not under git control: returns None
+
+    The work is done in shell script: 'dinkum-git-root-dir'
+    This needs to be on the PATH.
+    '''
+
+    # who does all the work
+    '''
+    Usage: git_root_dir <starting-dir-or-file>
+     Finds the git root directory of <starting-dir-or-file>
+     by looking for a .git directory in one of <starting_dir-or-file>'s
+     parent directory.
+     On success: prints directory name to stdout and returns 0
+     On failure: prints nothing and              and returns 1
+    '''
+
+    workhorse_prog = 'dinkum-git-root-dir'
+    cmd_line = workhorse_prog + ' ' + file_or_dir
+
+    # execute it
+    (exitcode, output) = getstatusoutput(cmd_line)
+
+    if exitcode == 0 :
+        root_dir = abspath(expanduser(output))
+        return output # tis a git file
+    else :
+        return None # tisn't
+
+    assert False, "can't get here"
+
+    
+
 
 
 
@@ -257,3 +310,34 @@ Apache License
    See the License for the specific language governing permissions and
    limitations under the License.        
 '''
+
+# Test code
+# No-op, i.e. doesn't do anything
+import unittest
+from os.path import expanduser
+class Test_utils(unittest.TestCase) :
+    # We count on:
+    #     us (this file) being under git
+    #     ~  (home dir) NOT being under git
+    under_git_file     = __file__
+    not_under_git_file = expanduser('~')
+    nonexistent_file   = '/aint/no/such/file'
+
+    def test_is_a_gitfile(self) :
+        self.assertTrue  ( is_a_gitfile(self.under_git_file    ) )
+        self.assertFalse ( is_a_gitfile(self.not_under_git_file) )
+        self.assertFalse ( is_a_gitfile(self.nonexistent_file  ) )
+
+    def test_git_root_dir(self) :
+        # Just make sure it returns something
+        # to painful to check it's write
+        root = git_root_dir(self.under_git_file)
+        self.assertIsInstance ( root, str )
+
+        self.assertIsNone  ( git_root_dir(self.not_under_git_file) )
+        self.assertIsNone  ( git_root_dir(self.nonexistent_file  ) )
+
+
+if __name__ == "__main__" :
+    # Run the unittests
+    unittest.main()
