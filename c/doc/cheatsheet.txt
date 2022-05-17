@@ -1,0 +1,16 @@
+C cheatsheet
+
+2022-05-16 tc initial
+
+/* function ptrs */
+int (*foo)(float, double) ;
+
+struct XX {int a; } ;
+struct XX (*bar)(int, float) ;
+
+typedef struct YY {int a; } YY_t;
+YY_t  (*f)(float z) ;
+
+typedef struct ZZ {float w ; } ZZ_t ;
+YY_t (*f_t) ( ZZ_t * p)
+
