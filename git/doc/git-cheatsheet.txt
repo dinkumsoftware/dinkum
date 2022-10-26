@@ -8,7 +8,7 @@ Frequently used git commands.
 2016-11-23 tc add Deleting commits
 2016-11-28 tc add How to tell if file under git
 2016-11-29 tc how to delete a branch
-                                 how to pretty log
+              how to pretty log
 2016-12-02 tc Added username/password caching
 2016-12-05 tc squashing since last push
 2016-12-14 tc git reset --hard HEAD
@@ -31,6 +31,7 @@ Frequently used git commands.
 2022-02-20 tc squash/merge automagically
 2022-03-01 tc improved rebase/squash
 2022-04-25 tc rearranged a bit.
+2022-10-08 tc merge tips
 
 Table of contents
     *** Creating stuff
@@ -173,6 +174,27 @@ git rebase -i origin/master
     # select r (reword)
 
 
+# manually fixing merges from:
+https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging
+
+Git stores all of these versions in the index under “stages” which each
+have numbers associated with them.
+    Stage 1 is the common ancestor,
+    stage 2 is your version and
+    stage 3 is from the MERGE_HEAD, the version you’re merging in (“theirs”).
+
+You can extract a copy of each of these versions of the conflicted file with the git show command and a special syntax.
+
+    $ git show :1:hello.rb > hello.common.rb
+    $ git show :2:hello.rb > hello.ours.rb
+    $ git show :3:hello.rb > hello.theirs.rb
+
+To compare your result to what you had in your branch before the merge,
+in other words, to see what the merge introduced, you can run:
+    git diff --ours
+If we want to see how the result of the merge differed from what
+was on their side, you can run:
+    git diff --theirs
 
 *** Deleting stuff
 
