@@ -108,7 +108,7 @@ git branch --set-upstream-to <origin/whatever> [<branchname>]
 *** Fixing stuff
 
 
-# SQUASHING
+ SQUASHING
 # squash <N> commits into one
 # Do NOT do this after a push
 git rebase -i HEAD~<N> ; 1st pick, remainder squash
@@ -120,7 +120,7 @@ git rebase -i HEAD~<N> ; 1st pick, remainder squash
    $ git merge --squash yourBranch
    $ git commit # all commit messages of yourBranch in one, really useful
     > [status 5007e77] Squashed commit of the following: ...
-
+1
 # Choice B
    # Thanks to https://makandracards.com/makandra/527-squashing-several-git-commits-into-a-single-commit
    # This example squashes all commits on topic-branch.  It's done on another branch for safety in case
