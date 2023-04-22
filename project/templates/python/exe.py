@@ -1,35 +1,16 @@
 #!/usr/bin/env python3
 #<filename> [filename] <fixme>
-#<path>  [path] <fixme>
+#<path>     [path]     <fixme>
 #<repo> https://github.com/dinkumsoftware/dinkum.git
 
-#<mod_doc>
+#<copyright> Copyright (c) 2023 Dinkum Software
+#<lic> Licensed under the Apache License, Version 2.0 (the "License");
+
 '''
     <fixme>
 '''
-#<\mod_doc>
 
-#<copyright> Copyright (c) 2020 Dinkum Software
-#<lic>
-'''Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-''' #</lic>
-
-#<authors> tc    tom campbell, www.DinkumSoftware.com <todo> change to .org
-
-#<history>
-#    2020-10-02 tc Initial
-#    2020-12-19 tc Added argparse and append ERROR: to main returns
-#</history>
+# 2023-xx-yy tc <fixme> 
 
 import sys
 import argparse
@@ -61,6 +42,21 @@ def main() :
     args = parser.parse_args()
 
     #<fixme> Code goes here
+
+#<lic-full>
+'''Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+''' #</lic-full>
+
 
 # main() launcher
 if __name__ == '__main__':
