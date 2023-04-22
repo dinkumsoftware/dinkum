@@ -9,12 +9,13 @@ A list of emacs commands that I never seem to remember
 2017-02-13 tc  Added Edit remote file as root
 2019-11-08 tc  Notes about compile ^X^E
                Summary of xref-xxx (find-tags replacement)
+2023-04-17 tc bug fix in remote ssh edit syntax
 
 # tramp
 # A way to edit remote files and files owned by root
 # https://www.emacswiki.org/emacs/TrampMode
-Find File: /<username>@<host>:<filename>    # edits file remotely
-           ^          ^      ^
+Find File: /ssh:<username>@<host>:<filename>    # edits file remotely
+           ^              ^      ^
 
 # Edits local as root
 Find File: /sudo::/path/to/file-to-edit
