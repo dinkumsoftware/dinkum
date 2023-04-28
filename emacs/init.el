@@ -9,3 +9,11 @@
 (package-initialize)
 
 (load "~/projects/dinkum/emacs/tc-init.emacs")
+
+;; gitlab
+;; https://github.com/nlamirault/emacs-gitlab
+;; 2023-04-28 tc  Didn't work... 
+;;                error: Package ‘gitlab-’ is unavailable
+
+;; (unless (package-installed-p 'gitlab)
+;; (package-install 'gitlab))

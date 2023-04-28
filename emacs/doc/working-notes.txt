@@ -1,0 +1,31 @@
+dinkum/emacs/doc/working-notes.txt
+
+2023-04-28 tc Initial
+
+installing emacs package to edit issues on Gitlab
+https://github.com/nlamirault/emacs-gitlab
+
+didn't work:
+    M-x package-install [RET] gitlab [RET]
+
+error: Package ‘gitlab-’ is unavailable
+
+To ensure normal operation, you should investigate and remove the
+cause of the error in your initialization file.  Start Emacs with
+the ‘--debug-init’ option to view a complete error backtrace.
+
+
+Debugger entered--Lisp error: (error "Package ‘gitlab-’ is unavailable")
+  signal(error ("Package ‘gitlab-’ is unavailable"))
+  error("Package `%s-%s' is unavailable" gitlab "")
+  package-compute-transaction(nil ((gitlab)))
+  package-install(gitlab)
+  (if (package-installed-p (quote gitlab)) nil (package-install (quote gitlab)))
+  eval-buffer(#<buffer  *load*> nil "/home/tc/.emacs.d/init.el" nil t)  ; Reading at buffer position 645
+  load-with-code-conversion("/home/tc/.emacs.d/init.el" "/home/tc/.emacs.d/init.el" t t)
+  load("/home/tc/.emacs.d/init" t t)
+  #f(compiled-function () #<bytecode 0x1e0f4d>)()
+  command-line()
+  normal-top-level()
+
+All the above failed. punted for now
