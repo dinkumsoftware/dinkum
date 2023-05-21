@@ -1,6 +1,138 @@
 dinkum/emacs/doc/working-notes.txt
 
-2023-04-28 tc Initial
+emacs-working-notes.txt
+
+ 3-May-05 tc@DinkumSoftware.com 
+
+After fedora core 3 bringup on blinky, there were some
+emacs issues:
+x    cut/paste to clipboard doesn't work
+x    ls spews terminal escape sequences in shell
+x    background color wrong
+
+<start> **** cut/paste to clipboard doesn't work
+
+menu-bar-enable-clipboard     M-x menu-bar-enable-clipboard RET
+  Command: Make CUT, PASTE and COPY (keys and menu bar items) use the clipboard.
+
+It's being invoked in:
+     ~/.tc-toolbox/emacs/mylisp/AAA.emacs
+but doesn't seem to work any more.
+doesn't work manually
+
+ESC-X clipboard-kill-region seems to work
+
+I'm running version; 21.3.1
+
+google menu-bar-enable-clipboard
+       For I am the clipboard master
+
+       Those of you using emacs might have gotten very frustrated
+       because its clipboard handling sucks. Instead of cutting and
+       pasting using the CLIPBOARD selection, it uses the PRIMARY
+       selection. So very broken...
+
+       Anyway, there's an easy way to fix this, just add:
+
+       (menu-bar-enable-clipboard)
+       (setq x-select-enable-clipboard t)
+
+       to your .emacs and you're set!
+
+set-variable x-select-enable-clipboard t
+didn't seem to make it work.
+
+Trying editting AAA-.emacs didn't make it work either
+
+
+
+http://www.oreillynet.com/pub/wlg/6162 
+
+    http://www.emacswiki.org/cgi-bin/wiki/CopyAndPaste
+    The above link probably has enough information in disjointed form
+    for you to cobble together a working solution for you, but in a
+    nutshell what worked for me with GNU Emacs 21.3-17 in Fedora Core
+    3 was adding the following to my .emacs::
+
+        (setq x-select-enable-clipboard t)
+        (setq interprogram-paste-function 'x-cut-buffer-or-selection-value)
+
+  
+Current values:
+    interprogram-cut-function's value is x-select-text
+    interprogram-paste-function's value is x-cut-buffer-or-selection-value
+
+so that's not it
+
+sigh...
+
+With no clipboard stuff in AAA-emacs
+    interprogram-cut/past-functions are
+        cut: x-select-text
+        paste: x-cut-buffer-or-selection-value
+
+    Menubar Edit says:
+        cut    (C-w)    fails
+        copy   (M-w)    fails
+        paste  (C-y)    works
+
+    These seem to work:
+        ESC-x clipboard-yank
+        ESC-x clipboard-kill-region
+
+    These:
+       works          C-y        yank              no doco about clipboard
+       fails          esc-w      kill-ring-save    doco about interprogram-cut-function
+
+So out of the box, with no modifications in AAA-.emacs
+We can get text FROM clipboard to emacs
+We cannot get text FROM emacs into gnome app.
+   
+So 
+    clipboard-kill-region    works
+
+    (M-w) kill-ring-save     fails
+     interprogram-cut-function is x-select-text
+     x-select-enable-clipboard nil
+
+(setq x-select-enable-clipboard t) gets text FROM emacs into gnome app!
+from the menu as well as (M-w) (C-y)
+
+<end> **** cut/paste to clipboard doesn't work
+
+
+
+
+<start>***     ls spews terminal escape sequences in shell
+
+It's an ls problem, not an emacs problem.
+term settings and the like are the same between luna (core 1)
+and blinky (core 30
+
+luna's ls works fine on blinky
+    luna:   ls (coreutils) 5.0
+    blinky: ls (coreutils) 5.2.1
+
+Didn't see anything in ls changelog that directly
+related.
+
+From newsgroup comp.emacs
+
+> M-x shell ls
+> every item is the lest is wrapped with
+> ^[[0m someOtherChar-different for item to item itemName ^[[0m
+
+In your .emacs add the following:
+
+(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
+
+bingo! it worked
+
+<end> *** ls spews terminal escape sequences in shell
+
+2023-04-28 tc prior from emacs-working-notes.txt
+              put it's contents in this file (working-notes.txt)
+              and git removed emacs-working-notes.txt
 
 installing emacs package to edit issues on Gitlab
 https://github.com/nlamirault/emacs-gitlab
@@ -29,3 +161,162 @@ Debugger entered--Lisp error: (error "Package ‘gitlab-’ is unavailable")
   normal-top-level()
 
 All the above failed. punted for now
+
+2023-05-09 tc
+Trying to get emacs-gitlab https://github.com/nlamirault/emacs-gitlab
+Package installer failed.
+Manual install failed. Dependency issues:  require(s) fails in
+    .emacs.d/emacs-gitlab/gitlab.el
+
+Running emacs version
+NU Emacs 26.3
+Copyright (C) 2019 Free Software Foundation, Inc.
+
+on ubuntu 20.04 LTS.
+
+Try to upgrade per https://learnubuntu.com/install-emacs/#how-to-install-the-most-recent-version-of-emacs
+    sudo snap install emacs --edge --classicw
+failed:
+    emacs (edge) 30.0.50-master-3adc1e7 from Alex Murray (alexmurray✪) installed
+
+trying:
+https://linux.how2shout.com/how-to-install-emacs-28-on-ubuntu-20-04-lts-focal-fossa/
+
+It adds an emacs apt repo:
+
+sudo add-apt-repository ppa:kelleyk/emacs
+sudo apt update && sudo apt upgrade
+sudo apt install emacs28
+
+The following packages were automatically installed and are no longer required:
+  gir1.2-goa-1.0 libphobos2-ldc-shared90
+Use 'sudo apt autoremove' to remove them.
+The following additional packages will be installed:
+  emacs28-common
+The following NEW packages will be installed:
+  emacs28 emacs28-common
+0 upgraded, 2 newly installed, 0 to remove and 1 not upgraded.
+
+
+Errors were encountered while processing:
+ /var/cache/apt/archives/emacs28_28.1~1.git5a223c7f2e-kk3+20.04_amd64.deb
+E: Sub-process /usr/bin/dpkg returned an error code (1)
+
+sudo apt autoremove # be tidy
+
+The following packages will be REMOVED:
+  emacs28-common gir1.2-goa-1.0 libphobos2-ldc-shared90
+0 upgraded, 0 newly installed, 3 to remove and 1 not upgraded.
+1 not fully installed or removed.
+After this operation, 5,961 kB disk space will be freed.
+
+sudo git remove emacs26
+It got an error:Package 'emacs26' is not installed, so not removed
+
+sudo apt install emacs28
+    he following additional packages will be installed:
+      emacs28-common
+    The following NEW packages will be installed:
+         emacs28 emacs28-common
+
+error:
+Unpacking emacs28 (28.1~1.git5a223c7f2e-kk3+20.04) ...
+dpkg: error processing archive /var/cache/apt/archives/emacs28_28.1~1.git5a223c7f2e-kk3+20.04_amd64.deb (--unpack):
+ trying to overwrite '/usr/include/emacs-module.h', which is also in package emacs-common 1:26.3+1-1ubuntu2
+dpkg-deb: error: paste subprocess was killed by signal (Broken pipe)
+Errors were encountered while processing:
+ /var/cache/apt/archives/emacs28_28.1~1.git5a223c7f2e-kk3+20.04_amd64.deb
+E: Sub-process /usr/bin/dpkg returned an error code (1)
+
+sudo apt install emacs26
+
+The following additional packages will be installed:
+  emacs26-common
+The following NEW packages will be installed:
+  emacs26 emacs26-common
+Preparing to unpack .../emacs26-common_26.3~1.git96dd019-kk1+20.04_all.deb ...
+Unpacking emacs26-common (26.3~1.git96dd019-kk1+20.04) ...
+dpkg: error processing archive /var/cache/apt/archives/emacs26-common_26.3~1.git96dd019-kk1+20.04_all.deb (--unpack):
+ trying to overwrite '/usr/include/emacs-module.h', which is also in package emacs-common 1:26.3+1-1ubuntu2
+dpkg-deb: error: paste subprocess was killed by signal (Broken pipe)
+Selecting previously unselected package emacs26.
+Preparing to unpack .../emacs26_26.3~1.git96dd019-kk1+20.04_amd64.deb ...
+Unpacking emacs26 (26.3~1.git96dd019-kk1+20.04) ...
+dpkg: error processing archive /var/cache/apt/archives/emacs26_26.3~1.git96dd019-kk1+20.04_amd64.deb (--unpack):
+ trying to overwrite '/usr/share/emacs/26.3/etc/DOC', which is also in package emacs-gtk 1:26.3+1-1ubuntu2
+dpkg-deb: error: paste subprocess was killed by signal (Broken pipe)
+Errors were encountered while processing:
+ /var/cache/apt/archives/emacs26-common_26.3~1.git96dd019-kk1+20.04_all.deb
+ /var/cache/apt/archives/emacs26_26.3~1.git96dd019-kk1+20.04_amd64.deb
+E: Sub-process /usr/bin/dpkg returned an error code (1)
+
+try again.
+
+tc@gizmo:~$ sudo apt install emacs28
+
+
+The following NEW packages will be installed:
+  emacs28
+0 upgraded, 1 newly installed, 0 to remove and 1 not upgraded.
+1 not fully installed or removed.
+Need to get 0 B/22.5 MB of archives.
+After this operation, 99.2 MB of additional disk space will be used.
+(Reading database ... 238244 files and directories currently installed.)
+Preparing to unpack .../emacs28_28.1~1.git5a223c7f2e-kk3+20.04_amd64.deb ...
+Unpacking emacs28 (28.1~1.git5a223c7f2e-kk3+20.04) ...
+dpkg: error processing archive /var/cache/apt/archives/emacs28_28.1~1.git5a223c7f2e-kk3+20.04_amd64.deb (--unpack):
+ trying to overwrite '/usr/include/emacs-module.h', which is also in package emacs-common 1:26.3+1-1ubuntu2
+dpkg-deb: error: paste subprocess was killed by signal (Broken pipe)
+Errors were encountered while processing:
+ /var/cache/apt/archives/emacs28_28.1~1.git5a223c7f2e-kk3+20.04_amd64.deb
+E: Sub-process /usr/bin/dpkg returned an error code (1)
+
+https://emacs.stackexchange.com/questions/58393/unable-to-install-emacs-26-3-after-removing-emacs-28-stuck-without-an-editor
+
+dpkg --get-selections | grep emacs | cut -f1
+emacs-bin-common
+emacs-common
+emacs-el
+emacs-gtk
+emacs28-common
+emacsen-common
+
+sudo apt purge $(dpkg --get-selections | grep emacs | cut -f1)
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+Some packages could not be installed. This may mean that you have
+requested an impossible situation or if you are using the unstable
+distribution that some required packages have not yet been created
+or been moved out of Incoming.
+The following information may help to resolve the situation:
+
+The following packages have unmet dependencies:
+ libwebkit2gtk-4.0-37 : Depends: libenchant-2-2 (>= 2.2.3) but it is not going to be installed
+E: Error, pkgProblemResolver::Resolve generated breaks, this may be caused by held packages.
+
+removed 3rd party PPA 
+
+tc@gizmo:/etc/apt/sources.list.d$ ls -l kelleyk-ubuntu-emacs-focal.list 
+-rw-r--r-- 1 root root 128 May  9 15:25 kelleyk-ubuntu-emacs-focal.list
+tc@gizmo:/etc/apt/sources.list.d$ sudo cp kelleyk-ubuntu-emacs-focal.list ~tc/keep
+tc@gizmo:/etc/apt/sources.list.d$ ls ~tc/keep/
+0-yo0-10p1p1.ini.1  dot.emacs.d  float-filesys-from-jl-tc-filesys  kelleyk-ubuntu-emacs-focal.list  my-seatrec-stock-rev-0.3  sdimage.tar  sdimage.tar.md5  yesterdays-news
+tc@gizmo:/etc/apt/sources.list.d$ cat kelleyk-ubuntu-emacs-focal.list 
+deb http://ppa.launchpad.net/kelleyk/emacs/ubuntu focal main
+# deb-src http://ppa.launchpad.net/kelleyk/emacs/ubuntu focal main
+tc@gizmo:/etc/apt/sources.list.d$ sudo rm kelleyk-ubuntu-emacs-focal.list 
+
+
+ 2391  sudo rm kelleyk-ubuntu-emacs-focal.list  # removed PPA
+ 2392  sudo apt install emacs26        # failed no such package
+ 2393  sudo apt update                 # freshened ppa list
+                                       # said 4 unrelated packages upgradable
+ 2394  apt list --upgradable           
+ 2395  sudo apt upgrade                # successfully upgrade
+ 2396  sudo apt autoremove             # emacs28-common
+ 2397  emacs --version                 # emacs 26.3
+ 2398  sudo apt install emacs          # 
+ 2399  emacs --version                 # emacs 26.3
+
+I think I'm back to where I was.

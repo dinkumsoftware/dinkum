@@ -42,6 +42,15 @@
 ;;               https://github.com/jwiegley/use-package.git
 ;; 2022-02-05 tc Remap C-g from keyboard-quit => keyboard-quit-context"
 ;;               Make a single C-g leave minibuffer instead of two C-g's
+;; 2023-05-09 tc package gitlab https://github.com/nlamirault/emacs-gitlab
+;;               didn't work.  Dependency woes.
+
+
+;;;-----------------------------------------------------------------------
+;; **** package gitlab https://github.com/nlamirault/emacs-gitlab
+;; Fails on require(s) in emacs-gitlab/gitlab.el
+;;(add-to-list 'load-path "~/.emacs.d/emacs-gitlab")
+;;(require 'gitlab)
 
 ;;;-----------------------------------------------------------------------
 ;; Set an emacs variable with this directory name (where tc.emacs lives)

@@ -1,5 +1,5 @@
 http://github.com/dinkumsoftware/dinkum.git
-emacs/emacs-cheatsheet.txt
+emacs/cheatsheet.txt
 
 A list of emacs commands that I never seem to remember
 
@@ -10,18 +10,23 @@ A list of emacs commands that I never seem to remember
 2019-11-08 tc  Notes about compile ^X^E
                Summary of xref-xxx (find-tags replacement)
 2023-04-17 tc bug fix in remote ssh edit syntax
+2023-05-10 tc format change, renamed emacs-cheatsheet.txt => cheatsheet.txt
 
 # tramp
 # A way to edit remote files and files owned by root
 # https://www.emacswiki.org/emacs/TrampMode
+
+# Edit local file as root
+Find File: /sudo::/path/to/file-to-edit
+
+# Edit remote file
 Find File: /ssh:<username>@<host>:<filename>    # edits file remotely
            ^              ^      ^
 
-# Edits local as root
-Find File: /sudo::/path/to/file-to-edit
-
 # Edit remote file as root
 Find File: /ssh:you@remotehost|sudo:remotehost:/path/to/file
+           ^   ^              ^    ^          ^
+
 
 # Launch emacs from unity(and maybe gnome)
 # At least on Ubuntu 14.04, if you launch emacs from desktop button, it
