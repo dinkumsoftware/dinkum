@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 #<filename> [filename] <fixme>
-#<path>     [path]     <fixme>
-#<repo> https://github.com/dinkumsoftware/dinkum.git
 
 #<copyright> Copyright (c) 2023 Dinkum Software
 #<lic> Licensed under the Apache License, Version 2.0 (the "License");

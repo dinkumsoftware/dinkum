@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-#<filename> [filename] <fixme>
+#<package_name> [package_name] <fixme>
+#<filename> __init__.py
 
 #<copyright> Copyright (c) 2020 Dinkum Software
 #<lic> Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +31,7 @@
 import unittest
 
 #<fixme>
-class Test_MODULE_NAME_HERE(unittest.TestCase):
+class Test_PACKAGE_NAME_HERE(unittest.TestCase): ###fixme###
         
     #<fixme>
     def test_FUNCTION_NAME_HERE(self) :
@@ -43,3 +44,4 @@ if __name__ == "__main__" :
     unittest.main()
 
 #</unittests>
+
