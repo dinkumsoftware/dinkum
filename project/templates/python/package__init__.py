@@ -31,7 +31,7 @@
 import unittest
 
 #<fixme>
-class Test_PACKAGE_NAME_HERE(unittest.TestCase): ###fixme###
+class Test_PACKAGE_NAME_HERE(unittest.TestCase): <fixme>
         
     #<fixme>
     def test_FUNCTION_NAME_HERE(self) :
