@@ -5,12 +5,14 @@
 #
 # 2019-11-20 tc Initial
 # 2021-11-16 tc ubuntu 20.04 via snap
+# 2023-11-03 tc added To create a new PyDev project
 
 # Table of contents
 #    Overview of eclipse installation
 #    How to install eclipse:
 #    Install PyDev
 #    Tweaks to eclipse/pydev
+#    To create a new PyDev project
 
 *** Overview of eclipse installation
 This was done under ubuntu 20.04 LTS
@@ -88,4 +90,12 @@ You can download and install directly from eclipse
         windows=>preferences=>general=>keys
         scheme: emacs
         
+*** To create a new PyDev project
+https://www.pydev.org/manual_101_project_conf.html#CreatingaProjectfromexistingsources
 
+If you have the sources from an existing project that wasn't created in Eclipse, you can :
+    either create a new project at that same location
+    (and choose Add project directory to the PYTHONPATH)
+    --or--
+    create it in a different directory and choose create links to existing sources
+    in the PYTHONPATH configuration in the new project wizard.

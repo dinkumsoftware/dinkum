@@ -26,20 +26,23 @@ Prior to 3.4 reload was built in
     # For help:
     python -m unittest --help
 
-    # To a specific test in a module
-    python module.py Test_module.test_testname
-
-    # To run all tests in module
-    python -m  module_name  [optional args]
-
+    Examples: (from unittest help message)
+      python -m unittest test_module               - run tests from test_module
+      python -m unittest module.TestClass          - run tests from module.TestClass
+      python -m unittest module.Class.test_method  - run specified test method
+      python -m unittest path/to/test_file.py      - run tests from test_file.py
+      
     # Recursively run all the unit tests in *.py files in current directory
+    # Note: a subdirectory must have an __init__.py in it to be discovered
     python -m unittest discover -v           -p '*'.py
 
     # Recursively run all the unit tests in *.py files in <dir>
     python -m unittest discover -v -s <dir> -p '*'.py
 
     # To run unit tests under emacs compile mode
-    ^X^E python module.py
+    ^X^E python -m module
+    ^X^E python    module.py
+
 
 **argparse** ...................................
 see: https://docs.python.org/3/library/argparse.html
