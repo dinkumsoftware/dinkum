@@ -44,7 +44,7 @@ class Foo:
 
 # Usage, i.e. how to call
 
-# staticmethod
+# Calling staticmethod
 Foo.smeth  ("external call from class"   )
 Foo().smeth("external call from instance")
 Foo().inst_method_calling_static()       
@@ -57,7 +57,7 @@ Foo().inst_method_calling_static()
 
 print()
 
-# classmethod
+# Calling classmethod
 Foo.cmeth  ("external call from class"   )
 Foo().cmeth("external call from instance")
 Foo().inst_method_calling_class()       

@@ -1,0 +1,11 @@
+cheatsheet-ipython.txt
+
+2023-11-08 tc Initial
+
+To automatically reload python modules when
+debugging/inspecting interactively:
+
+    %load_ext autoreload
+    %autoreload 2
+
+
