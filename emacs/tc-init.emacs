@@ -44,6 +44,7 @@
 ;;               Make a single C-g leave minibuffer instead of two C-g's
 ;; 2023-05-09 tc package gitlab https://github.com/nlamirault/emacs-gitlab
 ;;               didn't work.  Dependency woes.
+;; 2024-01-16 tc https://wikemacs.org/wiki/Edit_with_Emacs
 
 
 ;;;-----------------------------------------------------------------------
@@ -109,4 +110,9 @@
     ;; https://stackoverflow.com/questions/12224909/is-there-a-way-to-get-my-emacs-to-recognize-my-bash-aliases-and-custom-functions/12229404#12229404
     (setq shell-file-name "bash")
     (setq shell-command-switch "-ic")
+
+    ;; https://wikemacs.org/wiki/Edit_with_Emacs
+    (add-to-list 'load-path "/path/to/edit-server.el/")
+    (require 'edit-server)
+    (edit-server-start)
 

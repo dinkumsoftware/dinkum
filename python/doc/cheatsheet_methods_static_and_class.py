@@ -67,3 +67,20 @@ Foo().inst_method_calling_class()
 #  classmethod: cmeth() external call from instance
 #  classmethod: cmeth() From inst_method_calling_class(), Foo.cmeth()
 #  classmethod: cmeth() From inst_method_calling_class(), self.cmeth()
+
+print()
+
+# Be careful about inadvertentely SETTING class variables from an instance.
+# You make create an instance variable of the same name
+# https://stackoverflow.com/questions/44460724/can-i-access-class-variables-using-self
+
+class Bar:
+    cls_var = 1 ;
+
+    # "Bar.cls_var"         works anywhere
+
+    # "type(self).cls_var"  works anywhere
+
+    # "self.cls_var"        works for READ access
+    #                       creates an instance variable cls_var for writes
+
