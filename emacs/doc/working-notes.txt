@@ -388,5 +388,14 @@ Now sure exactly where it came from and why.
 
     git config --get branch.main.remote
 
-I just .gitignored it.
+2024-04-12 tc
+Launched editor server at startup so random web edits will work.
+See chrome-extension://ljobjlafonikaiipfkggjbhkghgicgoh/fancy-settings/source/index.html
 
+~/.emacs/tc-init.emacs -> /home/tc/projects/dinkum/emacs/tc-init.emacs
+
+Uncommented in tc-init.emacs:
+   (when (and (require 'edit-server nil t) (daemonp))
+     (edit-server-start))
+
+This didn't seem to work.  Debug later

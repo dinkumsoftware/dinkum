@@ -45,7 +45,8 @@
 ;; 2023-05-09 tc package gitlab https://github.com/nlamirault/emacs-gitlab
 ;;               didn't work.  Dependency woes.
 ;; 2024-01-16 tc https://wikemacs.org/wiki/Edit_with_Emacs
-
+;; 2024-04-12 tc launch a daemon to make make edit_with_emacs work
+;;               didn't seem to work
 
 ;;;-----------------------------------------------------------------------
 ;; **** package gitlab https://github.com/nlamirault/emacs-gitlab
@@ -128,8 +129,13 @@
      (setq edit-server-new-frame nil)
      (edit-server-start))
 
+
+
 ;; To open pages for editing in new frames using a running emacs
 ;; started in --daemon mode:
 
-;;   (when (and (require 'edit-server nil t) (daemonp))
-;;     (edit-server-start))
+;; 2024-04-12 tc
+;; uncommented to try to make work when emacs isn't running
+;; it failed.  debug later
+   (when (and (require 'edit-server nil t) (daemonp))
+     (edit-server-start))
