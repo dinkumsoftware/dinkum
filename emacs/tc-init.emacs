@@ -112,7 +112,24 @@
     (setq shell-command-switch "-ic")
 
     ;; https://wikemacs.org/wiki/Edit_with_Emacs
-    (add-to-list 'load-path "/path/to/edit-server.el/")
+    ;; <todo> ? Probably want to refactor this to init.el or dinkum.el
+    ;; Need Chrome extension @
+    ;; https://chromewebstore.google.com/detail/edit-with-emacs/ljobjlafonikaiipfkggjbhkghgicgoh?pli=1
+
+
+    (add-to-list 'load-path "~/projects/dinkum/emacs/edit-server/")
     (require 'edit-server)
     (edit-server-start)
 
+;; To open pages for editing in new buffers in your existing Emacs
+;; instance:
+;;
+   (when (require 'edit-server nil t)
+     (setq edit-server-new-frame nil)
+     (edit-server-start))
+
+;; To open pages for editing in new frames using a running emacs
+;; started in --daemon mode:
+
+;;   (when (and (require 'edit-server nil t) (daemonp))
+;;     (edit-server-start))

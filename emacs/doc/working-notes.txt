@@ -320,3 +320,73 @@ tc@gizmo:/etc/apt/sources.list.d$ sudo rm kelleyk-ubuntu-emacs-focal.list
  2399  emacs --version                 # emacs 26.3
 
 I think I'm back to where I was.
+
+2024-01-22 tc
+Getting ../edit-server/edit-server.el to work.
+Lets me use emacs on any web site.
+See: https://stackoverflow.com/questions/77855958/emacs-edit-server-el-doesnt-write-out-its-buffer-to-web-text-block
+
+../modified:   emacs/tc-init.emacs
+               emacs/edit-server/*
+
+working copy:
+gizmo:~tc/.emacs.d/edit-server -> /home/tc/projects/dinkum/emacs/edit-server/
+
+I tried it with survey monkey and it seemed to work.
+of course the survey monkey seems broken/hard to use.
+
+2024-04-12 tc
+did a routine git --add on ~/projects/dinkum and got:
+
+tc@gizmo:~/projects/dinkum$ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	renamed:    git/doc/git-cheatsheet.txt -> git/doc/cheatsheet.txt
+	renamed:    git/doc/git-tools.txt -> git/doc/tools.txt.py
+
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   emacs/doc/working-notes.txt
+	modified:   emacs/tc-init.emacs
+	deleted:    git/doc/cheatsheet.txt
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	com.dinkumsoftware/
+	emacs/doc/working-notes.txt.py
+	emacs/emacs/                             <<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	git/doc/cheatsheet.txt.py
+	git/doc/working-notes.txt.py
+	linux/TS-7553-V2/
+
+tc@gizmo:~/projects/dinkum$ git add --all
+warning: adding embedded git repository: emacs/emacs
+hint: You've added another git repository inside your current repository.
+hint: Clones of the outer repository will not contain the contents of
+hint: the embedded repository and will not know how to obtain it.
+hint: If you meant to add a submodule, use:
+hint: 
+hint: 	git submodule add <url> emacs/emacs
+hint: 
+hint: If you added this path by mistake, you can remove it from the
+hint: index with:
+hint: 
+hint: 	git rm --cached emacs/emacs
+hint: 
+hint: See "git help submodule" for more information.
+
+Now sure exactly where it came from and why.
+    cd ..../emacs/emacs
+    git status
+    On branch emacs-28
+    Your branch is up to date with 'origin/emacs-28'.
+
+    git config --get branch.main.remote
+
+I just .gitignored it.
+

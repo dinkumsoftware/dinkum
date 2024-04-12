@@ -1,0 +1,27 @@
+dinkum/linux/TS-7553-V2/upgrade-instructions.txt
+
+How to upgrade software on an embedded systems ts-7553-V2 to this century.
+
+2024-04-12 tc Initial
+And for the elinux ones:
+
+    I ended up doing a fresh build of Debian 12 using the distro-seed tooling to
+    generate the image https://github.com/embeddedTS/distro-seed
+        It’s pretty easy to use (just make sure your system is running >=python3.11)
+        It originally did not support the TS-7553-V2 but they added it at my request :)
+        My bet is that using the tool should be about as painless as getting a
+        recent copy of our build over to you, with the benefit of no Seatrec IP complications.
+
+        Cmd sequence I used:
+            apt-get update && apt-get install -y qemu-user-static
+            git clone https://github.com/embeddedTS/distro-seed.git
+            cd distro-seed
+            pip3 install --user -r requirements.txt
+            make checkdeps
+            make ts7553v2_debian_12_headless_defconfig
+            make
+
+ 
+
+
+
