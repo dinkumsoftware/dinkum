@@ -387,6 +387,7 @@ Now sure exactly where it came from and why.
     Your branch is up to date with 'origin/emacs-28'.
 
     git config --get branch.main.remote
+gitignored it.
 
 2024-04-12 tc
 Launched editor server at startup so random web edits will work.
