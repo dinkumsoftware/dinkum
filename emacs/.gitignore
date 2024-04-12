@@ -1,0 +1,7 @@
+# emacs/.gitignore
+#
+# 2024-04-12 tc initial 
+# Ignore the repo emacs in this directory
+# See working-notes line 368
+
+emacs
