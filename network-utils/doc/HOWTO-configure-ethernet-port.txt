@@ -1,0 +1,42 @@
+network-utils/doc/HOWTO-configure-ethernet-port.txt
+
+How to configure an Ethernet Port
+This uses ubuntu 20.04 gui
+
+2024-07-04 tc From cccc/doc/tc-working-notes.txt line 791
+
+This example uses:
+     IP: 172.16.0.10 in a 172.16.0.0/16 network with gateway of 172.16.0.1
+     ethernet device :enxa0cec806c1bf
+
+In settings, set:
+    Settings->Network->button settings->IP4
+    Manual
+        Addresses 17216.0.10 255.255.0.0 gw:<blank>
+        DNS: non-automatic. 8.8.8.8
+        Routes: non-Automatic 172.16.0.0 255.255.0.0 172.16.0.1
+    Apply
+    Cancel
+    Flick Power OFF/ON to be sure
+
+
+The results:
+tc@gizmo:ifconfig enxa0cec806c1bf
+enxa0cec806c1bf: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 172.16.0.10  netmask 255.255.0.0  broadcast 172.16.255.255
+        inet6 fe80::5235:c93e:229b:68d6  prefixlen 64  scopeid 0x20<link>
+        ether a0:ce:c8:06:c1:bf  txqueuelen 1000  (Ethernet)
+        RX packets 55497  bytes 10580027 (10.5 MB)
+        RX errors 0  dropped 644  overruns 0  frame 0
+        TX packets 160  bytes 25887 (25.8 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 
+
+        
+tc@gizmo:route -n
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+169.254.0.0     0.0.0.0         255.255.0.0     U     1000   0        0 enxa0cec806c1bf
+172.16.0.0      0.0.0.0         255.255.0.0     U     100    0        0 enxa0cec806c1bf
+172.16.0.0      172.16.0.1      255.255.0.0     UG    100    0        0 enxa0cec806c1bf
+
+

@@ -1,0 +1,11 @@
+apt/doc/cheatsheet.txt
+
+2024-09-07 tc Initial
+
+What package is a file in?
+     dpkg-query --search <filename - search_path>
+     dpkg-query -S       <filename - search_path>
+
+What files are in a package ?
+    dpkg-query --listfiles <package_name>
+    dpkg-query -L          <package_name>
