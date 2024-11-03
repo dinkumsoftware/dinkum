@@ -1,0 +1,25 @@
+dinkum/libreplan/working-notes.txt
+
+place to scribble stuff about libreplan
+
+2024-11-01 tc initial, libreplan
+
+https://www.libreplan.dev/open-source/download/
+
+sudo add-apt-repository ppa:libreplan/ppa
+sudo apt-get update
+sudo apt-get install libreplan
+
+that went ok.
+
+Couldn't figure out how to start.
+It had following with line thru it that didn't work.
+    Once installed, to use the application you must type in
+    the web browser the following URL: http://localhost:8080/libreplan/
+
+localhost refused to connect.
+
+2024-11-03 tc
+probably need to reconfigure gizmo... later
+
+
