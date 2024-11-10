@@ -1,0 +1,71 @@
+zoom/working-notes.txt
+
+2024-11-09 tc
+
+Updating the zoom app on gizmo.
+
+From https://zoom.us/support/down4j
+download: zoom_amd64.deb
+          Version 6.2.6 (2503)
+
+looks like I have 5.7.4
+    ? how do i apt upgrade from a deb file ?
+https://www.google.com/search?q=how+do+i+apt+upgrade+from+a+deb+file&oq=how+do+i+apt+upgrade+from+a+deb+file&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigATIHCAIQIRigATIHCAMQIRigATIHCAQQIRigATIHCAUQIRifBdIBCTEzMDc2ajFqNKgCALACAQ&sourceid=chrome&ie=UTF-8
+
+cd ~/Downloads
+sudo apt update
+sudo dpkg -i  zoom_amd64.deb
+
+Didn't go well
+==============================================
+sudo dpkg -i zoom_amd64.deb 
+(Reading database ... 243229 files and directories currently installed.)
+Preparing to unpack zoom_amd64.deb ...
+Unpacking zoom (6.2.6.2503) over (5.7.28991.0726) ...
+run post uninstall script, action is upgrade ...
+dpkg: dependency problems prevent configuration of zoom:
+ zoom depends on libxcb-cursor0; however:
+  Package libxcb-cursor0 is not installed.
+
+dpkg: error processing package zoom (--install):
+>>>>  dependency problems - leaving unconfigured <<<
+Processing triggers for desktop-file-utils (0.24-1ubuntu3) ...
+Processing triggers for gnome-menus (3.36.0-1ubuntu1) ...
+Processing triggers for mime-support (3.64ubuntu1) ...
+Processing triggers for shared-mime-info (1.15-1) ...
+Errors were encountered while processing:
+ zoom
+====================
+
+If the installation encounters missing dependencies, run the following command to automatically install them:
+Code
+
+    sudo apt -f install
+=========================
+tc@gizmo:~/Downloads$ sudo apt -f install
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+Correcting dependencies... Done
+The following additional packages will be installed:
+  libxcb-cursor0
+The following NEW packages will be installed:
+  libxcb-cursor0
+0 upgraded, 1 newly installed, 0 to remove and 8 not upgraded.
+1 not fully installed or removed.
+Need to get 10.5 kB of archives.
+After this operation, 39.9 kB of additional disk space will be used.
+Do you want to continue? [Y/n] Y
+Get:1 http://archive.ubuntu.com/ubuntu focal/universe amd64 libxcb-cursor0 amd64 0.1.1-4ubuntu1 [10.5 kB]
+Fetched 10.5 kB in 0s (106 kB/s)           
+Selecting previously unselected package libxcb-cursor0:amd64.
+(Reading database ... 243306 files and directories currently installed.)
+Preparing to unpack .../libxcb-cursor0_0.1.1-4ubuntu1_amd64.deb ...
+Unpacking libxcb-cursor0:amd64 (0.1.1-4ubuntu1) ...
+Setting up libxcb-cursor0:amd64 (0.1.1-4ubuntu1) ...
+Setting up zoom (6.2.6.2503) ...
+run post install script, action is configure...
+Processing triggers for libc-bin (2.31-0ubuntu9.16) ...
+===================================================
+
+It seemed to work.
