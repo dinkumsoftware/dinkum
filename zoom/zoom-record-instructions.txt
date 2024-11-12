@@ -1,0 +1,12 @@
+2024-11-12 tc from levi email
+
+Best way is to have someone claim the meeting as the host (it can be
+anyone).  To get set as the meeting host, click *Participants* and
+then *Claim host* in the bottom right corner.  Next go to More and
+select *Record* (depending on your zoom window, the *Record* button
+may already be at the bottom of the screen).  I recommend *Record to
+Computer* to save the recording to your local drive.  Once the meeting
+has ended, the video will be converted to an mp4 and you'll have a
+chance to select where on your local machine it saves to.  From there
+you can upload it to the Google Drive Technology folder for
+safekeeping and viewing.

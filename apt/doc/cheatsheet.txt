@@ -1,6 +1,7 @@
 apt/doc/cheatsheet.txt
 
 2024-09-07 tc Initial
+2024-11-09 tc Added how to install/update from *.deb
 
 What package is a file in?
      dpkg-query --search <filename - search_path>
@@ -9,3 +10,14 @@ What package is a file in?
 What files are in a package ?
     dpkg-query --listfiles <package_name>
     dpkg-query -L          <package_name>
+
+Upgrade a *.deb package.
+From: https://www.google.com/search?q=how+do+i+apt+upgrade+from+a+deb+file&oq=how+do+i+apt+upgrade+from+a+deb+file&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRigATIHCAIQIRigATIHCAMQIRigATIHCAQQIRigATIHCAUQIRifBdIBCTEzMDc2ajFqNKgCALACAQ&sourceid=chrome&ie=UTF-8
+
+    # from foo.deb    
+    cd <directory of foo.deb file>
+    sudo apt update
+    sudo dpkg -i  foo.deb
+
+    # If there are dependency problems:
+    sudo apt -f install
