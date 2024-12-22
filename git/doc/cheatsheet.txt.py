@@ -32,6 +32,7 @@ Frequently used git commands.
 2022-03-01 tc improved rebase/squash
 2022-04-25 tc rearranged a bit.
 2022-10-08 tc merge tips
+2024-12-16 tc how to delete a file in repo
 
 Table of contents
     *** Creating stuff
@@ -216,6 +217,22 @@ git reset --hard HEAD~<N>
 # Delete a branch
 git branch -d LOCAL    # local branch LOCAL
 git push origin --delete REMOTE # Remote branch REMOTE
+
+# Delete a file COMPLETELY warning: DANGEROUS
+https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
+
+    sudo snap install git-filter-repo
+    cd YOUR-REPOSITORY
+    git filter-repo --invert-paths --path PATH-TO-YOUR-FILE-WITH-SENSITIVE-DATA
+        # Might need a --force if repo not freshly cloned.
+        # If there are filenames with spaces or other special chars:
+            create (outside repo) file: files-to-delete.txt
+            and put each filename on one line.  Then
+            git filter-repo --invert-paths --paths-from-file <whereever>/files-to-delete.txt
+
+    git remote add origin https://github.com/OWNER/REPOSITORY.git
+    git remote set-url origin git@github.com:<Username>/<Project>.git
+    git push origin --force --all
 
 *** Publishing Stuff
 # Local branch is LOCAL
