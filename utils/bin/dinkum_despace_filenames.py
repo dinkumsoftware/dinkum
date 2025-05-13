@@ -30,6 +30,7 @@ space character, i.e. " ".  Each space character is normally replaced by
 
 #<history>
 #    2020-12-19 tc Initial
+#    2025-05-13 tc bug fixes
 #</history>
 
 import sys
@@ -126,8 +127,8 @@ def despace_filename( file_or_dirname, sub_str, **kwargs) :
             # Tell 'um what we are doing.
             print ("'%s' ==> '%s'" % (file_or_dirname, new_file_or_dirname))
 
-            if not dry_run :
-                os.rename( file_or_dirname, new_file_or_dirname)
+        if not dry_run :
+            os.rename( file_or_dirname, new_file_or_dirname)
 
     # Recursive if required
     if isdir and recursive :
